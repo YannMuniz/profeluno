@@ -1,0 +1,376 @@
+/* buscar-sala.css */
+
+/* Search Section */
+.search-section {
+    background: linear-gradient(135deg, rgba(115, 103, 240, 0.1), rgba(159, 140, 254, 0.05));
+    border: 1px solid var(--primary-color);
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 35px;
+    position: relative;
+    overflow: hidden;
+}
+
+.search-section::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, rgba(115, 103, 240, 0.15), transparent);
+    border-radius: 50%;
+}
+
+.search-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--text-primary);
+    position: relative;
+    z-index: 1;
+}
+
+.search-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 15px;
+    position: relative;
+    z-index: 1;
+}
+
+.search-input-group {
+    position: relative;
+}
+
+.search-input-group input,
+.search-input-group select {
+    width: 100%;
+    padding: 15px 45px 15px 15px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.search-input-group input:focus,
+.search-input-group select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.search-input-group i {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+}
+
+.btn-search {
+    background: linear-gradient(135deg, var(--primary-color), #9f8cfe);
+    color: white;
+    border: none;
+    padding: 15px 35px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-search:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(115, 103, 240, 0.3);
+}
+
+/* Filter Chips */
+.filter-chips {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+}
+
+.chip {
+    padding: 8px 15px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.chip:hover,
+.chip.active {
+    background: rgba(115, 103, 240, 0.2);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+/* Results Section */
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.results-count {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.sort-select {
+    padding: 10px 15px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.sort-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+/* Teacher Cards */
+.teachers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.teacher-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 25px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.teacher-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--primary-color);
+    transform: scaleY(0);
+    transition: transform 0.3s ease;
+}
+
+.teacher-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(115, 103, 240, 0.2);
+}
+
+.teacher-card:hover::before {
+    transform: scaleY(1);
+}
+
+.teacher-header {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.teacher-avatar {
+    width: 70px;
+    height: 70px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--primary-color), #9f8cfe);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: white;
+    flex-shrink: 0;
+}
+
+.teacher-info h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: var(--text-primary);
+}
+
+.teacher-subject {
+    color: var(--primary-color);
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.teacher-rating {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+}
+
+.teacher-rating i {
+    color: var(--warning-color);
+}
+
+.teacher-rating span {
+    color: var(--text-secondary);
+    margin-left: 5px;
+}
+
+.teacher-details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: rgba(115, 103, 240, 0.05);
+    border-radius: 8px;
+}
+
+.detail-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.detail-row i {
+    width: 18px;
+    color: var(--primary-color);
+}
+
+.teacher-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.tag {
+    padding: 5px 10px;
+    background: rgba(115, 103, 240, 0.1);
+    border: 1px solid rgba(115, 103, 240, 0.3);
+    border-radius: 15px;
+    font-size: 11px;
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.teacher-footer {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-primary {
+    flex: 1;
+    padding: 12px 20px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.btn-primary:hover {
+    background: #6258d3;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    padding: 12px 15px;
+    background: var(--card-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+/* Live Badge */
+.live-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: var(--success-color);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 10px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--text-secondary);
+}
+
+.empty-state i {
+    font-size: 80px;
+    margin-bottom: 25px;
+    opacity: 0.3;
+}
+
+.empty-state h3 {
+    font-size: 22px;
+    margin-bottom: 10px;
+    color: var(--text-primary);
+}
+
+.empty-state p {
+    font-size: 14px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .search-form {
+        grid-template-columns: 1fr;
+    }
+
+    .teachers-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .results-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+}

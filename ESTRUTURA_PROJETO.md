@@ -240,3 +240,304 @@ dev (integração contínua)
 ---
 
 **Status**: 🟢 Pronto para começar!
+
+# 📁 Estrutura do Projeto Laravel - Sistema de Aulas Virtuais
+
+## 🎯 Organização dos Arquivos
+
+### 1. **Views (resources/views/)**
+
+```
+resources/views/
+├── layouts/
+│   └── app.blade.php                 # Layout principal
+│
+├── partials/
+│   ├── sidebar.blade.php            # Componente sidebar
+│   └── header.blade.php             # Componente header
+│
+├── aluno/
+│   ├── dashboard.blade.php          # Dashboard do aluno
+│   ├── buscar-sala.blade.php        # Buscar professores
+│   ├── sala.blade.php               # Sala de aula (aluno)
+│   ├── simulados.blade.php          # Lista de simulados
+│   ├── conteudos.blade.php          # Conteúdos das aulas
+│   └── perfil.blade.php             # Perfil do aluno
+│
+└── professor/
+    ├── dashboard.blade.php          # Dashboard do professor
+    ├── salas.blade.php              # Gerenciar salas
+    ├── sala-criar.blade.php         # Criar nova sala
+    ├── simulados.blade.php          # Gerenciar simulados
+    ├── conteudos.blade.php          # Gerenciar conteúdos
+    └── perfil.blade.php             # Perfil do professor
+```
+
+### 2. **CSS (public/css/)**
+
+```
+public/css/
+├── dashboard.css                    # Estilos globais do dashboard
+├── buscar-sala.css                  # Estilos da busca de sala
+├── sala-aula.css                    # Estilos da sala de aula
+└── components.css                   # Componentes reutilizáveis
+```
+
+### 3. **JavaScript (public/js/)**
+
+```
+public/js/
+├── dashboard.js                     # Scripts principais
+├── sala-aula.js                     # Funcionalidades da sala
+├── webrtc.js                        # WebRTC para vídeo
+└── chat.js                          # Sistema de chat
+```
+
+### 4. **Controllers (app/Http/Controllers/)**
+
+```
+app/Http/Controllers/
+├── AlunoController.php              # Lógica do aluno
+├── ProfessorController.php          # Lógica do professor
+├── SalaController.php               # Lógica das salas
+├── SimuladoController.php           # Lógica dos simulados
+└── AuthController.php               # Autenticação
+```
+
+### 5. **Models (app/Models/)**
+
+```
+app/Models/
+├── User.php                         # Usuário (aluno/professor)
+├── Professor.php                    # Professor
+├── Aluno.php                        # Aluno
+├── Sala.php                         # Sala de aula
+├── Simulado.php                     # Simulado
+├── Questao.php                      # Questão do simulado
+├── Conteudo.php                     # Conteúdo da aula
+├── Materia.php                      # Matéria
+├── Avaliacao.php                    # Avaliação de professor
+└── Mensagem.php                     # Mensagem do chat
+```
+
+### 6. **Migrations (database/migrations/)**
+
+```
+database/migrations/
+├── xxxx_create_users_table.php
+├── xxxx_create_professores_table.php
+├── xxxx_create_alunos_table.php
+├── xxxx_create_salas_table.php
+├── xxxx_create_simulados_table.php
+├── xxxx_create_questoes_table.php
+├── xxxx_create_conteudos_table.php
+├── xxxx_create_materias_table.php
+├── xxxx_create_avaliacoes_table.php
+└── xxxx_create_mensagens_table.php
+```
+
+---
+
+## 🚀 Comandos de Instalação
+
+### 1. **Criar o projeto Laravel**
+```bash
+composer create-project laravel/laravel sistema-aulas-virtuais
+cd sistema-aulas-virtuais
+```
+
+### 2. **Configurar o .env**
+```env
+APP_NAME="Sistema de Aulas Virtuais"
+APP_URL=http://localhost:8000
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=aulas_virtuais
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+### 3. **Instalar dependências**
+```bash
+composer install
+npm install
+```
+
+### 4. **Criar estrutura de pastas**
+```bash
+# Views
+mkdir -p resources/views/layouts
+mkdir -p resources/views/partials
+mkdir -p resources/views/aluno
+mkdir -p resources/views/professor
+
+# CSS e JS
+mkdir -p public/css
+mkdir -p public/js
+```
+
+### 5. **Criar arquivos CSS e JS**
+Copie os arquivos CSS e JS que criei para as respectivas pastas em `public/`
+
+### 6. **Criar Controllers**
+```bash
+php artisan make:controller AlunoController
+php artisan make:controller ProfessorController
+php artisan make:controller SalaController
+```
+
+### 7. **Criar Models**
+```bash
+php artisan make:model Professor -m
+php artisan make:model Aluno -m
+php artisan make:model Sala -m
+php artisan make:model Simulado -m
+```
+
+### 8. **Rodar migrations**
+```bash
+php artisan migrate
+```
+
+### 9. **Iniciar servidor**
+```bash
+php artisan serve
+```
+
+---
+
+## 📝 Exemplo de Migration - Professores
+
+```php
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up()
+    {
+        Schema::create('professores', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('nome');
+            $table->string('especialidade');
+            $table->text('bio')->nullable();
+            $table->string('foto')->nullable();
+            $table->decimal('avaliacao_media', 3, 2)->default(0);
+            $table->integer('total_avaliacoes')->default(0);
+            $table->integer('total_alunos')->default(0);
+            $table->boolean('ao_vivo')->default(false);
+            $table->string('aula_atual')->nullable();
+            $table->string('proxima_aula')->nullable();
+            $table->boolean('certificado')->default(false);
+            $table->string('avatar_color')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    public function down()
+    {
+        Schema::dropIfExists('professores');
+    }
+};
+```
+
+---
+
+## 🎨 Personalização de Cores
+
+Você pode personalizar as cores editando o `:root` no arquivo `dashboard.css`:
+
+```css
+:root {
+    --primary-color: #7367f0;      /* Cor principal */
+    --success-color: #28c76f;      /* Verde */
+    --danger-color: #ea5455;       /* Vermelho */
+    --warning-color: #ff9f43;      /* Laranja */
+    --info-color: #00cfe8;         /* Azul claro */
+    --dark-bg: #1e1e2d;           /* Fundo escuro */
+    --card-bg: #2b2b40;           /* Fundo dos cards */
+    --sidebar-bg: #262637;         /* Fundo da sidebar */
+}
+```
+
+---
+
+## 🔐 Middleware de Autenticação
+
+Crie um middleware para diferenciar aluno e professor:
+
+```bash
+php artisan make:middleware CheckRole
+```
+
+```php
+<?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+
+class CheckRole
+{
+    public function handle(Request $request, Closure $next, $role)
+    {
+        if (!auth()->check() || auth()->user()->role !== $role) {
+            abort(403, 'Acesso não autorizado');
+        }
+
+        return $next($request);
+    }
+}
+```
+
+Registre no `app/Http/Kernel.php`:
+
+```php
+protected $routeMiddleware = [
+    // ...
+    'role' => \App\Http\Middleware\CheckRole::class,
+];
+```
+
+---
+
+## 📚 Próximos Passos
+
+1. ✅ Implementar autenticação (Laravel Breeze/Jetstream)
+2. ✅ Criar seeders com dados de teste
+3. ✅ Implementar WebRTC para vídeo chamadas
+4. ✅ Adicionar sistema de chat em tempo real (Laravel Echo + Pusher)
+5. ✅ Implementar upload de arquivos (materiais)
+6. ✅ Adicionar notificações em tempo real
+7. ✅ Criar dashboard com estatísticas
+
+---
+
+## 🛠️ Tecnologias Utilizadas
+
+- **Laravel 10+** - Framework PHP
+- **Bootstrap 5** - Framework CSS
+- **Font Awesome** - Ícones
+- **MySQL** - Banco de dados
+- **WebRTC** - Vídeo chamadas
+- **Pusher/Laravel Echo** - Real-time (opcional)
+
+---
+
+## 📞 Suporte
+
+Se tiver dúvidas sobre a implementação, consulte:
+- [Documentação Laravel](https://laravel.com/docs)
+- [Bootstrap Docs](https://getbootstrap.com/docs)
+- [WebRTC Guide](https://webrtc.org/getting-started/overview)
+
+---
+
+**Desenvolvido com ❤️ para educação online**
