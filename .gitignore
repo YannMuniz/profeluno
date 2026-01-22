@@ -1,0 +1,50 @@
+# Laravel
+backend-laravel/.env
+backend-laravel/.env.local
+backend-laravel/.env.*.local
+backend-laravel/vendor/
+backend-laravel/node_modules/
+backend-laravel/storage/logs/*
+backend-laravel/bootstrap/cache/*
+backend-laravel/public/hot
+backend-laravel/public/storage
+backend-laravel/.DS_Store
+
+# .NET / C#
+backend-dotnet/bin/
+backend-dotnet/obj/
+backend-dotnet/.vs/
+backend-dotnet/appsettings.local.json
+backend-dotnet/appsettings.*.local.json
+backend-dotnet/.vscode/
+backend-dotnet/*.user
+backend-dotnet/*.suo
+
+# Docker volumes
+postgres_data/
+vendor_laravel/
+node_modules/
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local testing
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env.local
+.env.*.local

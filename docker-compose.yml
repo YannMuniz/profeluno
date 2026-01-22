@@ -1,0 +1,79 @@
+services:
+  laravel:
+    build:
+      context: ./backend-laravel
+      dockerfile: Dockerfile
+    container_name: profeluno_laravel
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_KEY=base64:$(php -r 'echo base64_encode(random_bytes(32));')
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=profeluno
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+    volumes:
+      - ./backend-laravel:/var/www
+      - vendor_laravel:/var/www/vendor
+      - node_modules:/var/www/node_modules
+    ports:
+      - "8000:8000"
+    command: sh -c "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8000"
+    depends_on:
+      - postgres
+    networks:
+      - profeluno_network
+
+  vite:
+    build:
+      context: ./backend-laravel
+      dockerfile: Dockerfile
+    container_name: profeluno_vite
+    volumes:
+      - ./backend-laravel:/var/www
+      - node_modules:/var/www/node_modules
+    ports:
+      - "5173:5173"
+    command: npm run dev
+    networks:
+      - profeluno_network
+
+  dotnet:
+    build:
+      context: ./backend-dotnet
+      dockerfile: Dockerfile
+    container_name: profeluno_dotnet
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend-dotnet:/app
+    networks:
+      - profeluno_network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: profeluno_postgres
+    environment:
+      - POSTGRES_DB=profeluno
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - profeluno_network
+
+volumes:
+  vendor_laravel:
+  node_modules:
+  postgres_data:
+
+networks:
+  profeluno_network:
+    driver: bridge
