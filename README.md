@@ -51,7 +51,7 @@ exit
 # 4. Acessar no navegador
 # Laravel: http://localhost:8000
 # Vite: http://localhost:5173
-# C#: http://localhost:5000
+# C#: http://localhost:6000
 ```
 
 ## 📚 Documentação
