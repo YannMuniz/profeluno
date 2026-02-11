@@ -20,6 +20,7 @@ backend-dotnet/appsettings.*.local.json
 backend-dotnet/.vscode/
 backend-dotnet/*.user
 backend-dotnet/*.suo
+.vs/
 
 # Docker volumes
 postgres_data/

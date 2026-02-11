@@ -47,9 +47,9 @@ services:
     container_name: profeluno_dotnet
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:6000
+      - ASPNETCORE_URLS=http://+:8080
     ports:
-      - "6000:6000"
+      - "9000:8080"
     volumes:
       - ./backend-dotnet:/app
     networks:
