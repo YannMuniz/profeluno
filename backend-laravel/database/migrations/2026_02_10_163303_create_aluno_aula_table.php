@@ -11,15 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('classroom_user', function (Blueprint $table) {
+        Schema::create('aluno_sala', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('classroom_id')->constrained('classrooms')->onDelete('cascade');
-            $table->enum('status', ['active', 'completed', 'dropped'])->default('active');
+            $table->foreignId('aluno_id')->constrained('aluno')->onDelete('cascade');
+            $table->foreignId('sala_aula_id')->constrained('sala_aula')->onDelete('cascade');
             $table->dateTime('joined_at')->nullable();
             $table->dateTime('left_at')->nullable();
             $table->timestamps();
-            $table->unique(['user_id', 'classroom_id']);
+            $table->unique(['aluno_id', 'sala_aula_id']);
         });
     }
 
@@ -28,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('classroom_user');
+        Schema::dropIfExists('aluno_sala');
     }
 };

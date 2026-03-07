@@ -2,31 +2,31 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
+use App\Models\Admin;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 use function Symfony\Component\Clock\now;
 
-class UsersSeeder extends Seeder
+class AdminSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        User::create([
+        Admin::create([
             'id' => 1,
-            'email' => 'eduassis29@gmail.com',
-            'password' => Hash::make('Capim12'),
+            'user_id' => 1,
+            'nome_admin' => 'Eduardo',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        User::create([
+        Admin::create([
             'id' => 2,
-            'email' => 'yannmunizbarbosa@gmail.com',
-            'password' => Hash::make('26112004'),
+            'user_id' => 2,
+            'nome_admin' => 'Yann',
             'created_at' => now(),
             'updated_at' => now(),
         ]);

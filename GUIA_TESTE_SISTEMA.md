@@ -249,13 +249,13 @@ php artisan tinker
 - Laravel: 12.48.1
 - PHP: 8.3
 - Node.js: (com Vite para build)
-- SQLite: 3.x
+- PostgreSQL: 13.x
 - Bootstrap: 5.3.0
 - Font Awesome: 6.4.0
 
 ### Extensões PHP Instaladas
 - php-xml (para processamento XML)
-- php-sqlite3 (para banco de dados SQLite)
+- php-pgsql (para banco de dados PostgreSQL)
 
 ### Dependências Composer
 - laravel/framework
@@ -281,9 +281,7 @@ chmod -R 755 /var/www/html/profeluno/backend-laravel/bootstrap/cache
 
 ### Banco de dados corrompido
 ```bash
-rm /var/www/html/profeluno/backend-laravel/database/database.sqlite
-php artisan migrate
-php artisan db:seed
+php artisan migrate:fresh --seed
 ```
 
 ---

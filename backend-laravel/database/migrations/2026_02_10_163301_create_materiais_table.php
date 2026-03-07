@@ -11,15 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('materials', function (Blueprint $table) {
+        Schema::create('material', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('classroom_id')->constrained('classrooms')->onDelete('cascade');
-            $table->string('title');
-            $table->text('description')->nullable();
+            $table->unsignedBigInteger('sala_aula_id')->nullable();
+            $table->string('titulo');
+            $table->text('descricao')->nullable();
             $table->enum('type', ['pdf', 'slide', 'video', 'document', 'other'])->default('document');
             $table->string('file_path')->nullable();
             $table->string('file_url')->nullable();
-            $table->integer('order')->default(0);
             $table->timestamps();
         });
     }
@@ -29,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('materials');
+        Schema::dropIfExists('material');
     }
 };
