@@ -50,3 +50,6 @@ yarn-error.log*
 # Environment
 .env.local
 .env.*.local
+
+#Docker
+*.yml
