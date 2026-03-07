@@ -54,9 +54,11 @@ services:
       - ./backend-dotnet:/app
     networks:
       - profeluno_network
+    depends_on:
+      - postgres
 
   postgres:
-    image: postgres:13
+    image: postgres:16
     container_name: profeluno_postgres
     environment:
       - POSTGRES_DB=profeluno
