@@ -19,17 +19,11 @@ public partial class ProfelunoContext : DbContext
     {
     }
 
-    public virtual DbSet<Admin> Admins { get; set; }
-
-    public virtual DbSet<Aluno> Alunos { get; set; }
-
     public virtual DbSet<AlunoSala> AlunoSalas { get; set; }
 
     public virtual DbSet<Material> Materials { get; set; }
 
     public virtual DbSet<Migration> Migrations { get; set; }
-
-    public virtual DbSet<Professor> Professors { get; set; }
 
     public virtual DbSet<Role> Roles { get; set; }
 
@@ -41,56 +35,6 @@ public partial class ProfelunoContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Admin>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("admin_pkey");
-
-            entity.ToTable("admin");
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.CreatedAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("created_at");
-            
-            entity.Property(e => e.NomeAdmin)
-                .HasMaxLength(255)
-                .HasColumnName("nome_admin");
-            entity.Property(e => e.UpdatedAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("updated_at");
-            
-            entity.Property(e => e.UserId).HasColumnName("user_id");
-
-            entity.HasOne(d => d.User).WithMany(p => p.AdminUsers)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("1");
-        });
-
-        modelBuilder.Entity<Aluno>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("aluno_pkey");
-
-            entity.ToTable("aluno");
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.CreatedAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("created_at");
-            
-            entity.Property(e => e.NomeAluno)
-                .HasMaxLength(255)
-                .HasColumnName("nome_aluno");
-            entity.Property(e => e.UpdatedAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("updated_at");
-            
-            entity.Property(e => e.UserId).HasColumnName("user_id");
-
-            entity.HasOne(d => d.User).WithMany(p => p.AlunoUsers)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("1");
-        });
-
         modelBuilder.Entity<AlunoSala>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("aluno_sala_pkey");
@@ -114,10 +58,6 @@ public partial class ProfelunoContext : DbContext
             entity.Property(e => e.UpdatedAt)
                 .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("updated_at");
-
-            entity.HasOne(d => d.Aluno).WithMany(p => p.AlunoSalas)
-                .HasForeignKey(d => d.AlunoId)
-                .HasConstraintName("aluno_sala_aluno_id_foreign");
 
             entity.HasOne(d => d.SalaAula).WithMany(p => p.AlunoSalas)
                 .HasForeignKey(d => d.SalaAulaId)
@@ -165,31 +105,6 @@ public partial class ProfelunoContext : DbContext
             entity.Property(e => e.Migration1)
                 .HasMaxLength(255)
                 .HasColumnName("migration");
-        });
-
-        modelBuilder.Entity<Professor>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("professor_pkey");
-
-            entity.ToTable("professor");
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.CreatedAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("created_at");
-            
-            entity.Property(e => e.NomeProfessor)
-                .HasMaxLength(255)
-                .HasColumnName("nome_professor");
-            entity.Property(e => e.UpdatedAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("updated_at");
-            
-            entity.Property(e => e.UserId).HasColumnName("user_id");
-
-            entity.HasOne(d => d.User).WithMany(p => p.ProfessorUsers)
-                .HasForeignKey(d => d.UserId)
-                .HasConstraintName("1");
         });
 
         modelBuilder.Entity<Role>(entity =>
@@ -254,10 +169,6 @@ public partial class ProfelunoContext : DbContext
             entity.HasOne(d => d.Material).WithMany(p => p.SalaAulas)
                 .HasForeignKey(d => d.MaterialId)
                 .HasConstraintName("sala_aula_material_id_foreign");
-
-            entity.HasOne(d => d.Professor).WithMany(p => p.SalaAulas)
-                .HasForeignKey(d => d.ProfessorId)
-                .HasConstraintName("sala_aula_professor_id_foreign");
         });
 
         modelBuilder.Entity<Simulado>(entity =>
@@ -304,6 +215,9 @@ public partial class ProfelunoContext : DbContext
             entity.Property(e => e.Password)
                 .HasMaxLength(255)
                 .HasColumnName("password");
+            entity.Property(e => e.Cargo)
+            .HasMaxLength(255)
+            .HasColumnName("cargo");
             entity.Property(e => e.UpdatedAt)
                 .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("updated_at");

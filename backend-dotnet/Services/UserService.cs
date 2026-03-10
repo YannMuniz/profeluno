@@ -1,5 +1,6 @@
 ﻿using backend_dotnet.Data;
 using backend_dotnet.Models;
+using backend_dotnet.Models.Requests;
 using backend_dotnet.Models.Responses;
 using backend_dotnet.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -25,14 +26,6 @@ namespace backend_dotnet.Services
             return await _context.Users.FirstOrDefaultAsync(x => x.Id == idUsuario);
         }
 
-        public async Task<User> CadastraUsuarioAsync(User user)
-        {
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-
-            return user;
-        }
-
         public async Task<User> AtualizaUsuarioAsync(User user)
         {
             _context.Users.Update(user);
@@ -40,17 +33,11 @@ namespace backend_dotnet.Services
             return user;
         }
 
-        // Só, aluno professor ou admin, e autorizado ou não para o acesso
-        public async Task<LoginResponse> LoginAsync(string email, string password)
+        public async Task<LoginResponse> LoginAsync(LoginRequest loginRequest)
         {
             LoginResponse login = new LoginResponse();
 
-            var user = await _context.Users
-                .Include(u => u.AdminUsers)
-                .Include(v => v.AlunoUsers)
-                .Include(w => w.ProfessorUsers)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.Email == email && x.Password == password);
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == loginRequest.Email && x.Password == loginRequest.Password);
 
             if(user == null) 
             {
@@ -64,7 +51,7 @@ namespace backend_dotnet.Services
             {
                 login = new LoginResponse
                 {
-                    Cargo = GetCargo(user),
+                    Cargo = user.Cargo,
                     Autorizacao = true
                 };
             }
@@ -72,12 +59,22 @@ namespace backend_dotnet.Services
             return login;
         }
 
-        public string GetCargo(User user)
+        public async Task<bool> CadastrarUsuario(CadastroRequest cadastro)
         {
-            if(user.AdminUsers.Any()) return "Admin";
-            if(user.ProfessorUsers.Any()) return "Professor";
-            if(user.AlunoUsers.Any()) return "Aluno";
-            return "Convidado";
+            if(cadastro == null) return false;
+
+            User user = new User
+            {
+                Nome_Usuario = cadastro.Nome,
+                Email = cadastro.Email,
+                Cargo = cadastro.Cargo,
+                Password = cadastro.Senha
+            };
+
+            await _context.Users.AddAsync(user);
+            await _context.SaveChangesAsync();
+
+            return true;
         }
     }
 }

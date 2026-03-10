@@ -41,18 +41,6 @@ namespace backend_dotnet.Controllers
         }
 
         /// <summary>
-        /// Cadastra um novo Usuario
-        /// </summary>
-        /// <param name="user"></param>
-        /// <returns></returns>
-        [HttpPost("CadastraUsuario")]
-        public async Task<IActionResult> CadastraUsuarioAsync(User user)
-        {
-            var userCadastrado = await _userService.CadastraUsuarioAsync(user);
-            return Ok(userCadastrado);
-        }
-
-        /// <summary>
         /// Atualiza o Usuario
         /// </summary>
         /// <param name="user"></param>
@@ -73,9 +61,19 @@ namespace backend_dotnet.Controllers
         [HttpPost("Login")]
         public async Task<IActionResult> LoginAsync([FromBody] LoginRequest loginRequest)
         {
-            var login = await _userService.LoginAsync(loginRequest.Email, loginRequest.Password);
+            var login = await _userService.LoginAsync(loginRequest);
 
             return Ok(login);
+        }
+
+        [HttpPost("CadastrarUsuario")]
+        public async Task<IActionResult> CadastrarUsuario([FromBody] CadastroRequest cadastro)
+        {
+            var resultado = await _userService.CadastrarUsuario(cadastro);
+
+            if(resultado) return Ok("Usuário cadastrado com sucesso!");
+
+            return BadRequest("Erro ao cadastrar usuário.");
         }
     }
 }
