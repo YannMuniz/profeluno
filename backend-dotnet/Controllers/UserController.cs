@@ -1,4 +1,5 @@
 ﻿using backend_dotnet.Models;
+using backend_dotnet.Models.Requests;
 using backend_dotnet.Models.Responses;
 using backend_dotnet.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -70,9 +71,9 @@ namespace backend_dotnet.Controllers
         /// <param name="password"></param>
         /// <returns></returns>
         [HttpPost("Login")]
-        public async Task<IActionResult> LoginAsync(string email, string password)
+        public async Task<IActionResult> LoginAsync([FromBody] LoginRequest loginRequest)
         {
-            var login = await _userService.LoginAsync(email, password);
+            var login = await _userService.LoginAsync(loginRequest.Email, loginRequest.Password);
 
             return Ok(login);
         }
