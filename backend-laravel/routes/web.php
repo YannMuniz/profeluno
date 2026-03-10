@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ClassroomController;
+use App\Http\Controllers\UserController;
 
 // Rota de início - redireciona para login
 Route::get('/', function () {
@@ -17,6 +18,9 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
     Route::get('/registro', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/registro', [AuthController::class, 'register']);
+
+    // Rota de teste/integração com a API .NET para validar usuário (email + senha)
+    Route::post('/dotnet/verify-user', [AuthController::class, 'verifyUser']);
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])
