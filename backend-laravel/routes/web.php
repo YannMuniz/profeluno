@@ -15,9 +15,9 @@ Route::get('/', function () {
 // Autenticação - Rotas públicas
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'autenticar'])->name('autenticar');
     Route::get('/registro', [AuthController::class, 'showRegister'])->name('register');
-    Route::post('/registro', [AuthController::class, 'register']);
+    Route::post('/registro', [AuthController::class, 'registrar'])->name('registrar');
 
     // Rota de teste/integração com a API .NET para validar usuário (email + senha)
     Route::post('/dotnet/verify-user', [AuthController::class, 'verifyUser']);

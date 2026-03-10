@@ -17,16 +17,20 @@ class UsersSeeder extends Seeder
     {
         User::create([
             'id' => 1,
+            'nome_usuario' => 'Eduardo',
             'email' => 'eduassis29@gmail.com',
             'password' => md5('Capim12'),
+            'cargo' => 'admin',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
         User::create([
             'id' => 2,
+            'nome_usuario' => 'Yann',
             'email' => 'yannmunizbarbosa@gmail.com',
             'password' => md5('26112004'),
+            'cargo' => 'admin',
             'created_at' => now(),
             'updated_at' => now(),
         ]);

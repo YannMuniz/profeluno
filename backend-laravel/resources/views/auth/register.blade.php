@@ -1,5 +1,4 @@
 @extends('layouts.app')
-
 @section('content')
 <div class="auth-container">
     <div class="auth-card">
@@ -26,7 +25,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('register') }}">
+        <form method="POST" action="{{ route('registrar') }}">
             @csrf
             
             <div class="form-group">
@@ -61,21 +60,21 @@
             </div>
 
             <div class="form-group">
-                <label for="role_id">Tipo de Usuário</label>
+                <label for="cargo_id">Tipo de Usuário</label>
                 <select 
-                    name="role_id" 
-                    id="role_id" 
-                    class="form-control @error('role_id') is-invalid @enderror"
+                    name="cargo_id" 
+                    id="cargo_id" 
+                    class="form-control @error('cargo_id') is-invalid @enderror"
                     required
                 >
                     <option value="">Selecione...</option>
-                    @foreach($roles as $role)
-                        <option value="{{ $role->id }}" {{ old('role_id') == $role->id ? 'selected' : '' }}>
-                            {{ ucfirst($role->name) }}
+                    @foreach($cargos as $cargo)
+                        <option value="{{ $cargo->id }}" {{ old('cargo_id') == $cargo->id ? 'selected' : '' }}>
+                            {{ ucfirst($cargo->nome_cargo) }}
                         </option>
                     @endforeach
                 </select>
-                @error('role_id')
+                @error('cargo_id')
                     <span class="error-message">{{ $message }}</span>
                 @enderror
             </div>

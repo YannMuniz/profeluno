@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('titulo');
             $table->text('descricao')->nullable();
-            $table->foreignId('professor_id')->nullable()->constrained('professor');
+            $table->foreignId('user_id')->nullable()->constrained('users');
             // $table->enum('status', ['pending', 'active', 'completed', 'archived'])->default('pending');
             $table->dateTime('data_hora_inicio')->nullable();
             $table->dateTime('data_hora_fim')->nullable();
