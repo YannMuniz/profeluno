@@ -207,7 +207,7 @@ public partial class ProfelunoContext : DbContext
 
             entity.HasIndex(e => e.Email, "users_email_unique").IsUnique();
 
-            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Id).ValueGeneratedOnAdd().HasColumnName("id");
             entity.Property(e => e.CreatedAt)
                 .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("created_at");
