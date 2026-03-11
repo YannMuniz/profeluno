@@ -63,6 +63,10 @@ namespace backend_dotnet.Services
         {
             if(cadastro == null) return false;
 
+            var emailExistente = await _context.Users.AnyAsync(x => x.Email == cadastro.Email);
+
+            if(emailExistente) return false;
+
             User user = new User
             {
                 Nome_Usuario = cadastro.Nome,
