@@ -2,7 +2,7 @@
 {
     public class LoginResponse
     {
-        public string Cargo { get; set; }
+        public int IdCargo { get; set; }
         public bool Autorizacao { get; set; }
     }
 }

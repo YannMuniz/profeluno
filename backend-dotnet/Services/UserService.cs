@@ -43,7 +43,7 @@ namespace backend_dotnet.Services
             {
                 login = new LoginResponse
                 {
-                    Cargo = "UNAUTHORIZED",
+                    IdCargo = 0,
                     Autorizacao = false
                 };
             }
@@ -51,7 +51,7 @@ namespace backend_dotnet.Services
             {
                 login = new LoginResponse
                 {
-                    Cargo = user.Cargo,
+                    IdCargo = user.IdCargo,
                     Autorizacao = true
                 };
             }
@@ -65,10 +65,13 @@ namespace backend_dotnet.Services
 
             User user = new User
             {
+                Id = 3,
                 Nome_Usuario = cadastro.Nome,
                 Email = cadastro.Email,
-                Cargo = cadastro.Cargo,
-                Password = cadastro.Senha
+                IdCargo = cadastro.IdCargo,
+                Password = cadastro.Senha,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now
             };
 
             await _context.Users.AddAsync(user);

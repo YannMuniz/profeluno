@@ -33,6 +33,8 @@ public partial class ProfelunoContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+    public virtual DbSet<Cargo> Cargos { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AlunoSala>(entity =>
@@ -215,9 +217,25 @@ public partial class ProfelunoContext : DbContext
             entity.Property(e => e.Password)
                 .HasMaxLength(255)
                 .HasColumnName("password");
-            entity.Property(e => e.Cargo)
-            .HasMaxLength(255)
-            .HasColumnName("cargo");
+            entity.Property(e => e.IdCargo)
+            .HasColumnName("cargo_id");
+            entity.Property(e => e.Nome_Usuario)
+                .HasMaxLength(255)
+                .HasColumnName("nome_usuario");
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnType("timestamp(0) without time zone")
+                .HasColumnName("updated_at");
+        });
+
+        modelBuilder.Entity<Cargo>(entity => 
+        {
+            entity.HasKey(e => e.Id).HasName("cargos_pkey");
+            entity.ToTable("cargos");
+            entity.HasIndex(e => e.NomeCargo, "cargos_name_unique").IsUnique();
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.CreatedAt)
+                .HasColumnType("timestamp(0) without time zone")
+                .HasColumnName("created_at");
             entity.Property(e => e.UpdatedAt)
                 .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("updated_at");
