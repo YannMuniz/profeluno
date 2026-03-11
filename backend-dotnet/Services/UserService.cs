@@ -73,8 +73,8 @@ namespace backend_dotnet.Services
                 Email = cadastro.Email,
                 IdCargo = cadastro.IdCargo,
                 Password = cadastro.Senha,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now
             };
 
             await _context.Users.AddAsync(user);
