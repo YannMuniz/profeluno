@@ -7,10 +7,12 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ClassroomController;
 use App\Http\Controllers\UserController;
 
-// Rota de início - redireciona para login
-// Route::get('/', function () {
-//     return Auth::check() ? redirect(Auth::user()->role->name === 'professor' ? '/professor/dashboard' : '/aluno/dashboard') : redirect('/login');
-// })->name('home');
+// Rota de início - redireciona para login (evita erro de rota [home] não definida nos views)
+Route::get('/', function () {
+    return Auth::check()
+        ? redirect(Auth::user()->cargo?->nome_cargo === 'professor' ? '/professor/dashboard' : '/aluno/dashboard')
+        : redirect('/login');
+})->name('home');
 
 // Autenticação - Rotas públicas
 Route::middleware('guest')->group(function () {
@@ -23,7 +25,8 @@ Route::middleware('guest')->group(function () {
     Route::post('/dotnet/verify-user', [AuthController::class, 'verifyUser']);
 });
 
-Route::post('/logout', [AuthController::class, 'logout'])
+// Logout deve ser feito via POST para maior segurança, mas aceitamos GET para simplificar cliques em link.
+Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])
     ->middleware('auth')
     ->name('logout');
 

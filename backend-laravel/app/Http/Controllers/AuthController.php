@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Models\Cargo;
 
@@ -25,6 +26,12 @@ class AuthController extends Controller
             $response = Http::post($url, [
                 'email' => $request->input('email'),
                 'password' => $password,
+            ]);
+
+            Log::debug('AuthController::autenticar dotnet response', [
+                'url' => $url,
+                'status' => $response->status(),
+                'body' => $response->body(),
             ]);
 
             if ($response->successful()) {
@@ -74,11 +81,23 @@ class AuthController extends Controller
                 ->withErrors(['email' => 'Email ou senha inválidos.'])
                 ->withInput($request->only('email'));
         } catch (\Throwable $e) {
+            Log::error('AuthController::autenticar error', ['exception' => $e]);
+
             return redirect()
                 ->route('login')
                 ->withErrors(['email' => 'Ocorreu um erro ao tentar fazer login.'])
                 ->withInput($request->only('email'));
         }
+    }
+
+    public function logout(Request $request)
+    {
+        Auth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login');
     }
 
     public function showLogin() {
@@ -98,6 +117,9 @@ class AuthController extends Controller
             'password' => 'required|string',
             'password_confirmation' => 'required|string|same:password',
         ]);
+
+        $password = md5($request->input('password'));
+
         $dotnetBaseUrl = env('DOTNET_API_URL', 'http://profeluno_dotnet:2912');
         $url = "{$dotnetBaseUrl}/v1/User/CadastrarUsuario"; 
         try {
@@ -108,11 +130,26 @@ class AuthController extends Controller
                     ->withInput($request->only('name', 'email', 'cargo_id'));
             }
 
+            Log::debug('AuthController::registrar dotnet request', [
+                'url' => $url,
+                'payload' => [
+                    'nome' => $request->input('name'),
+                    'email' => $request->input('email'),
+                    'senha' => md5($request->input('password')),
+                    'idCargo' => $request->input('cargo_id'),
+                ],
+            ]);
+
             $response = Http::post($url, [
-                'name' => $request->input('name'),
+                'nome' => $request->input('name'),
                 'email' => $request->input('email'),
-                'cargo' =>  $request->input('cargo_id'),
-                'senha' => md5($request->input('password')),
+                'senha' => $password,
+                'idCargo' => $request->input('cargo_id'),
+            ]);
+
+            Log::debug('AuthController::registrar dotnet response', [
+                'status' => $response->status(),
+                'body' => $response->body(),
             ]);
 
             if ($response->successful()) {
@@ -121,7 +158,7 @@ class AuthController extends Controller
                     ['email' => $request->input('email')],
                     [
                         'nome_usuario' => $request->input('name'),
-                        'password' => bcrypt(Str::random(32)),
+                        'password' => md5($request->password),
                         'cargo_id' => $request->input('cargo_id'),
                     ]
                 );
