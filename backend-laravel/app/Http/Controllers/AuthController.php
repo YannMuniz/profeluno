@@ -12,83 +12,55 @@ use App\Models\Cargo;
 class AuthController extends Controller
 {
     public function autenticar(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string',
+{
+    $request->validate([
+        'email' => 'required|email',
+        'password' => 'required|string',
+    ]);
+
+    $dotnetBaseUrl = env('DOTNET_API_URL', 'http://profeluno_dotnet:2912');
+    $url = "{$dotnetBaseUrl}/v1/User/Login";
+
+    try {
+        $response = Http::post($url, [
+            'email' => $request->input('email'),
+            'password' => md5($request->input('password')),
         ]);
 
-        $dotnetBaseUrl = env('DOTNET_API_URL', 'http://profeluno_dotnet:2912');
-        $url = "{$dotnetBaseUrl}/v1/User/Login"; 
+        if ($response->successful()) {
+            $data = $response->json();
 
-        $password = md5($request->input('password'));
-        try {
-            $response = Http::post($url, [
-                'email' => $request->input('email'),
-                'password' => $password,
-            ]);
+            if (!empty($data['autorizacao'])) {
+                $user = \App\Models\User::where('email', $request->input('email'))->firstOrFail();
 
-            Log::debug('AuthController::autenticar dotnet response', [
-                'url' => $url,
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ]);
+                Auth::login($user);
 
-            if ($response->successful()) {
-                $data = $response->json();
+                $role = strtolower($user->cargo?->nome_cargo ?? 'aluno');
 
-                if (!empty($data['autorizacao'])) {
-                    $cargoValue = $data['cargo'] ?? null;
-                    $cargoId = null;
-
-                    if (is_numeric($cargoValue)) {
-                        $cargoId = (int) $cargoValue;
-                    } elseif (is_string($cargoValue)) {
-                        $cargoId = Cargo::whereRaw('LOWER(nome_cargo) = ?', [strtolower($cargoValue)])->value('id');
-                    }
-
-                    $cargoId = $cargoId ?: Cargo::whereRaw('LOWER(nome_cargo) = ?', ['aluno'])->value('id');
-
-                    $user = \App\Models\User::firstOrCreate(
-                        ['email' => $request->input('email')],
-                        [
-                            'password' => bcrypt(Str::random(32)),
-                            'cargo_id' => $cargoId,
-                            'nome_usuario' => $request->input('email'),
-                        ]
-                    );
-
-                    if ($user->cargo_id !== $cargoId) {
-                        $user->update(['cargo_id' => $cargoId]);
-                    }
-
-                    Auth::login($user);
-
-                    $role = strtolower($user->cargo?->nome_cargo ?? 'aluno');
-
-                    if ($role === 'admin') {
-                        return redirect()->route('admin.dashboard');
-                    } elseif ($role === 'professor') {
-                        return redirect()->route('professor.dashboard');
-                    } else {
-                        return redirect()->route('aluno.dashboard');
-                    }
+                if ($role === 'admin') {
+                    return redirect()->route('admin.dashboard');
+                } elseif ($role === 'professor') {
+                    return redirect()->route('professor.dashboard');
+                } else {
+                    return redirect()->route('aluno.dashboard');
                 }
             }
-
-            return redirect()
-                ->route('login')
-                ->withErrors(['email' => 'Email ou senha inválidos.'])
-                ->withInput($request->only('email'));
-        } catch (\Throwable $e) {
-            Log::error('AuthController::autenticar error', ['exception' => $e]);
-
-            return redirect()
-                ->route('login')
-                ->withErrors(['email' => 'Ocorreu um erro ao tentar fazer login.'])
-                ->withInput($request->only('email'));
         }
+
+        return redirect()
+            ->route('login')
+            ->withErrors(['email' => 'Email ou senha inválidos.'])
+            ->withInput($request->only('email'));
+
+    } catch (\Throwable $e) {
+        Log::error('AuthController::autenticar error', ['exception' => $e]);
+
+        return redirect()
+            ->route('login')
+            ->withErrors(['email' => 'Ocorreu um erro ao tentar fazer login.'])
+            ->withInput($request->only('email'));
     }
+}
 
     public function logout(Request $request)
     {

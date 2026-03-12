@@ -13,7 +13,7 @@
     </div>
 
     <nav class="sidebar-menu">
-        @if (Auth::user()->role->name === 'professor')
+        @if (Auth::user()->cargo?->nome_cargo === 'professor')
             <div class="menu-item">
                 <a href="{{ route('professor.dashboard') }}" class="menu-link {{ request()->routeIs('professor.dashboard') ? 'active' : '' }}">
                     <i class="fas fa-chart-line"></i>

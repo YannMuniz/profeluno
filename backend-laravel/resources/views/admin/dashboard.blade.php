@@ -5,7 +5,6 @@
 @section('content')
     <div class="admin-dashboard">
         <h1>Bem-vindo, {{ auth()->user()->nome_usuario ?? 'Administrador' }}</h1>
-        <p>Use o menu para navegar pelas funcionalidades do painel administrativo.</p>
 
         <div class="admin-cards">
             <div class="stat-card">
@@ -32,6 +31,6 @@
             </div>
         </div>
 
-        <p class="mt-4">Por enquanto, este painel apresenta apenas o acesso ao dashboard. Em breve será possível gerenciar usuários, cargos e configurações do sistema.</p>
+        <p class="mt-4"></p>
     </div>
 @endsection
