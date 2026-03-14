@@ -9,7 +9,7 @@ Seu projeto **ProfeLuno** foi estruturado com a seguinte arquitetura:
 - Responsabilidade: Interface, renderização, validação, exibição de dados
 
 ### 🔧 .NET = Backend (seu amigo)
-- Port: **2912**
+- Port: **5000**
 - Responsabilidade: APIs, CRUD, autenticação, videochamada, banco de dados
 
 ---
@@ -86,7 +86,7 @@ Seu projeto **ProfeLuno** foi estruturado com a seguinte arquitetura:
                        ↓
 3. Controller chama: $this->dotNetService->getClassrooms()
                        ↓
-4. DotNetService faz HTTP GET para http://localhost:2912/api/classrooms
+4. DotNetService faz HTTP GET para http://localhost:5000/api/classrooms
                        ↓
 5. .NET retorna JSON com as salas
                        ↓
@@ -141,7 +141,7 @@ dotnet ef database update
 
 # 3. Run
 dotnet run
-# http://localhost:2912
+# http://localhost:5000
 ```
 
 ---

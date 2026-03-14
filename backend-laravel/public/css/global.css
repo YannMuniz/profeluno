@@ -19,6 +19,12 @@ a:hover {
     color: #9f8cfe;
 }
 
+.profile-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: inherit;
+}
+
 .btn-primary {
     background: linear-gradient(135deg, var(--primary-color), #9f8cfe);
     color: white;

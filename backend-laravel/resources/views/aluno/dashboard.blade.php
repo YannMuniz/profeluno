@@ -48,7 +48,7 @@
         Ações Rápidas
     </h2>
     <div class="action-cards">
-        <a href="{{ route('aluno.browse') }}" class="action-card">
+        <a href="{{ route('aluno.buscar-sala') }}" class="action-card">
             <div class="action-icon">
                 <i class="fas fa-search"></i>
             </div>
@@ -113,7 +113,7 @@
         <div class="empty-state">
             <i class="fas fa-inbox"></i>
             <h3>Nenhuma aula ainda</h3>
-            <p>Você ainda não participa de nenhuma aula. <a href="{{ route('aluno.browse') }}">Buscar salas</a></p>
+            <p>Você ainda não participa de nenhuma aula. <a href="{{ route('aluno.buscar-sala') }}">Buscar salas</a></p>
         </div>
     @endif
 </div>

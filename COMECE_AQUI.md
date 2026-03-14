@@ -42,7 +42,7 @@ cd backend-dotnet
 dotnet restore
 dotnet ef database update
 dotnet run
-# http://localhost:2912
+# http://localhost:5000
 ```
 
 ---
@@ -161,7 +161,7 @@ Você (Laravel)           Seu Amigo (.NET)
 ### "Laravel não conecta ao .NET"
 ```bash
 # Verifique se .NET está rodando
-curl http://localhost:2912/api/health
+curl http://localhost:5000/api/health
 ```
 
 ### "DotNetService não existe"

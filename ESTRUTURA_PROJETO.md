@@ -230,7 +230,7 @@ dev (integração contínua)
 - [ ] Docker rodando: `docker-compose ps` ✓
 - [ ] Laravel acessível: http://localhost:8000
 - [ ] Vite acessível: http://localhost:5173
-- [ ] C# acessível: http://localhost:2912
+- [ ] C# acessível: http://localhost:5000
 - [ ] PostgreSQL conectando: `psql -h localhost -U postgres -d profeluno`
 - [ ] Git configurado: `git config --list`
 - [ ] Parceiro clonou e conseguiu rodar

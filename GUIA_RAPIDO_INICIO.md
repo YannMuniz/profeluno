@@ -24,7 +24,7 @@ php artisan serve
 
 ### .env
 ```env
-DOTNET_API_URL=http://localhost:2912/api
+DOTNET_API_URL=http://localhost:5000/api
 DOTNET_API_TIMEOUT=30
 ```
 
@@ -38,7 +38,7 @@ cd backend-dotnet
 dotnet restore
 dotnet ef database update
 dotnet run
-# http://localhost:2912
+# http://localhost:5000
 ```
 
 ---

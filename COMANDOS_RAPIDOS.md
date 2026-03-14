@@ -197,7 +197,7 @@ docker-compose up -d
 
 - **Laravel (APP)**: http://localhost:8000
 - **Vite (Frontend Dev)**: http://localhost:5173
-- **C# API**: http://localhost:2912
+- **C# API**: http://localhost:5000
 - **PostgreSQL**: localhost:5432
 - **Bitbucket**: https://bitbucket.org
 
@@ -218,7 +218,7 @@ docker-compose up -d
 curl http://localhost:8000
 
 # Testar C#
-curl http://localhost:2912
+curl http://localhost:5000
 
 # Testar API via Laravel
 curl http://localhost:8000/api/dotnet/users
@@ -246,7 +246,7 @@ docker-compose logs <serviço>
 
 # Porta já está sendo usada?
 lsof -i :8000
-lsof -i :2912
+lsof -i :5000
 lsof -i :5173
 
 # Reiniciar Docker Desktop

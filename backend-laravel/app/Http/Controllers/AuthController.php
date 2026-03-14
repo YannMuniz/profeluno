@@ -12,55 +12,66 @@ use App\Models\Cargo;
 class AuthController extends Controller
 {
     public function autenticar(Request $request)
-{
-    $request->validate([
-        'email' => 'required|email',
-        'password' => 'required|string',
-    ]);
-
-    $dotnetBaseUrl = env('DOTNET_API_URL', 'http://profeluno_dotnet:2912');
-    $url = "{$dotnetBaseUrl}/v1/User/Login";
-
-    try {
-        $response = Http::post($url, [
-            'email' => $request->input('email'),
-            'password' => md5($request->input('password')),
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string',
         ]);
 
-        if ($response->successful()) {
-            $data = $response->json();
+        $dotnetBaseUrl = env('DOTNET_API_URL', 'http://profeluno_dotnet:5000');
+        $url = "{$dotnetBaseUrl}/v1/User/Login";
 
-            if (!empty($data['autorizacao'])) {
-                $user = \App\Models\User::where('email', $request->input('email'))->firstOrFail();
+        try {
+            $response = Http::post($url, [
+                'email' => $request->input('email'),
+                'password' => md5($request->input('password')),
+            ]);
 
-                Auth::login($user);
+            if ($response->successful()) {
+                $data = $response->json();
 
-                $role = strtolower($user->cargo?->nome_cargo ?? 'aluno');
+                if (!empty($data['autorizacao'])) {
+                    $user = \App\Models\User::where('email', $request->input('email'))
+                        ->with('cargo') // eager load para não fazer query extra
+                        ->firstOrFail();
 
-                if ($role === 'admin') {
-                    return redirect()->route('admin.dashboard');
-                } elseif ($role === 'professor') {
-                    return redirect()->route('professor.dashboard');
-                } else {
-                    return redirect()->route('aluno.dashboard');
+                    Auth::login($user);
+
+                    // Salva na sessão — sem aparecer na URL
+                    session([
+                        'user_id'    => $user->id,
+                        'user_nome'  => $user->nome_usuario,
+                        'user_email' => $user->email,
+                        'user_cargo' => strtolower($user->cargo?->nome_cargo ?? 'aluno'),
+                        'cargo_id'   => $user->cargo_id,
+                    ]);
+
+                    $role = session('user_cargo');
+
+                    if ($role === 'admin') {
+                        return redirect()->route('admin.dashboard');
+                    } elseif ($role === 'professor') {
+                        return redirect()->route('professor.dashboard');
+                    } else {
+                        return redirect()->route('aluno.dashboard');
+                    }
                 }
             }
+
+            return redirect()
+                ->route('login')
+                ->withErrors(['email' => 'Email ou senha inválidos.'])
+                ->withInput($request->only('email'));
+
+        } catch (\Throwable $e) {
+            Log::error('AuthController::autenticar error', ['exception' => $e]);
+
+            return redirect()
+                ->route('login')
+                ->withErrors(['email' => 'Ocorreu um erro ao tentar fazer login.'])
+                ->withInput($request->only('email'));
         }
-
-        return redirect()
-            ->route('login')
-            ->withErrors(['email' => 'Email ou senha inválidos.'])
-            ->withInput($request->only('email'));
-
-    } catch (\Throwable $e) {
-        Log::error('AuthController::autenticar error', ['exception' => $e]);
-
-        return redirect()
-            ->route('login')
-            ->withErrors(['email' => 'Ocorreu um erro ao tentar fazer login.'])
-            ->withInput($request->only('email'));
     }
-}
 
     public function logout(Request $request)
     {
@@ -92,7 +103,7 @@ class AuthController extends Controller
 
         $password = md5($request->input('password'));
 
-        $dotnetBaseUrl = env('DOTNET_API_URL', 'http://profeluno_dotnet:2912');
+        $dotnetBaseUrl = env('DOTNET_API_URL', 'http://profeluno_dotnet:5000');
         $url = "{$dotnetBaseUrl}/v1/User/CadastrarUsuario"; 
         try {
             if ($request->input('password') !== $request->input('password_confirmation')) {

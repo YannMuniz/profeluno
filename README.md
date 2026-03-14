@@ -71,7 +71,7 @@ exit
 |---------|-------|-----|
 | Laravel | 8000 | http://localhost:8000 |
 | Vite | 5173 | http://localhost:5173 |
-| C# API | 2912 | http://localhost:2912 |
+| C# API | 5000 | http://localhost:5000 |
 | PostgreSQL | 5432 | localhost:5432 |
 
 ## 🛠️ Comandos Principais

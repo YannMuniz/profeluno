@@ -66,7 +66,7 @@ exit
 #### PASSO 7: Verificar se está funcionando
 - **Laravel**: http://localhost:8000
 - **Vite (JS)**: http://localhost:5173
-- **C# API**: http://localhost:2912
+- **C# API**: http://localhost:5000
 - **PostgreSQL**: localhost:5432
 
 #### PASSO 8: Ver logs em tempo real (IMPORTANTE)
@@ -265,7 +265,7 @@ class UserController extends Controller
     public function store()
     {
         // Laravel faz requisição para C#
-        $response = Http::post('http://dotnet:2912/api/users', [
+        $response = Http::post('http://dotnet:5000/api/users', [
             'name' => request('name'),
             'email' => request('email'),
         ]);
@@ -327,7 +327,7 @@ Usuario acessa → Laravel (8000)
                     ↓
               Precisa processar foto?
                     ↓
-         Chama API .NET (2912)
+         Chama API .NET (5000)
                     ↓
             C# processa imagem
                     ↓
@@ -385,10 +385,10 @@ dotnet run
 |---------|-------|--------|-----|
 | Laravel | 8000 | Externo | http://localhost:8000 |
 | Vite (Frontend) | 5173 | Externo | http://localhost:5173 |
-| C# API | 2912 | Externo | http://localhost:2912 |
+| C# API | 5000 | Externo | http://localhost:5000 |
 | PostgreSQL | 5432 | Externo | localhost:5432 |
 | **Interno (entre containers)** |  |  |  |
-| Laravel → C# | N/A | Interno | http://dotnet:2912 |
+| Laravel → C# | N/A | Interno | http://dotnet:5000 |
 | C# → DB | N/A | Interno | postgresql://postgres:5432 |
 | Laravel → DB | N/A | Interno | postgresql://postgres:5432 |
 
@@ -403,7 +403,7 @@ DB_HOST=postgres
 DB_DATABASE=profeluno
 DB_USERNAME=postgres
 DB_PASSWORD=postgres
-DOTNET_API_URL=http://dotnet:2912
+DOTNET_API_URL=http://dotnet:5000
 ```
 
 **backend-dotnet/appsettings.Development.json:**
@@ -467,7 +467,7 @@ git push origin feature/...
 - [ ] Docker subindo (você conseguiu!)
 - [ ] Laravel acessível em http://localhost:8000
 - [ ] Vite acessível em http://localhost:5173
-- [ ] C# acessível em http://localhost:2912
+- [ ] C# acessível em http://localhost:5000
 - [ ] Repositório Bitbucket criado
 - [ ] Git inicializado localmente
 - [ ] Primeira versão enviada para Bitbucket
