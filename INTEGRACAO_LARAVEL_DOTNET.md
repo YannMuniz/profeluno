@@ -19,7 +19,7 @@ class ApiController extends Controller
     public function getUsersFromDotNet()
     {
         try {
-            $response = Http::get('http://dotnet:5000/api/users');
+            $response = Http::get('http://dotnet:9000/api/users');
             
             if ($response->successful()) {
                 return response()->json([
@@ -46,7 +46,7 @@ class ApiController extends Controller
      */
     public function createUserInDotNet()
     {
-        $response = Http::post('http://dotnet:5000/api/users', [
+        $response = Http::post('http://dotnet:9000/api/users', [
             'name' => request('name'),
             'email' => request('email'),
             'phone' => request('phone')
@@ -64,7 +64,7 @@ class ApiController extends Controller
      */
     public function updateUserInDotNet($id)
     {
-        $response = Http::put("http://dotnet:5000/api/users/{$id}", [
+        $response = Http::put("http://dotnet:9000/api/users/{$id}", [
             'name' => request('name'),
             'email' => request('email')
         ]);
@@ -77,7 +77,7 @@ class ApiController extends Controller
      */
     public function deleteUserInDotNet($id)
     {
-        $response = Http::delete("http://dotnet:5000/api/users/{$id}");
+        $response = Http::delete("http://dotnet:9000/api/users/{$id}");
 
         if ($response->successful()) {
             return response()->json(['success' => true]);
@@ -332,7 +332,7 @@ docker-compose exec dotnet bash
 dotnet run
 
 # Criar usuário via API
-curl -X POST http://localhost:5000/api/users \
+curl -X POST http://localhost:9000/api/users \
   -H "Content-Type: application/json" \
   -d '{"name":"João","email":"joao@example.com"}'
 ```
@@ -359,7 +359,7 @@ SELECT * FROM users;
 
 ## 6️⃣ Troubleshooting
 
-### "http://dotnet:5000 connection refused"
+### "http://dotnet:9000 connection refused"
 
 ```bash
 # Verificar se container está rodando
@@ -387,7 +387,7 @@ docker-compose exec laravel env | grep DB_
 ```bash
 # Dentro do Laravel container
 docker-compose exec laravel bash
-curl http://dotnet:5000/health
+curl http://dotnet:9000/health
 
 # Se não conectar, os containers não estão na mesma rede
 docker network ls

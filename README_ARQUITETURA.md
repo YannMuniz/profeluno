@@ -20,7 +20,7 @@
          │ HTTP JSON
          ▼
 ┌──────────────────────────────────────┐
-│ .NET - Port 5000 🔧 (SEU AMIGO)     │
+│ .NET - Port 9000 🔧 (SEU AMIGO)     │
 │ ├─ APIs REST                         │
 │ ├─ Services (lógica)                 │
 │ ├─ Banco de dados                    │
@@ -84,7 +84,7 @@ public function index()
 ```php
 public function getClassrooms()
 {
-    $response = Http::get('http://localhost:5000/api/classrooms');
+    $response = Http::get('http://localhost:9000/api/classrooms');
     return $response->json();
 }
 ```

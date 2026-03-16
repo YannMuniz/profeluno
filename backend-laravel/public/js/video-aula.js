@@ -165,6 +165,6 @@ document.addEventListener('DOMContentLoaded', function() {
         setInterval(() => {
             // Aqui você poderia fazer requisições para o servidor
             // para obter o número real de participantes
-        }, 5000);
+        }, 9000);
     }
 });

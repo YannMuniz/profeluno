@@ -18,7 +18,7 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $dotnetBaseUrl = env('DOTNET_API_URL', 'http://profeluno_dotnet:5000');
+        $dotnetBaseUrl = env('DOTNET_API_URL', 'http://profeluno_dotnet:9000');
         $url = "{$dotnetBaseUrl}/v1/User/Login";
 
         try {
@@ -103,7 +103,7 @@ class AuthController extends Controller
 
         $password = md5($request->input('password'));
 
-        $dotnetBaseUrl = env('DOTNET_API_URL', 'http://profeluno_dotnet:5000');
+        $dotnetBaseUrl = env('DOTNET_API_URL', 'http://profeluno_dotnet:9000');
         $url = "{$dotnetBaseUrl}/v1/User/CadastrarUsuario"; 
         try {
             if ($request->input('password') !== $request->input('password_confirmation')) {
