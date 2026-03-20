@@ -31,9 +31,9 @@ namespace backend_dotnet.Services
             return await _context.Users.FirstOrDefaultAsync(x => x.Nome_Usuario.ToUpper().StartsWith(nomeUsuario.ToUpper()));
         }
 
-        public async Task<User> RetornaUsuarioPorCargoAsync(string cargoUsuario)
+        public async Task<User> RetornaUsuarioPorCargoAsync(int idCargo)
         {
-            return await _context.Users.Include(w => w.Cargo).FirstOrDefaultAsync(x => x.Cargo.NomeCargo.ToUpper().StartsWith(cargoUsuario.ToUpper()));
+            return await _context.Users.FirstOrDefaultAsync(x => x.IdCargo == idCargo);
         }
 
         public async Task<User> AtualizaUsuarioAsync(User user)

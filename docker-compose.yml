@@ -50,8 +50,8 @@ services:
       - ASPNETCORE_URLS=http://+:9000
     ports:
       - "9000:9000"
-    volumes:
-      - ./backend-dotnet:/app
+    # volumes:
+    #   - ./backend-dotnet:/app
     networks:
       - profeluno_network
     depends_on:

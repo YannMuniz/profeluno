@@ -1,8 +1,4 @@
 using backend_dotnet.Configuration;
-using backend_dotnet.Data;
-using backend_dotnet.Services;
-using backend_dotnet.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,7 +7,6 @@ builder.Services.AddDatabaseConfiguration(builder.Configuration);
 builder.Services.AddInfrastructure();
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -26,7 +21,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Minha API v1");
-        c.RoutePrefix = string.Empty; // Isso faz o Swagger carregar na raiz
+        c.RoutePrefix = "swagger";
     });
 }
 

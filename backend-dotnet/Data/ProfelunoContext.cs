@@ -1,8 +1,5 @@
 ﻿using backend_dotnet.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
 
 namespace backend_dotnet.Data;
 
@@ -218,13 +215,7 @@ public partial class ProfelunoContext : DbContext
                 .HasMaxLength(255)
                 .HasColumnName("password");
             entity.Property(e => e.IdCargo)
-            .HasColumnName("cargo_id");
-
-            entity.HasOne(d => d.Cargo)
-                .WithMany(p => p.Users)
-                .HasForeignKey(d => d.IdCargo)
-                .OnDelete(DeleteBehavior.Restrict)
-                .HasConstraintName("fk_user_cargo");
+                .HasColumnName("cargo_id");
 
             entity.Property(e => e.Nome_Usuario)
                 .HasMaxLength(255)

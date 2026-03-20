@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace backend_dotnet.Models;
+﻿namespace backend_dotnet.Models;
 
 public partial class SalaAula
 {

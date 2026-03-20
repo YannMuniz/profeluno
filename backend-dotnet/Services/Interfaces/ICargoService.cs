@@ -1,6 +1,5 @@
 using backend_dotnet.Models;
 using backend_dotnet.Models.Requests;
-using backend_dotnet.Models.Responses;
 
 namespace backend_dotnet.Services.Interfaces
 {

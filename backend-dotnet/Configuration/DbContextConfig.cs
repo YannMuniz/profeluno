@@ -1,6 +1,5 @@
 ﻿using backend_dotnet.Data;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 
 namespace backend_dotnet.Configuration
 {

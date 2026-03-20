@@ -1,6 +1,5 @@
 ﻿using backend_dotnet.Models;
 using backend_dotnet.Models.Requests;
-using backend_dotnet.Models.Responses;
 using backend_dotnet.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -58,10 +57,10 @@ namespace backend_dotnet.Controllers
         /// </summary>
         /// <param name="cargoUsuario"></param>
         /// <returns></returns>
-        [HttpGet("RetornaUsuarioPorCargo/{cargoUsuario}")]
-        public async Task<IActionResult> RetornaUsuarioPorCargoAsync(string cargoUsuario)
+        [HttpGet("RetornaUsuarioPorCargo/{idCargo}")]
+        public async Task<IActionResult> RetornaUsuarioPorCargoAsync(int idCargo)
         {
-            var user = await _userService.RetornaUsuarioPorCargoAsync(cargoUsuario);
+            var user = await _userService.RetornaUsuarioPorCargoAsync(idCargo);
             if(user == null) return NotFound();
             return Ok(user);
         }
