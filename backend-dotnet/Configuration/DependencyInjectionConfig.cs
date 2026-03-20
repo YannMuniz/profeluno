@@ -8,6 +8,7 @@ public static class DependencyInjectionConfig
     public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<ICargoService, CargoServices>();
 
         return services;
     }

@@ -219,6 +219,13 @@ public partial class ProfelunoContext : DbContext
                 .HasColumnName("password");
             entity.Property(e => e.IdCargo)
             .HasColumnName("cargo_id");
+
+            entity.HasOne(d => d.Cargo)
+                .WithMany(p => p.Users)
+                .HasForeignKey(d => d.IdCargo)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_user_cargo");
+
             entity.Property(e => e.Nome_Usuario)
                 .HasMaxLength(255)
                 .HasColumnName("nome_usuario");
@@ -232,6 +239,9 @@ public partial class ProfelunoContext : DbContext
             entity.HasKey(e => e.Id).HasName("cargos_pkey");
             entity.ToTable("cargos");
             entity.HasIndex(e => e.NomeCargo, "cargos_name_unique").IsUnique();
+            entity.Property(e => e.NomeCargo)
+                .HasMaxLength(255)
+                .HasColumnName("nome_cargo");
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.CreatedAt)
                 .HasColumnType("timestamp(0) without time zone")

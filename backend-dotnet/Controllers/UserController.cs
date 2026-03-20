@@ -41,6 +41,32 @@ namespace backend_dotnet.Controllers
         }
 
         /// <summary>
+        /// Retorna o Usuario por Nome
+        /// </summary>
+        /// <param name="nomeUsuario"></param>
+        /// <returns></returns>
+        [HttpGet("RetornaUsuarioPorNome/{nomeUsuario}")]
+        public async Task<IActionResult> RetornaUsuarioPorNomeAsync(string nomeUsuario)
+        {
+            var user = await _userService.RetornaUsuarioPorNomeAsync(nomeUsuario);
+            if(user == null) return NotFound();
+            return Ok(user);
+        }
+
+        /// <summary>
+        /// Retorna o Usuario por Cargo
+        /// </summary>
+        /// <param name="cargoUsuario"></param>
+        /// <returns></returns>
+        [HttpGet("RetornaUsuarioPorCargo/{cargoUsuario}")]
+        public async Task<IActionResult> RetornaUsuarioPorCargoAsync(string cargoUsuario)
+        {
+            var user = await _userService.RetornaUsuarioPorCargoAsync(cargoUsuario);
+            if(user == null) return NotFound();
+            return Ok(user);
+        }
+
+        /// <summary>
         /// Atualiza o Usuario
         /// </summary>
         /// <param name="user"></param>
