@@ -1,7 +1,7 @@
-{{-- resources/views/admin/usuarios/index.blade.php --}}
+{{-- resources/views/admin/cargos/index.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Gerenciar Usuários')
+@section('title', 'Gerenciar Cargos')
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/forms.css') }}">
@@ -9,19 +9,17 @@
 
 @section('content')
 
-{{-- Header --}}
 <div class="page-header">
     <div class="page-header-info">
-        <h2><i class="fas fa-users"></i> Usuários</h2>
-        <p>Gerencie todos os usuários do sistema</p>
+        <h2><i class="fas fa-book"></i> Cargos</h2>
+        <p>Gerencie os cargos disponíveis na plataforma</p>
     </div>
-    <a href="{{ route('admin.usuarios.create') }}" class="btn-create">
-        <i class="fas fa-user-plus"></i>
-        Novo Usuário
+    <a href="{{ route('admin.cargos.create') }}" class="btn-create">
+        <i class="fas fa-plus"></i>
+        Novo Cargo
     </a>
 </div>
 
-{{-- Alertas flash --}}
 @if(session('success'))
 <div class="alert alert-success">
     <i class="fas fa-check-circle"></i>
@@ -36,70 +34,53 @@
 </div>
 @endif
 
-{{-- Tabela --}}
 <div class="table-wrapper">
     <div class="table-toolbar">
         <div class="table-search">
-            <input type="text" id="searchInput" placeholder="Buscar por nome ou e-mail...">
+            <input type="text" id="searchInput" placeholder="Buscar cargo...">
             <i class="fas fa-search"></i>
         </div>
         <span class="table-count">
-            {{ $usuarios->count() }} usuário(s) encontrado(s)
+            {{ $cargos->count() }} cargo(s) encontrado(s)
         </span>
     </div>
 
-    <table class="data-table" id="usuariosTable">
+    <table class="data-table" id="materiasTable">
         <thead>
             <tr>
                 <th>#</th>
-                <th>Usuário</th>
-                <th>E-mail</th>
-                <th>Cargo</th>
-                <th>Criado em</th>
+                <th>Nome da Cargo</th>
+                <th>Criada em</th>
                 <th>Ações</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($usuarios as $usuario)
+            @forelse($cargos as $cargo)
             @php
-                $id       = $usuario['id']          ?? $usuario['Id']    ?? '—';
-                $nome     = $usuario['nome_Usuario'] ?? $usuario['nome'] ?? $usuario['Nome'] ?? '—';
-                $email    = $usuario['email']        ?? $usuario['Email'] ?? '—';
-                $criadoEm = $usuario['createdAt']   ?? $usuario['criadoEm'] ?? null;
-
-                // Resolve o id do cargo vindo do usuário
-                $idCargo   = $usuario['idCargo'] ?? $usuario['cargo'] ?? $usuario['Id_Cargo'] ?? null;
-                $nomeCargo = $cargosMap[$idCargo] ?? 'Aluno'; // fallback se não encontrar
-                $cargoSlug = strtolower($nomeCargo); // usado nas classes CSS
+                $id        = $cargo['idMateria']         ?? $cargo['idMateria']       ?? '—';
+                $nome      = $cargo['nome_materia']      ?? $cargo['nomeMateria']     ?? $cargo['Nome'] ?? '—';
+                $criadoEm  = $cargo['createdAt']        ?? $cargo['createdAt']        ?? null;
             @endphp
             <tr>
                 <td>{{ $id }}</td>
                 <td>
-                    <div class="td-user">
-                        <div class="avatar-initial">
-                            {{ strtoupper(substr($nome, 0, 1)) }}
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div class="avatar-initial" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                            <i class="fas fa-book" style="font-size:14px;"></i>
                         </div>
-                        <div class="td-user-info">
-                            {{ $nome }}
-                        </div>
+                        <strong>{{ $nome }}</strong>
                     </div>
-                </td>
-                <td>{{ $email }}</td>
-                <td>
-                    <span class="badge badge-{{ $cargoSlug }}">
-                        <i class="fas fa-{{ $cargoSlug === 'admin' ? 'shield-alt' : ($cargoSlug === 'professor' ? 'chalkboard-teacher' : 'user-graduate') }}"></i>
-                        {{ ucfirst($nomeCargo) }}
-                    </span>
                 </td>
                 <td>
                     {{ $criadoEm ? \Carbon\Carbon::parse($criadoEm)->format('d/m/Y') : '—' }}
                 </td>
                 <td>
                     <div class="td-actions">
-                        <a href="{{ route('admin.usuarios.edit', $id) }}" class="btn-edit">
+                        <a href="{{ route('admin.cargos.edit', $id) }}" class="btn-edit">
                             <i class="fas fa-pen"></i>
                             Editar
                         </a>
+
                         <button class="btn-delete"
                             onclick="openDeleteModal('{{ $id }}', '{{ addslashes($nome) }}')"
                         >
@@ -111,10 +92,10 @@
             </tr>
             @empty
             <tr>
-                <td colspan="6">
+                <td colspan="5">
                     <div class="table-empty">
-                        <i class="fas fa-users-slash"></i>
-                        <p>Nenhum usuário encontrado.</p>
+                        <i class="fas fa-book-open"></i>
+                        <p>Nenhum cargo cadastrado ainda.</p>
                     </div>
                 </td>
             </tr>
@@ -123,10 +104,9 @@
     </table>
 </div>
 
-{{-- Paginação --}}
-@if(isset($usuarios) && method_exists($usuarios, 'links'))
+@if(isset($cargos) && method_exists($cargos, 'links'))
 <div class="pagination-wrapper">
-    {{ $usuarios->links() }}
+    {{ $cargos->links() }}
 </div>
 @endif
 
@@ -136,8 +116,8 @@
         <div class="modal-icon">
             <i class="fas fa-trash-alt"></i>
         </div>
-        <h4>Excluir Usuário</h4>
-        <p>Tem certeza que deseja excluir o usuário <strong id="deleteUserName"></strong>? Esta ação não pode ser desfeita.</p>
+        <h4>Excluir Cargo</h4>
+        <p>Tem certeza que deseja excluir o cargo <strong id="deleteCargoName"></strong>? Esta ação não pode ser desfeita.</p>
         <div class="modal-actions">
             <button class="btn-cancel" onclick="closeDeleteModal()">
                 <i class="fas fa-times"></i>
@@ -159,18 +139,16 @@
 
 @push('scripts')
 <script>
-// Busca na tabela
 document.getElementById('searchInput').addEventListener('input', function () {
     const q = this.value.toLowerCase();
-    document.querySelectorAll('#usuariosTable tbody tr').forEach(row => {
+    document.querySelectorAll('#materiasTable tbody tr').forEach(row => {
         row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
     });
 });
 
-// Modal de exclusão
 function openDeleteModal(id, nome) {
-    document.getElementById('deleteUserName').textContent = nome;
-    document.getElementById('deleteForm').action = `/admin/usuarios/${id}`;
+    document.getElementById('deleteMateriaName').textContent = nome;
+    document.getElementById('deleteForm').action = `/admin/cargos/${id}`;
     document.getElementById('deleteModal').classList.add('active');
 }
 

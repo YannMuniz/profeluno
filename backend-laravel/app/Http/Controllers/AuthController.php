@@ -94,7 +94,21 @@ class AuthController extends Controller
     }
 
     public function showRegister() {
-        $cargos = Cargo::all();
+        $cargos = collect();
+        try {
+            $response = Http::get("{$this->baseUrl}/v1/Cargo/RetornaTodosCargos");
+
+            if ($response->successful()) {
+                $cargos = collect($response->json());
+            } else {
+                Log::warning('UserController::create falha ao buscar cargos', [
+                    'status' => $response->status(),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::error('UserController::create erro ao buscar cargos', ['exception' => $e]);
+        }
+
         return view('auth.register', compact('cargos'));
     }
 

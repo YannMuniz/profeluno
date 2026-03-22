@@ -21,7 +21,6 @@ class MateriaController extends Controller
 
         try {
             $response = Http::get("{$this->baseUrl}/v1/Materia/ListarMaterias");
-
             if ($response->successful()) {
                 $materias = collect($response->json());
             } else {
@@ -86,6 +85,7 @@ class MateriaController extends Controller
 
         try {
             $response = Http::get("{$this->baseUrl}/v1/Materia/BuscarMateriaPorId/{$id}");
+            // dd($response->json());
 
             if ($response->successful()) {
                 $materia = (object) $response->json();

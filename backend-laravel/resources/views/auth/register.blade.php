@@ -69,8 +69,15 @@
                 >
                     <option value="">Selecione...</option>
                     @foreach($cargos as $cargo)
-                        <option value="{{ $cargo->id }}" {{ old('cargo_id') == $cargo->id ? 'selected' : '' }}>
-                            {{ ucfirst($cargo->nome_cargo) }}
+                    @php
+                        $cargoId   = is_array($cargo) ? ($cargo['id']         ?? $cargo['Id']        ?? '') : $cargo->id;
+                        $cargoNome = is_array($cargo) ? ($cargo['nome_cargo']  ?? $cargo['nomeCargo'] ?? $cargo['Nome'] ?? '') : $cargo->nome_cargo;
+                        $selected  = old('cargo_id', is_array($usuario ?? null)
+                            ? ($usuario['cargo_id'] ?? $usuario['idCargo'] ?? '')
+                            : ($usuario->cargo_id ?? '')) == $cargoId ? 'selected' : '';
+                    @endphp
+                        <option value="{{ $cargoId }}" {{ $selected }}>
+                            {{ $cargoNome }}
                         </option>
                     @endforeach
                 </select>

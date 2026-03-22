@@ -19,10 +19,22 @@ class UserController extends Controller
     public function index()
     {
         $usuarios = collect();
+        $cargosMap = [];
 
         try {
-            $response = Http::get("{$this->baseUrl}/v1/User/ListarUsuarios");
+            // Busca cargos primeiro para montar o mapa id => nome
+            $cargosResponse = Http::get("{$this->baseUrl}/v1/Cargo/ListarCargos");
+            if ($cargosResponse->successful()) {
+                $cargos = collect($cargosResponse->json());
+                $cargosMap = $cargos->keyBy(function ($cargo) {
+                    return $cargo['id'] ?? $cargo['Id'] ?? $cargo['idCargo'] ?? null;
+                })->map(function ($cargo) {
+                    return $cargo['nome'] ?? $cargo['Nome'] ?? $cargo['nomeCargo'] ?? '—';
+                })->toArray();
+            }
 
+            // Busca usuários
+            $response = Http::get("{$this->baseUrl}/v1/User/ListarUsuarios");
             if ($response->successful()) {
                 $usuarios = collect($response->json());
             } else {
@@ -35,8 +47,7 @@ class UserController extends Controller
             Log::error('UserController::index erro', ['exception' => $e]);
         }
 
-        // Busca os cargos localmente para os badges (leve, sem depender da API aqui)
-        return view('admin.usuarios.index', compact('usuarios'));
+        return view('admin.usuarios.index', compact('usuarios', 'cargosMap'));
     }
 
     public function create()
@@ -45,7 +56,6 @@ class UserController extends Controller
 
         try {
             $response = Http::get("{$this->baseUrl}/v1/Cargo/ListarCargos");
-
             if ($response->successful()) {
                 $cargos = collect($response->json());
             } else {
@@ -63,18 +73,29 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nome_usuario'          => 'required|string|max:255',
-            'email'                 => 'required|email|max:255',
-            'cargo_id'              => 'required',
-            'password'              => 'required|string|min:6|confirmed',
-            'password_confirmation' => 'required|string',
+            'nome_usuario' => 'required|string|max:255',
+            'email'        => 'required|email|max:255',
+            'cargo_id'     => 'required|exists:cargos,id',
+            'password'     => 'required|string|min:6',
+            'password_confirmation' => 'required|string|same:password',
         ]);
 
+        $password = md5($request->input('password'));
+
         try {
+            Log::debug('UserController::store dotnet request', [
+                'payload' => [
+                    'nome'    => $request->input('nome_usuario'),
+                    'email'   => $request->input('email'),
+                    'senha'   => $password,
+                    'idCargo' => $request->input('cargo_id'),
+                ],
+            ]);
+
             $response = Http::post("{$this->baseUrl}/v1/User/CadastrarUsuario", [
                 'nome'    => $request->input('nome_usuario'),
                 'email'   => $request->input('email'),
-                'senha'   => md5($request->input('password')),
+                'senha'   => $password,
                 'idCargo' => $request->input('cargo_id'),
             ]);
 
@@ -84,7 +105,6 @@ class UserController extends Controller
             ]);
 
             if ($response->successful()) {
-                // Sincroniza localmente para Auth e sessão funcionarem
                 User::updateOrCreate(
                     ['email' => $request->input('email')],
                     [
@@ -120,9 +140,17 @@ class UserController extends Controller
         try {
             // Busca dados do usuário
             $responseUsuario = Http::get("{$this->baseUrl}/v1/User/BuscarUsuario/{$id}");
-
+            
             if ($responseUsuario->successful()) {
-                $usuario = (object) $responseUsuario->json();
+                $data    = $responseUsuario->json();
+
+                $usuario = (object) [
+                    'id'          => $data['id']          ?? $data['Id']         ?? null,
+                    'nome_Usuario'=> $data['nome_Usuario'] ?? $data['nome']       ?? $data['Nome'] ?? '',
+                    'email'       => $data['email']        ?? $data['Email']      ?? '',
+                    'idCargo'     => $data['idCargo']      ?? $data['cargo_id']   ?? null,
+                    'createdAt'   => $data['createdAt']    ?? $data['criadoEm']   ?? null,
+                ];
             } else {
                 Log::warning('UserController::edit usuário não encontrado', [
                     'id'     => $id,
@@ -157,13 +185,12 @@ class UserController extends Controller
         $rules = [
             'nome_usuario' => 'required|string|max:255',
             'email'        => 'required|email|max:255',
-            'cargo_id'     => 'required',
+            'cargo_id'     => 'required|exists:cargos,id',
         ];
 
-        // Senha só valida se foi preenchida
         if ($request->filled('password')) {
-            $rules['password']              = 'string|min:6|confirmed';
-            $rules['password_confirmation'] = 'required|string';
+            $rules['password']              = 'string|min:6';
+            $rules['password_confirmation'] = 'required|string|same:password';
         }
 
         $request->validate($rules);
@@ -180,7 +207,12 @@ class UserController extends Controller
         }
 
         try {
-            $response = Http::put("{$this->baseUrl}/v1/User/AtualizarUsuario/{$id}", $payload);
+            Log::debug('UserController::update dotnet request', [
+                'id'      => $id,
+                'payload' => $payload,
+            ]);
+
+            $response = Http::put("{$this->baseUrl}/v1/User/AtualizarUsuario", $payload);
 
             Log::debug('UserController::update dotnet response', [
                 'status' => $response->status(),
@@ -188,7 +220,6 @@ class UserController extends Controller
             ]);
 
             if ($response->successful()) {
-                // Sincroniza localmente
                 $localData = [
                     'nome_usuario' => $request->input('nome_usuario'),
                     'cargo_id'     => $request->input('cargo_id'),

@@ -70,7 +70,7 @@ namespace backend_dotnet.Controllers
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
-        [HttpPut("AtualizarUsuario{idUsuario}")]
+        [HttpPut("AtualizarUsuario/{idUsuario}")]
         public async Task<IActionResult> AtualizaUsuarioAsync(User user, int idUsuario)
         {
             user.Id = idUsuario;

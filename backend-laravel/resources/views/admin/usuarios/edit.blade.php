@@ -12,7 +12,7 @@
 <div class="page-header">
     <div class="page-header-info">
         <h2><i class="fas fa-user-edit"></i> Editar Usuário</h2>
-        <p>Atualize os dados de <strong>{{ $usuario->nome_usuario }}</strong></p>
+        <p>Atualize os dados de <strong>{{ $usuario->nome_Usuario }}</strong></p>
     </div>
     <a href="{{ route('admin.usuarios.index') }}" class="btn-cancel">
         <i class="fas fa-arrow-left"></i>

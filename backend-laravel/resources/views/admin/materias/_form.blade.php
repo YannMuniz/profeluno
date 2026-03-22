@@ -39,11 +39,11 @@
                 name="nome_materia"
                 class="form-control {{ $errors->has('nome_materia') ? 'is-invalid' : '' }}"
                 placeholder="Ex.: Matemática, Física, Química..."
-                value="{{ old('nome_materia', is_array($materia ?? null) ? ($materia['nome_materia'] ?? $materia['nomeMateria'] ?? '') : ($materia->nome_materia ?? '')) }}"
+                value="{{ old('nomeMateria', is_array($materia ?? null) ? ($materia['nomeMateria'] ?? $materia['nomeMateria'] ?? '') : ($materia->nomeMateria ?? '')) }}"
                 required
             >
             <span class="form-hint">O nome da matéria deve ser único na plataforma.</span>
-            @error('nome_materia')
+            @error('nomeMateria')
                 <span class="form-error"><i class="fas fa-exclamation-circle"></i> {{ $message }}</span>
             @enderror
         </div>
@@ -58,7 +58,7 @@
                         id="situacao_materia"
                         name="situacao_materia"
                         value="1"
-                        {{ old('situacao_materia', is_array($materia ?? null) ? ($materia['situacao_materia'] ?? $materia['situacaoMateria'] ?? 1) : ($materia->situacao_materia ?? 1)) ? 'checked' : '' }}
+                        {{ old('situacaoMateria', is_array($materia ?? null) ? ($materia['situacaoMateria'] ?? $materia['situacaoMateria'] ?? 1) : ($materia->situacaoMateria ?? 1)) ? 'checked' : '' }}
                     >
                     <span class="toggle-slider"></span>
                 </div>
@@ -67,7 +67,7 @@
                     <small>Matérias ativas ficam visíveis para alunos e professores</small>
                 </div>
             </label>
-            @error('situacao_materia')
+            @error('situacaoMateria')
                 <span class="form-error"><i class="fas fa-exclamation-circle"></i> {{ $message }}</span>
             @enderror
         </div>

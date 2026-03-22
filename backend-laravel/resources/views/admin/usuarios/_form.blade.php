@@ -40,7 +40,7 @@
                 id="nome_usuario"
                 name="nome_usuario"
                 class="form-control {{ $errors->has('nome_usuario') ? 'is-invalid' : '' }}"
-                value="{{ old('nome_usuario', is_array($usuario ?? null) ? ($usuario['nome_usuario'] ?? $usuario['nome'] ?? $usuario['Nome'] ?? '') : ($usuario->nome_usuario ?? '')) }}"
+                value="{{ old('nome_Usuario', is_array($usuario ?? null) ? ($usuario['nome_Usuario'] ?? $usuario['nome'] ?? $usuario['Nome'] ?? '') : ($usuario->nome_Usuario ?? '')) }}"
                 required
             >
             @error('nome_usuario')
@@ -81,11 +81,17 @@
                 <option value="">Selecione um cargo...</option>
                 @foreach($cargos as $cargo)
                 @php
-                    $cargoId   = is_array($cargo) ? ($cargo['id']         ?? $cargo['Id']        ?? '') : $cargo->id;
-                    $cargoNome = is_array($cargo) ? ($cargo['nome_cargo']  ?? $cargo['nomeCargo'] ?? $cargo['Nome'] ?? '') : $cargo->nome_cargo;
-                    $selected  = old('cargo_id', is_array($usuario ?? null)
-                        ? ($usuario['cargo_id'] ?? $usuario['idCargo'] ?? '')
-                        : ($usuario->cargo_id ?? '')) == $cargoId ? 'selected' : '';
+                    $cargoId   = is_array($cargo) ? ($cargo['id'] ?? $cargo['Id'] ?? '') : $cargo->id;
+                    $cargoNome = is_array($cargo) ? ($cargo['nome_cargo'] ?? $cargo['nomeCargo'] ?? $cargo['Nome'] ?? $cargo['nome'] ?? '') : $cargo->nome_cargo;
+
+                    // Pega o cargo atual do usuário (array ou objeto)
+                    $usuarioCargoId = old('cargo_id',
+                        is_array($usuario ?? null)
+                            ? ($usuario['idCargo'] ?? $usuario['cargo_id'] ?? '')
+                            : ($usuario->idCargo ?? $usuario->cargo_id ?? '')
+                    );
+
+                    $selected = (string) $usuarioCargoId === (string) $cargoId ? 'selected' : '';
                 @endphp
                     <option value="{{ $cargoId }}" {{ $selected }}>
                         {{ $cargoNome }}
