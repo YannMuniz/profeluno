@@ -12,7 +12,7 @@
 <div class="page-header">
     <div class="page-header-info">
         <h2><i class="fas fa-book-open"></i> Editar Matéria</h2>
-        <p>Atualize os dados de <strong>{{ $materia->nome_materia }}</strong></p>
+        <p>Atualize os dados de <strong>{{ $materia->nomeMateria }}</strong></p>
     </div>
     <a href="{{ route('admin.materias.index') }}" class="btn-cancel">
         <i class="fas fa-arrow-left"></i>
@@ -32,7 +32,7 @@
     </div>
 
     @include('admin.materias._form', [
-        'action' => route('admin.materias.update', $materia->id),
+        'action' => route('admin.materias.update', $materia->idMateria),
         'method' => 'PUT',
         'materia' => $materia,
     ])

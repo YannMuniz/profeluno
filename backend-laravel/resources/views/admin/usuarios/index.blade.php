@@ -62,11 +62,17 @@
         <tbody>
             @forelse($usuarios as $usuario)
             @php
-                $id       = $usuario['id']           ?? $usuario['Id']        ?? '—';
-                $nome     = $usuario['nome_usuario']  ?? $usuario['nome']      ?? $usuario['Nome'] ?? '—';
+                $mapaCargos = [
+                    1 => 'aluno',
+                    2 => 'professor',
+                    3 => 'admin',
+                ];
+                $id       = $usuario['id']           ?? $usuario['idUser']        ?? '—';
+                $nome     = $usuario['nome_Usuario']  ?? $usuario['nome']      ?? $usuario['Nome'] ?? '—';
                 $email    = $usuario['email']         ?? $usuario['Email']     ?? '—';
-                $cargo    = strtolower($usuario['cargo'] ?? $usuario['Cargo'] ?? $usuario['nomeCargo'] ?? 'aluno');
-                $criadoEm = $usuario['created_at']    ?? $usuario['criadoEm'] ?? null;
+                $cargoId = $usuario['idCargo'] ?? null;
+                $cargo = $mapaCargos[$cargoId] ?? 'aluno';
+                $criadoEm = $usuario['createdAt']    ?? $usuario['criadoEm'] ?? null;
             @endphp
             <tr>
                 <td>{{ $id }}</td>

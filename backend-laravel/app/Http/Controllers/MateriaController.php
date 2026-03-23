@@ -48,8 +48,8 @@ class MateriaController extends Controller
             'nome_materia' => 'required|string|max:255',
         ]);
 
-        $situacao = $request->has('situacao_materia') ? 1 : 0;
-
+        $situacao = $request->input('situacao_materia', 0);
+        
         try {
             $response = Http::post("{$this->baseUrl}/v1/Materia/CadastrarMateria", [
                 'nomeMateria'    => $request->input('nome_materia'),
@@ -119,9 +119,9 @@ class MateriaController extends Controller
         $situacao = $request->has('situacao_materia') ? 1 : 0;
 
         try {
-            $response = Http::put("{$this->baseUrl}/v1/Materia/AtualizarMateria/{$id}", [
-                'id'             => $id,
-                'nomeMateria'    => $request->input('nome_materia'),
+            $response = Http::put("{$this->baseUrl}/v1/Materia/AtualizarMateria", [
+                'idMateria'       => (int) $id,
+                'nomeMateria'     => $request->input('nome_materia'),
                 'situacaoMateria' => $situacao,
             ]);
 
@@ -193,8 +193,8 @@ class MateriaController extends Controller
             $materia      = $responseGet->json();
             $novaSituacao = isset($materia['situacaoMateria']) ? ($materia['situacaoMateria'] ? 0 : 1) : 0;
 
-            $responsePatch = Http::put("{$this->baseUrl}/v1/Materia/AtualizarMateria/{$id}", [
-                'id'              => $id,
+            $responsePatch = Http::put("{$this->baseUrl}/v1/Materia/AtualizarMateria", [
+                'idMateria'       => (int) $id,
                 'nomeMateria'     => $materia['nomeMateria'] ?? $materia['nome_materia'],
                 'situacaoMateria' => $novaSituacao,
             ]);

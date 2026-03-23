@@ -58,10 +58,10 @@
         <tbody>
             @forelse($materias as $materia)
             @php
-                $id        = $materia['id']               ?? $materia['Id']              ?? '—';
+                $id        = $materia['id']               ?? $materia['idMateria']              ?? '—';
                 $nome      = $materia['nome_materia']      ?? $materia['nomeMateria']     ?? $materia['Nome'] ?? '—';
                 $situacao  = $materia['situacao_materia']  ?? $materia['situacaoMateria'] ?? 1;
-                $criadoEm  = $materia['created_at']        ?? $materia['criadoEm']        ?? null;
+                $criadoEm  = $materia['createdAt']        ?? $materia['criadoEm']        ?? null;
             @endphp
             <tr>
                 <td>{{ $id }}</td>

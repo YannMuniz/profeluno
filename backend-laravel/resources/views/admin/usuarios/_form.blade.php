@@ -39,11 +39,11 @@
                 type="text"
                 id="nome_usuario"
                 name="nome_usuario"
-                class="form-control {{ $errors->has('nome_usuario') ? 'is-invalid' : '' }}"
-                value="{{ old('nome_usuario', is_array($usuario ?? null) ? ($usuario['nome_usuario'] ?? $usuario['nome'] ?? $usuario['Nome'] ?? '') : ($usuario->nome_usuario ?? '')) }}"
+                class="form-control {{ $errors->has('nome_Usuario') ? 'is-invalid' : '' }}"
+                value="{{ old('nome_Usuario', is_array($usuario ?? null) ? ($usuario['nome_Usuario'] ?? $usuario['nome'] ?? $usuario['Nome'] ?? '') : ($usuario->nome_Usuario ?? '')) }}"
                 required
             >
-            @error('nome_usuario')
+            @error('nome_Usuario')
                 <span class="form-error"><i class="fas fa-exclamation-circle"></i> {{ $message }}</span>
             @enderror
         </div>
@@ -81,11 +81,11 @@
                 <option value="">Selecione um cargo...</option>
                 @foreach($cargos as $cargo)
                 @php
-                    $cargoId   = is_array($cargo) ? ($cargo['id']         ?? $cargo['Id']        ?? '') : $cargo->id;
-                    $cargoNome = is_array($cargo) ? ($cargo['nome_cargo']  ?? $cargo['nomeCargo'] ?? $cargo['Nome'] ?? '') : $cargo->nome_cargo;
-                    $selected  = old('cargo_id', is_array($usuario ?? null)
-                        ? ($usuario['cargo_id'] ?? $usuario['idCargo'] ?? '')
-                        : ($usuario->cargo_id ?? '')) == $cargoId ? 'selected' : '';
+                    $cargoId   = is_array($cargo) ? ($cargo['idCargo'] ?? $cargo['id'] ?? '') : $cargo->idCargo;
+                    $cargoNome = is_array($cargo) ? ($cargo['nomeCargo'] ?? $cargo['nome_cargo'] ?? '') : $cargo->nomeCargo;
+                    $selected  = (string) old('cargo_id', is_array($usuario ?? null)
+                        ? ($usuario['idCargo'] ?? '')
+                        : ($usuario->idCargo ?? '')) == (string) $cargoId ? 'selected' : '';
                 @endphp
                     <option value="{{ $cargoId }}" {{ $selected }}>
                         {{ $cargoNome }}
@@ -98,6 +98,9 @@
         </div>
 
         {{-- Senha (só exibe campo de senha em criação; em edição é opcional) --}}
+        @if(isset($current_password))
+            <input type="hidden" name="current_password" value="{{ $current_password }}">
+        @endif
         <div class="form-row">
             <div class="form-group">
                 <label class="form-label" for="password">

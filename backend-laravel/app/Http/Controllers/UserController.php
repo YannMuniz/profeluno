@@ -116,13 +116,12 @@ class UserController extends Controller
     {
         $usuario = null;
         $cargos  = collect();
-
         try {
             // Busca dados do usuário
             $responseUsuario = Http::get("{$this->baseUrl}/v1/User/BuscarUsuario/{$id}");
 
             if ($responseUsuario->successful()) {
-                $usuario = (object) $responseUsuario->json();
+                $usuario = $responseUsuario->json();
             } else {
                 Log::warning('UserController::edit usuário não encontrado', [
                     'id'     => $id,
@@ -133,10 +132,9 @@ class UserController extends Controller
                     ->route('admin.usuarios.index')
                     ->with('error', 'Usuário não encontrado.');
             }
-
             // Busca cargos para o select
             $responseCargos = Http::get("{$this->baseUrl}/v1/Cargo/ListarCargos");
-
+            // dd($responseCargos->json(), $usuario);
             if ($responseCargos->successful()) {
                 $cargos = collect($responseCargos->json());
             }
@@ -169,18 +167,17 @@ class UserController extends Controller
         $request->validate($rules);
 
         $payload = [
-            'id'      => $id,
-            'nome'    => $request->input('nome_usuario'),
-            'email'   => $request->input('email'),
-            'idCargo' => $request->input('cargo_id'),
+            'idUser'       => (int) $id,
+            'nome_Usuario' => $request->input('nome_usuario'),
+            'email'        => $request->input('email'),
+            'idCargo'      => (int) $request->input('cargo_id'),
+            'password'     => $request->filled('password')
+                                ? md5($request->input('password'))
+                                : $request->input('current_password'),
         ];
 
-        if ($request->filled('password')) {
-            $payload['senha'] = md5($request->input('password'));
-        }
-
         try {
-            $response = Http::put("{$this->baseUrl}/v1/User/AtualizarUsuario/{$id}", $payload);
+            $response = Http::put("{$this->baseUrl}/v1/User/AtualizarUsuario", $payload);
 
             Log::debug('UserController::update dotnet response', [
                 'status' => $response->status(),
