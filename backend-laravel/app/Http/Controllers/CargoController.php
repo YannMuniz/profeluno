@@ -151,7 +151,7 @@ class CargoController extends Controller
     public function destroy(string $id)
     {
         try {
-            $response = Http::delete("{$this->baseUrl}/v1/Cargo/DeletarCargo");
+            $response = Http::delete("{$this->baseUrl}/v1/Cargo/DeletarCargo/{$id}");
 
             Log::debug('CargoController::destroy dotnet response', [
                 'status' => $response->status(),
