@@ -75,7 +75,7 @@ namespace backend_dotnet.Controllers
             return BadRequest("Erro ao cadastrar cargo.");
         }
 
-        [HttpDelete("DeletarCargo")]
+        [HttpDelete("DeletarCargo/{IdCargo}")]
         public async Task<IActionResult> DeletarCargo(int idCargo)
         {
             var resultado = _cargoService.DeletarCargoAsync(idCargo);
