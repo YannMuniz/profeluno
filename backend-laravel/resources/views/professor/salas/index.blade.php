@@ -143,7 +143,7 @@
                     $pronta = $inicio && $agora->gte($inicio->subMinutes(15));
                 @endphp
                 @if($pronta)
-                    <a href="{{ route('professor.sala.iniciar', $sala->id) }}" class="btn-start-now">
+                    <a href="{{ route('professor.salas.iniciar', $sala->id) }}" class="btn-start-now">
                         <i class="fas fa-play"></i>
                         Iniciar Agora
                     </a>

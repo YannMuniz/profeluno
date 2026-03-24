@@ -65,12 +65,20 @@ class ConteudoController extends Controller
             ],
         ];
 
-        return view('professor.conteudo.index', compact('conteudos'));
+        $title = '<i class="fas fa-folder-open"></i> Conteúdos';
+        $subtitle = 'Gerencie os materiais e simulados das suas salas de aula';
+        return view('professor.conteudo.index', compact('conteudos', 'title', 'subtitle'));
     }
 
     public function create()
     {
-        return view('professor.conteudo.create');
+        $ultimapagina = "<a href='" . route('professor.conteudo.index') . "' class='back-link'>
+            <i class='fas fa-arrow-left'></i>
+            Voltar
+        </a>";
+        $title = '<i class="fas fa-plus"></i> Novo Conteúdo';
+        $subtitle = 'Adicione um conteúdo de apoio para a sala';
+        return view('professor.conteudo.create', compact('title', 'subtitle', 'ultimapagina'));
     }
 
     public function store() {

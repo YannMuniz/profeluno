@@ -10,10 +10,10 @@
 @section('content')
 
 <div class="page-header">
-    <div class="page-header-info">
+    {{-- <div class="page-header-info">
         <h2><i class="fas fa-folder-open"></i> Conteúdos</h2>
         <p>Gerencie os materiais e simulados das suas salas de aula</p>
-    </div>
+    </div> --}}
     <a href="{{ route('professor.conteudo.create') }}" class="btn-create">
         <i class="fas fa-plus"></i>
         Novo Conteúdo

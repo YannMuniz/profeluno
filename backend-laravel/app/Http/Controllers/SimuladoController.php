@@ -70,12 +70,21 @@ class SimuladoController extends Controller
             ],
         ];
 
-        return view('professor.simulado.index', compact('simulados'));
+        $title = '<i class="fas fa-list-ol"></i> Simulados';
+        $subtitle = 'Gerencie os simulados vinculados às suas salas de aula';
+
+        return view('professor.simulado.index', compact('simulados', 'title', 'subtitle'));
     }
 
     public function create()
     {
-        return view('professor.simulado.create');
+        $ultimapagina = "<a href='" . route('professor.simulados.index') . "' class='back-link'>
+            <i class='fas fa-arrow-left'></i>
+            Voltar
+        </a>";
+        $title = '<i class="fas fa-plus"></i> Criar Simulado';
+        $subtitle = 'Preencha os detalhes para criar um novo simulado';
+        return view('professor.simulado.create', compact('title', 'subtitle', 'ultimapagina'));
     }
 
     public function store() 

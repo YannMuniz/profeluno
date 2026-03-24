@@ -10,10 +10,10 @@
 @section('content')
 
 <div class="page-header">
-    <div class="page-header-info">
+    {{-- <div class="page-header-info">
         <h2><i class="fas fa-list-ol"></i> Simulados</h2>
         <p>Gerencie os simulados vinculados às suas salas de aula</p>
-    </div>
+    </div> --}}
     <a href="{{ route('professor.simulados.create') }}" class="btn-create">
         <i class="fas fa-plus"></i>
         Novo Simulado

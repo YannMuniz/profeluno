@@ -9,23 +9,6 @@
 
 @section('content')
 
-<div class="page-header">
-    <div class="page-header-left">
-        <a href="{{-- route('professor.sala.show', $sala->id) --}}" class="back-link">
-            <i class="fas fa-arrow-left"></i>
-            Voltar para a Sala
-        </a>
-        <h1 class="page-title">Novo Simulado</h1>
-        <p class="page-subtitle">Crie as questões para a sala <strong>{{-- $sala->titulo --}}</strong></p>
-    </div>
-    <div class="page-header-right">
-        <div class="questao-counter-badge">
-            <i class="fas fa-list-ol"></i>
-            <span id="totalQuestoesLabel">0 questão(ões)</span>
-        </div>
-    </div>
-</div>
-
 <form action="{{ route('professor.simulados.store') }}" method="POST" id="formSimulado">
     @csrf
     <input type="hidden" name="sala_aula_id" value="{{-- $sala->id --}}">

@@ -9,17 +9,6 @@
 
 @section('content')
 
-<div class="page-header">
-    <div class="page-header-left">
-        <a href="{{-- route('professor.sala.show', $sala->id) --}}" class="back-link">
-            <i class="fas fa-arrow-left"></i>
-            Voltar para a Sala
-        </a>
-        <h1 class="page-title">Novo Conteúdo</h1>
-        <p class="page-subtitle">Adicione um conteúdo de apoio para a sala <strong>{{-- $sala->titulo --}}</strong></p>
-    </div>
-</div>
-
 <div class="form-grid-two">
 
     {{-- Formulário principal --}}
