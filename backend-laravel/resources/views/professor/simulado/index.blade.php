@@ -10,10 +10,6 @@
 @section('content')
 
 <div class="page-header">
-    {{-- <div class="page-header-info">
-        <h2><i class="fas fa-list-ol"></i> Simulados</h2>
-        <p>Gerencie os simulados vinculados às suas salas de aula</p>
-    </div> --}}
     <a href="{{ route('professor.simulados.create') }}" class="btn-create">
         <i class="fas fa-plus"></i>
         Novo Simulado
@@ -57,6 +53,7 @@
             <tr>
                 <th>#</th>
                 <th>Simulado</th>
+                <th>Descrição</th>
                 <th>Sala de Aula</th>
                 <th>Matéria</th>
                 <th>Questões</th>
@@ -77,7 +74,7 @@
                 $situacao  = $simulado['situacao']     ?? 1;
                 $criadoEm  = $simulado['criado_em']    ?? null;
 
-                // Cor da barra de progresso de questões (até 10 = amarelo, 11–20 = azul, 20+ = verde)
+                // Cor da barra de progresso de questões
                 $barCor = match(true) {
                     $questoes >= 20 => ['cor' => '#28c76f', 'bg' => 'rgba(40,199,111,0.12)'],
                     $questoes >= 10 => ['cor' => '#7367f0', 'bg' => 'rgba(115,103,240,0.12)'],
@@ -86,22 +83,32 @@
             @endphp
             <tr data-situacao="{{ $situacao }}">
                 <td>{{ $id }}</td>
+
+                {{-- Título --}}
                 <td>
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <div class="avatar-initial"
                              style="background: rgba(115,103,240,0.12); color: var(--primary-color); border: 1px solid rgba(115,103,240,0.25);">
                             <i class="fas fa-list-ol" style="font-size: 14px;"></i>
                         </div>
-                        <div>
-                            <strong>{{ $titulo }}</strong>
-                            @if($descricao)
-                            <p style="font-size: 12px; color: var(--text-secondary); margin: 2px 0 0;">
-                                {{ Str::limit($descricao, 55) }}
-                            </p>
-                            @endif
-                        </div>
+                        <strong>{{ $titulo }}</strong>
                     </div>
                 </td>
+
+                {{-- Descrição (coluna nova) --}}
+                <td style="max-width: 220px;">
+                    @if($descricao)
+                        <span
+                            style="font-size: 12px; color: var(--text-secondary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;"
+                            title="{{ $descricao }}">
+                            {{ $descricao }}
+                        </span>
+                    @else
+                        <span style="color: var(--text-secondary); font-size: 12px;">—</span>
+                    @endif
+                </td>
+
+                {{-- Sala --}}
                 <td>
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <i class="fas fa-chalkboard-teacher"
@@ -109,6 +116,8 @@
                         <span>{{ $sala }}</span>
                     </div>
                 </td>
+
+                {{-- Matéria --}}
                 <td>
                     <span class="badge"
                           style="background: rgba(0,207,232,0.1); color: var(--info-color); border: 1px solid rgba(0,207,232,0.25);">
@@ -116,6 +125,8 @@
                         {{ $materia }}
                     </span>
                 </td>
+
+                {{-- Questões --}}
                 <td>
                     <div style="display: flex; align-items: center; gap: 10px; min-width: 100px;">
                         <div style="flex: 1; height: 6px; background: var(--border-color); border-radius: 6px; overflow: hidden;">
@@ -126,22 +137,30 @@
                         </span>
                     </div>
                 </td>
+
+                {{-- Situação --}}
                 <td>
                     <span class="badge {{ $situacao ? 'badge-ativo' : 'badge-inativo' }}">
                         <i class="fas fa-{{ $situacao ? 'check-circle' : 'times-circle' }}"></i>
                         {{ $situacao ? 'Ativo' : 'Inativo' }}
                     </span>
                 </td>
+
+                {{-- Data --}}
                 <td>
                     {{ $criadoEm ? \Carbon\Carbon::parse($criadoEm)->format('d/m/Y') : '—' }}
                 </td>
+
+                {{-- Ações --}}
                 <td>
                     <div class="td-actions">
-                        <a href="#" class="btn-edit" title="Visualizar questões">
+                        <a href="{{ route('professor.simulados.show', $id) }}"
+                           class="btn-edit" title="Visualizar questões">
                             <i class="fas fa-eye"></i>
                             Ver
                         </a>
-                        <a href="#" class="btn-edit" title="Editar simulado">
+                        <a href="{{ route('professor.simulados.edit', $id) }}"
+                           class="btn-edit" title="Editar simulado">
                             <i class="fas fa-pen"></i>
                             Editar
                         </a>
@@ -155,7 +174,7 @@
             </tr>
             @empty
             <tr id="emptyRow">
-                <td colspan="8">
+                <td colspan="9">
                     <div class="table-empty">
                         <i class="fas fa-list-ol"></i>
                         <p>Nenhum simulado cadastrado ainda.</p>
