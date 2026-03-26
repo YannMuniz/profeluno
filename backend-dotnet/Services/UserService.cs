@@ -38,7 +38,7 @@ namespace backend_dotnet.Services
 
         public async Task<User> RetornaUsuarioPorNomeUsuarioIdCargo(string nomeUsuario, int idCargo)
         {
-            return await _context.Users.AsNoTracking().FirstOrDefaultAsync((x => x.Nome_Usuario == nomeUsuario) || (x => x.IdCargo == idCargo) || (x => x.Nome_Usuario == nomeUsuario && x.IdCargo == idCargo));
+            return await _context.Users.AsNoTracking().FirstOrDefaultAsync((x => x.Nome_Usuario == nomeUsuario && x.IdCargo == idCargo));
         }
 
         public async Task<AtualizaUsuarioRequest> AtualizaUsuarioAsync(AtualizaUsuarioRequest user)

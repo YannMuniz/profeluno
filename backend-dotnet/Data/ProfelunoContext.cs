@@ -33,6 +33,7 @@ public partial class ProfelunoContext : DbContext
     public virtual DbSet<Cargo> Cargos { get; set; }
 
     public virtual DbSet<Materia> Materias { get; set; }
+    public virtual DbSet<SimuladoQuestao> SimuladoQuestoes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -167,13 +168,13 @@ public partial class ProfelunoContext : DbContext
             entity.Property(e => e.CreatedAt)
                 .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("created_at");
-            entity.Property(e => e.QuestaoA).HasColumnName("questao_a");
-            entity.Property(e => e.QuestaoB).HasColumnName("questao_b");
-            entity.Property(e => e.QuestaoC).HasColumnName("questao_c");
-            entity.Property(e => e.QuestaoCorreta).HasColumnName("questao_correta");
-            entity.Property(e => e.QuestaoD).HasColumnName("questao_d");
-            entity.Property(e => e.QuestaoE).HasColumnName("questao_e");
             entity.Property(e => e.SalaAulaId).HasColumnName("sala_aula_id");
+            entity.Property(e => e.Descricao).HasColumnName("descricao");
+            entity.Property(e => e.Situacao).HasColumnName("situacao");
+            entity.Property(e => e.Titulo)
+                .HasMaxLength(255)
+                .HasColumnName("titulo");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
             entity.Property(e => e.UpdatedAt)
                 .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("updated_at");
@@ -181,6 +182,22 @@ public partial class ProfelunoContext : DbContext
             entity.HasOne(d => d.SalaAula).WithMany(p => p.Simulados)
                 .HasForeignKey(d => d.SalaAulaId)
                 .HasConstraintName("simulado_sala_aula_id_foreign");
+        });
+
+        modelBuilder.Entity<SimuladoQuestao>(entity =>
+        {
+            entity.ToTable("simulado_questao");
+            entity.HasKey(e => e.IdSimuladoQuestao);
+            entity.Property(e => e.IdSimuladoQuestao).HasColumnName("id");
+            entity.Property(e => e.IdSimulado).HasColumnName("simulado_id");
+            entity.Property(e => e.CreatedAt)
+                .HasColumnType("timestamp(0) without time zone")
+                .HasColumnName("created_at");
+            entity.Property(e => e.Ordem).HasColumnName("ordem");
+            entity.Property(e => e.Enunciado).HasColumnName("enunciado");
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnType("timestamp(0) without time zone")
+                .HasColumnName("updated_at");
         });
 
         modelBuilder.Entity<User>(entity =>
