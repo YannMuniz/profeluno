@@ -29,7 +29,8 @@ namespace backend_dotnet.Services
                         Titulo = request.Titulo,
                         Descricao = request.Descricao,
                         Situacao = request.Situacao,
-                        SalaAulaId = (int)request.SalaAulaId,
+                        IdMateria = (int)request.IdMateria,
+                        IdUser = request.IdUser,
                         CreatedAt = DateTime.Now,
                     };
 

@@ -2,10 +2,11 @@
 {
     public class CriarSimuladoRequest
     {
-        public int SalaAulaId { get; set; }
+        public int IdMateria { get; set; }
         public string Titulo { get; set; }
         public string Descricao { get; set; }
-        public int Situacao { get; set; }
+        public bool Situacao { get; set; }
+        public int IdUser { get; set; }
 
         public List<CriarSimuladoQuestoesRequest> SimuladoQuestoesRequests { get; set; }
     }

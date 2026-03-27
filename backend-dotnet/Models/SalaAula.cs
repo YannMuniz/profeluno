@@ -17,6 +17,5 @@ public partial class SalaAula
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public virtual ICollection<AlunoSala> AlunoSalas { get; set; } = new List<AlunoSala>();
-    public virtual Material? Material { get; set; }
-    public virtual ICollection<Simulado> Simulados { get; set; } = new List<Simulado>();
+    public virtual Conteudo? Material { get; set; }
 }

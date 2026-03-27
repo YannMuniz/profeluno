@@ -18,7 +18,7 @@ public partial class ProfelunoContext : DbContext
 
     public virtual DbSet<AlunoSala> AlunoSalas { get; set; }
 
-    public virtual DbSet<Material> Materials { get; set; }
+    public virtual DbSet<Conteudo> Conteudos { get; set; }
 
     public virtual DbSet<Migration> Migrations { get; set; }
 
@@ -62,22 +62,22 @@ public partial class ProfelunoContext : DbContext
                 .HasConstraintName("aluno_sala_sala_aula_id_foreign");
         });
 
-        modelBuilder.Entity<Material>(entity =>
+        modelBuilder.Entity<Conteudo>(entity =>
         {
             entity.ToTable("material");
-            entity.HasKey(e => e.IdMaterial);
-            entity.Property(e => e.IdMaterial).HasColumnName("id");
+            entity.HasKey(e => e.IdConteudo);
+            entity.Property(e => e.IdConteudo).HasColumnName("id");
             entity.Property(e => e.CreatedAt)
                 .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("created_at");
             entity.Property(e => e.Descricao).HasColumnName("descricao");
+            entity.Property(e => e.IdUsuario).HasColumnName("user_id");
             entity.Property(e => e.FilePath)
                 .HasMaxLength(255)
                 .HasColumnName("file_path");
             entity.Property(e => e.FileUrl)
                 .HasMaxLength(255)
                 .HasColumnName("file_url");
-            entity.Property(e => e.SalaAulaId).HasColumnName("sala_aula_id");
             entity.Property(e => e.Titulo)
                 .HasMaxLength(255)
                 .HasColumnName("titulo");
@@ -154,10 +154,6 @@ public partial class ProfelunoContext : DbContext
             entity.Property(e => e.Url)
                 .HasMaxLength(255)
                 .HasColumnName("url");
-
-            entity.HasOne(d => d.Material).WithMany(p => p.SalaAulas)
-                .HasForeignKey(d => d.MaterialId)
-                .HasConstraintName("sala_aula_material_id_foreign");
         });
 
         modelBuilder.Entity<Simulado>(entity =>
@@ -168,20 +164,20 @@ public partial class ProfelunoContext : DbContext
             entity.Property(e => e.CreatedAt)
                 .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("created_at");
-            entity.Property(e => e.SalaAulaId).HasColumnName("sala_aula_id");
+            entity.Property(e => e.IdMateria).HasColumnName("materia_id");
             entity.Property(e => e.Descricao).HasColumnName("descricao");
             entity.Property(e => e.Situacao).HasColumnName("situacao");
             entity.Property(e => e.Titulo)
                 .HasMaxLength(255)
                 .HasColumnName("titulo");
-            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.IdUser).HasColumnName("user_id");
             entity.Property(e => e.UpdatedAt)
                 .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("updated_at");
 
-            entity.HasOne(d => d.SalaAula).WithMany(p => p.Simulados)
-                .HasForeignKey(d => d.SalaAulaId)
-                .HasConstraintName("simulado_sala_aula_id_foreign");
+            entity.HasOne(d => d.Materia).WithMany(p => p.Simulados)
+                .HasForeignKey(d => d.IdMateria)
+                .HasConstraintName("simulado_materia_id_foreign");
         });
 
         modelBuilder.Entity<SimuladoQuestao>(entity =>
@@ -190,14 +186,24 @@ public partial class ProfelunoContext : DbContext
             entity.HasKey(e => e.IdSimuladoQuestao);
             entity.Property(e => e.IdSimuladoQuestao).HasColumnName("id");
             entity.Property(e => e.IdSimulado).HasColumnName("simulado_id");
+            entity.Property(e => e.Ordem).HasColumnName("ordem");
+            entity.Property(e => e.Enunciado).HasColumnName("enunciado");
+            entity.Property(e => e.QuestaoCorreta).HasColumnName("questao_correta");
+            entity.Property(e => e.QuestaoA).HasColumnName("questao_a");
+            entity.Property(e => e.QuestaoB).HasColumnName("questao_b");
+            entity.Property(e => e.QuestaoC).HasColumnName("questao_c");
+            entity.Property(e => e.QuestaoD).HasColumnName("questao_d");
+            entity.Property(e => e.QuestaoE).HasColumnName("questao_e");
             entity.Property(e => e.CreatedAt)
                 .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("created_at");
-            entity.Property(e => e.Ordem).HasColumnName("ordem");
-            entity.Property(e => e.Enunciado).HasColumnName("enunciado");
             entity.Property(e => e.UpdatedAt)
                 .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("updated_at");
+
+            entity.HasOne(d => d.Simulado).WithMany(p => p.SimuladoQuestao)
+                .HasForeignKey(d => d.IdSimulado)
+                .HasConstraintName("simulado_questao_simulado_id_foreign");
         });
 
         modelBuilder.Entity<User>(entity =>

@@ -20,10 +20,10 @@ return new class extends Migration
             $table->boolean('situacao')->default(true)->comment('1 = ativo, 0 = inativo');
 
             // ── Vínculo com sala de aula ───────────────────────────────────
-            $table->unsignedBigInteger('sala_aula_id')->nullable();
-            $table->foreign('sala_aula_id')
+            $table->unsignedBigInteger('materia_id')->nullable();
+            $table->foreign('materia_id')
                   ->references('id')
-                  ->on('sala_aula')
+                  ->on('materias')
                   ->nullOnDelete();
 
             // ── Vínculo com professor ──────────────────────────────────────
