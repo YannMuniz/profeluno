@@ -129,7 +129,7 @@ class SimuladoController extends Controller
         $professorId = Auth::id();
 
         // ── Chamada à API .NET ──────────────────────────────────────────────
-        $data = $this->apiGet("Simulado/BuscarSimuladoPorId/{$id}");
+        $data = $this->apiGet("Simulado/BuscarSimuladoPorId/{$professorId}");
 
         // ── Fallback: dados fictícios enquanto a API não está disponível ────
         // TODO: remover após integração completa
