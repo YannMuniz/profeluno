@@ -5,12 +5,27 @@
 --}}
 
 @php
-    $isEdit     = isset($simulado) && !empty($simulado);
-    $titulo     = $isEdit ? ($simulado['titulo']      ?? '') : old('titulo',      '');
-    $descricao  = $isEdit ? ($simulado['descricao']   ?? '') : old('descricao',   '');
-    $materiaId  = $isEdit ? ($simulado['materia_id']  ?? '') : old('materia_id',  '');
-    $situacao   = $isEdit ? ($simulado['situacao']    ?? 1)  : old('situacao',    1);
-    $questoes   = $isEdit ? ($simulado['questoes']    ?? []) : [];
+    $isEdit    = isset($simulado) && !empty($simulado);
+    $titulo    = $isEdit ? ($simulado['titulo']    ?? '') : old('titulo',     '');
+    $descricao = $isEdit ? ($simulado['descricao'] ?? '') : old('descricao',  '');
+    $materiaId = $isEdit ? ($simulado['idMateria'] ?? '') : old('materia_id', ''); // ✅ era materia_id
+    $situacao  = $isEdit ? ($simulado['situacao']  ?? 1)  : old('situacao',   1);
+
+    // ✅ era $simulado['questoes'] com snake_case — API retorna simuladoQuestao em camelCase
+    $questoes = [];
+    if ($isEdit) {
+        foreach (($simulado['simuladoQuestao'] ?? []) as $q) {
+            $questoes[] = [
+                'enunciado'       => $q['enunciado']      ?? '',
+                'questao_a'       => $q['questaoA']       ?? '',
+                'questao_b'       => $q['questaoB']       ?? '',
+                'questao_c'       => $q['questaoC']       ?? '',
+                'questao_d'       => $q['questaoD']       ?? '',
+                'questao_e'       => $q['questaoE']       ?? null,
+                'questao_correta' => $q['questaoCorreta'] ?? null,
+            ];
+        }
+    }
 @endphp
 
 <div class="form-grid-two">

@@ -9,10 +9,10 @@
 
 @section('content')
 
-<form action="{{ route('professor.simulados.update', $simulado['id']) }}" method="POST" id="formSimulado">
+<form action="{{ route('professor.simulados.update', $simulado['idSimulado']) }}" method="POST" id="formSimulado">
     @csrf
     @method('PUT')
-    @include('professor.simulado._form', ['salas' => $salas, 'simulado' => $simulado])
+    @include('professor.simulado._form', ['simulado' => $simulado])
 </form>
 
 @endsection

@@ -325,15 +325,13 @@
 @section('content')
 
 @php
-    $titulo     = $simulado['titulo']       ?? '—';
-    $descricao  = $simulado['descricao']    ?? null;
-    $materiaId  = $simulado['materia_id']   ?? null;
-    $materia    = $simulado['materia']      ?? '—';
-    $sala       = $simulado['sala']         ?? '—';
-    $situacao   = $simulado['situacao']     ?? 1;
-    $criadoEm   = $simulado['criado_em']    ?? null;
-    $questoes   = $simulado['questoes']     ?? [];
-    $total      = count($questoes);
+    $titulo    = $simulado['titulo']            ?? '—';
+    $descricao = $simulado['descricao']         ?? null;
+    $situacao  = $simulado['situacao']          ?? 1;
+    $criadoEm  = $simulado['createdAt']         ?? null; // ✅ createdAt
+    $materia   = $simulado['materia']           ?? '—';
+    $questoes  = $simulado['simuladoQuestao']   ?? []; // ✅ simuladoQuestao
+    $total     = count($questoes);
 
     $letraMap = [1 => 'A', 2 => 'B', 3 => 'C', 4 => 'D', 5 => 'E'];
 @endphp
@@ -387,14 +385,14 @@
             @foreach($questoes as $i => $q)
             @php
                 $num     = $i + 1;
-                $correta = (int) ($q['questao_correta'] ?? 0);
+                $correta = (int) ($q['questaoCorreta'] ?? 0); // ✅ questaoCorreta
 
                 $alternativas = [
-                    1 => $q['questao_a'] ?? null,
-                    2 => $q['questao_b'] ?? null,
-                    3 => $q['questao_c'] ?? null,
-                    4 => $q['questao_d'] ?? null,
-                    5 => $q['questao_e'] ?? null,
+                    1 => $q['questaoA'] ?? null, // ✅ questaoA
+                    2 => $q['questaoB'] ?? null,
+                    3 => $q['questaoC'] ?? null,
+                    4 => $q['questaoD'] ?? null,
+                    5 => $q['questaoE'] ?? null,
                 ];
             @endphp
 
@@ -443,7 +441,7 @@
         {{-- Ações --}}
         <div class="form-actions">
             {!! $ultimapagina !!}
-            <a href="{{ route('professor.simulados.edit', $simulado['id']) }}" class="btn-form-submit">
+            <a href="{{ route('professor.simulados.edit', $simulado['idSimulado']) }}" class="btn-form-submit">
                 <i class="fas fa-pen"></i>
                 Editar Simulado
             </a>
@@ -509,15 +507,6 @@
                             <strong>{{ $materia }}</strong>
                         </div>
                     </li>
-                    @if($sala !== '—')
-                    <li>
-                        <i class="fas fa-chalkboard-teacher"></i>
-                        <div>
-                            <span style="display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Sala de Aula</span>
-                            <strong>{{ $sala }}</strong>
-                        </div>
-                    </li>
-                    @endif
                     <li>
                         <i class="fas fa-toggle-on"></i>
                         <div>

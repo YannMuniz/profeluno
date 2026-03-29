@@ -464,5 +464,51 @@ document.addEventListener('DOMContentLoaded', () => {
     function pad(n) {
         return String(n).padStart(2, '0');
     }
+    /* ========================================================
+    15. POPULAR QUESTÕES NO EDIT (window.questoesIniciais)
+    ======================================================== */
+    if (window.questoesIniciais && window.questoesIniciais.length > 0) {
+        const container = document.getElementById('questoesContainer');
+        if (container) {
+            window.questoesIniciais.forEach((q) => {
+                // Reutiliza a função já existente para criar o bloco
+                addQuestao(container);
 
+                // Pega o último bloco inserido
+                const blocks = container.querySelectorAll('.questao-block');
+                const block  = blocks[blocks.length - 1];
+
+                // Preenche o enunciado
+                const enunciadoEl = block.querySelector('textarea');
+                if (enunciadoEl) enunciadoEl.value = q.enunciado ?? '';
+
+                // Preenche as alternativas
+                const campos = {
+                    questao_a: 'questao_a',
+                    questao_b: 'questao_b',
+                    questao_c: 'questao_c',
+                    questao_d: 'questao_d',
+                    questao_e: 'questao_e',
+                };
+
+                Object.entries(campos).forEach(([key, _]) => {
+                    // O name do input é questoes[N][questao_a], buscamos pelo sufixo
+                    const input = block.querySelector(`input[name$="[${key}]"]`);
+                    if (input) input.value = q[key] ?? '';
+                });
+
+                // Marca o radio da questão correta
+                if (q.questao_correta) {
+                    const radio = block.querySelector(
+                        `input[type="radio"][value="${q.questao_correta}"]`
+                    );
+                    if (radio) radio.checked = true;
+                }
+            });
+
+            // Atualiza o resumo e navegação após popular tudo
+            updateSummary(container);
+            updateNavigation(container);
+        }
+    }
 });

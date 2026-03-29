@@ -33,7 +33,6 @@ class SimuladoController extends Controller
             $response = Http::withHeaders($this->authHeaders())
                 ->timeout(15)
                 ->get("{$this->baseUrl}/v1/{$endpoint}");
-
             if ($response->successful()) {
                 return $response->json();
             }
@@ -57,7 +56,9 @@ class SimuladoController extends Controller
                 ->post("{$this->baseUrl}/v1/{$endpoint}", $data);
 
             if ($response->successful()) {
-                return $response->json();
+                // API pode retornar JSON ou string vazia (ex: 200/201 sem body)
+                $json = $response->json();
+                return is_array($json) ? $json : [];
             }
 
             Log::warning("[SimuladoController] POST {$endpoint} retornou {$response->status()}", [
@@ -127,9 +128,8 @@ class SimuladoController extends Controller
     public function index()
     {
         $professorId = Auth::id();
-
         // ── Chamada à API .NET ──────────────────────────────────────────────
-        $data = $this->apiGet("Simulado/BuscarSimuladoPorId/{$professorId}");
+        $data = $this->apiGet("Simulado/RetornaSimuladosPorUsuario/{$professorId}");
 
         // ── Fallback: dados fictícios enquanto a API não está disponível ────
         // TODO: remover após integração completa
@@ -266,12 +266,12 @@ class SimuladoController extends Controller
                 return [
                     'ordem'           => $index + 1,
                     'enunciado'       => $q['enunciado'],
-                    'questao_a'       => $q['questao_a'],
-                    'questao_b'       => $q['questao_b'],
-                    'questao_c'       => $q['questao_c'],
-                    'questao_d'       => $q['questao_d'],
-                    'questao_e'       => $q['questao_e'] ?? null,
-                    'questao_correta' => (int) $q['questao_correta'],
+                    'questaoA'       => $q['questao_a'],
+                    'questaoB'       => $q['questao_b'],
+                    'questaoC'       => $q['questao_c'],
+                    'questaoD'       => $q['questao_d'],
+                    'questaoE'       => $q['questao_e'] ?? null,
+                    'questaoCorreta' => (int) $q['questao_correta'],
                 ];
             })
             ->toArray();
@@ -279,15 +279,15 @@ class SimuladoController extends Controller
         $payload = [
             'titulo'       => $request->titulo,
             'descricao'    => $request->descricao,
-            'materia_id'   => (int) $request->materia_id,
-            'professor_id' => Auth::id(),
+            'idMateria'   => (int) $request->materia_id,
+            'idUser' => Auth::id(),
             'situacao'     => true,
-            'questoes'     => $questoes,
+            'simuladoQuestoesRequests'     => $questoes,
         ];
-        dd($payload);
+        // dd($payload);
         // ── Chamada à API .NET ──────────────────────────────────────────────
-        $resultado = $this->apiPost('Simulado/CadastrarSimulado', $payload);
-
+        // $resultado = $this->apiPost('Simulado/CadastrarSimulado', $payload);
+        $resultado = $this->apiPost('Simulado/CadastrarSimulado', [$payload]);
         if (is_null($resultado)) {
             return back()
                 ->withInput()
@@ -302,11 +302,11 @@ class SimuladoController extends Controller
     /**
      * Exibe as questões de um simulado.
      *
-     * GET /api/simulado/{id}
      */
     public function show(int $id)
     {
-        $simulado = $this->apiGet("/Simulado/BuscarSimuladoPorId/{$id}");
+        $professorId = Auth::id();
+        $simulado = $this->apiGet("Simulado/RetornaSimuladoPorId/{$id}/{$professorId}");
 
         if (is_null($simulado)) {
             return redirect()
@@ -328,14 +328,11 @@ class SimuladoController extends Controller
     /**
      * Exibe o formulário de edição de um simulado.
      *
-     * GET /api/simulado/{id}
-     * GET /api/salas?professor_id={id}
      */
     public function edit(int $id)
     {
         $professorId = Auth::id();
-
-        $simulado = $this->apiGet("/Simulado/BuscarSimuladoPorId/{$id}");
+        $simulado = $this->apiGet("Simulado/RetornaSimuladoPorId/{$id}/{$professorId}");
 
         if (is_null($simulado)) {
             return redirect()

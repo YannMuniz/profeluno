@@ -54,7 +54,6 @@
                 <th>#</th>
                 <th>Simulado</th>
                 <th>Descrição</th>
-                <th>Sala de Aula</th>
                 <th>Matéria</th>
                 <th>Questões</th>
                 <th>Situação</th>
@@ -65,14 +64,13 @@
         <tbody>
             @forelse($simulados as $simulado)
             @php
-                $id        = $simulado['id']          ?? '—';
+                $id        = $simulado['idSimulado']          ?? '—';
                 $titulo    = $simulado['titulo']       ?? '—';
                 $descricao = $simulado['descricao']    ?? null;
-                $sala      = $simulado['sala']         ?? '—';
-                $materia   = $simulado['materia']      ?? '—';
+                $materia   = $simulado['idMateria']      ?? '—';
                 $questoes  = $simulado['qtd_questoes'] ?? 0;
                 $situacao  = $simulado['situacao']     ?? 1;
-                $criadoEm  = $simulado['criado_em']    ?? null;
+                $criadoEm  = $simulado['createdAt']    ?? null;
 
                 // Cor da barra de progresso de questões
                 $barCor = match(true) {
@@ -106,15 +104,6 @@
                     @else
                         <span style="color: var(--text-secondary); font-size: 12px;">—</span>
                     @endif
-                </td>
-
-                {{-- Sala --}}
-                <td>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <i class="fas fa-chalkboard-teacher"
-                           style="color: var(--primary-color); font-size: 13px;"></i>
-                        <span>{{ $sala }}</span>
-                    </div>
                 </td>
 
                 {{-- Matéria --}}
