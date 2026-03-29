@@ -35,7 +35,7 @@ namespace backend_dotnet.Services
                         CreatedAt = DateTime.Now,
                     };
 
-                    _context.Simulados.Add(newSimulado);
+                    await _context.Simulados.AddAsync(newSimulado);
 
                     await _context.SaveChangesAsync();
 
@@ -79,19 +79,24 @@ namespace backend_dotnet.Services
         {
             return await _context.Simulados.Include(x => x.SimuladoQuestao).ToListAsync();
         }
-        public async Task<Simulado> RetornaSimuladoPorIdAsync(int idSimulado)
+        public async Task<Simulado> RetornaSimuladoPorIdAsync(int idSimulado, int idUsuario)
         {
-            return await _context.Simulados.Include(x => x.SimuladoQuestao).FirstOrDefaultAsync(x => x.IdSimulado == idSimulado);
+            return await _context.Simulados.Include(x => x.SimuladoQuestao).FirstOrDefaultAsync(x => x.IdSimulado == idSimulado && x.IdUser == idUsuario);
         }
 
-        public async Task<IEnumerable<Simulado>> RetornaSimuladosPorMateriaAsync(int idMateria)
+        public async Task<IEnumerable<Simulado>> RetornaSimuladosPorMateriaAsync(int idMateria, int idUsuario)
         {
-            return await _context.Simulados.Where(x => x.IdMateria == idMateria).Include(x => x.SimuladoQuestao).ToListAsync();
+            return await _context.Simulados.Where(x => x.IdMateria == idMateria && x.IdUser == idUsuario).Include(x => x.SimuladoQuestao).ToListAsync();
         }
 
         public async Task<IEnumerable<SimuladoQuestao>> RetornaSimuladoQuestoesPorIdSimulado(int idSimulado)
         {
             return await _context.SimuladoQuestoes.Where(x => x.IdSimulado == idSimulado).ToListAsync();
+        }
+
+        public async Task<IEnumerable<Simulado>> RetornaSimuladosPorUsuarioAsync(int idUsuario)
+        {
+            return await _context.Simulados.Where(x => x.IdUser == idUsuario).Include(x => x.SimuladoQuestao).ToListAsync();
         }
 
         public Task<Simulado> AtualizaSimuladoAsync(AtualizarSimuladoRequest simulado)
