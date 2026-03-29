@@ -2,6 +2,7 @@
 using backend_dotnet.Models;
 using backend_dotnet.Models.Requests;
 using backend_dotnet.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace backend_dotnet.Services
 {
@@ -74,13 +75,23 @@ namespace backend_dotnet.Services
         {
             throw new NotImplementedException();
         }
-        public Task<IEnumerable<Simulado>> RetornaTodosSimuladosAsync()
+        public async Task<IEnumerable<Simulado>> RetornaTodosSimuladosAsync()
         {
-            throw new NotImplementedException();
+            return await _context.Simulados.Include(x => x.SimuladoQuestao).ToListAsync();
         }
-        public Task<Simulado> RetornaSimuladoPorIdAsync(int idSimulado)
+        public async Task<Simulado> RetornaSimuladoPorIdAsync(int idSimulado)
         {
-            throw new NotImplementedException();
+            return await _context.Simulados.Include(x => x.SimuladoQuestao).FirstOrDefaultAsync(x => x.IdSimulado == idSimulado);
+        }
+
+        public async Task<IEnumerable<Simulado>> RetornaSimuladosPorMateriaAsync(int idMateria)
+        {
+            return await _context.Simulados.Where(x => x.IdMateria == idMateria).Include(x => x.SimuladoQuestao).ToListAsync();
+        }
+
+        public async Task<IEnumerable<SimuladoQuestao>> RetornaSimuladoQuestoesPorIdSimulado(int idSimulado)
+        {
+            return await _context.SimuladoQuestoes.Where(x => x.IdSimulado == idSimulado).ToListAsync();
         }
 
         public Task<Simulado> AtualizaSimuladoAsync(AtualizarSimuladoRequest simulado)

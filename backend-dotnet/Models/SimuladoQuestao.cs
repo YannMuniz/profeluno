@@ -1,4 +1,5 @@
-﻿
+﻿using System.Text.Json.Serialization;
+
 namespace backend_dotnet.Models
 {
     public class SimuladoQuestao
@@ -15,6 +16,8 @@ namespace backend_dotnet.Models
         public string? QuestaoE { get; set; }
         public DateTime? CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+
+        [JsonIgnore]
         public virtual Simulado Simulado { get; set; } = null!;
     }
 }

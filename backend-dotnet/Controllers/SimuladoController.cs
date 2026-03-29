@@ -22,5 +22,37 @@ namespace backend_dotnet.Controllers
             if(result) return Ok("Simulados cadastrados com sucesso!");
             return BadRequest("Erro ao cadastrar os simulados.");
         }
+
+        [HttpGet("RetornaTodosSimuladosQuestoes")]
+        public async Task<IActionResult> RetornaTodosSimuladosQuestoesAsync()
+        {
+            var result = await _simuladoService.RetornaTodosSimuladosAsync();
+            if(result != null) return Ok(result);
+            return NotFound("Nenhum simulado encontrado.");
+        }
+
+        [HttpGet("RetornaSimuladoPorId/{idSimulado}")]
+        public async Task<IActionResult> RetornaSimuladoPorIdAsync(int idSimulado)
+        {
+            var result = await _simuladoService.RetornaSimuladoPorIdAsync(idSimulado);
+            if(result != null) return Ok(result);
+            return NotFound("Simulado não encontrado.");
+        }
+
+        [HttpGet("RetornaSimuladosPorMateria/{idMateria}")]
+        public async Task<IActionResult> RetornaSimuladosPorMateriaAsync(int idMateria)
+        {
+            var result = await _simuladoService.RetornaSimuladosPorMateriaAsync(idMateria);
+            if(result != null) return Ok(result);
+            return NotFound("Nenhum simulado encontrado para a matéria informada.");
+        }
+
+        [HttpGet("RetornaSimuladoQuestoesPorIdSimulado/{idSimulado}")]
+        public async Task<IActionResult> RetornaSimuladoQuestoesPorIdSimuladoAsync(int idSimulado)
+        {
+            var result = await _simuladoService.RetornaSimuladoQuestoesPorIdSimulado(idSimulado);
+            if(result != null) return Ok(result);
+            return NotFound("Nenhuma questão encontrada para o simulado informado.");
+        }
     }
 }
