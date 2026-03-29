@@ -129,7 +129,7 @@ class SimuladoController extends Controller
         $professorId = Auth::id();
 
         // ── Chamada à API .NET ──────────────────────────────────────────────
-        $data = $this->apiGet("Simulados/BuscarSimuladoPorId/{$id}");
+        $data = $this->apiGet("Simulado/BuscarSimuladoPorId/{$professorId}");
 
         // ── Fallback: dados fictícios enquanto a API não está disponível ────
         // TODO: remover após integração completa
@@ -286,7 +286,7 @@ class SimuladoController extends Controller
         ];
         dd($payload);
         // ── Chamada à API .NET ──────────────────────────────────────────────
-        $resultado = $this->apiPost('/api/simulados', $payload);
+        $resultado = $this->apiPost('Simulado/CadastrarSimulado', $payload);
 
         if (is_null($resultado)) {
             return back()
@@ -302,11 +302,11 @@ class SimuladoController extends Controller
     /**
      * Exibe as questões de um simulado.
      *
-     * GET /api/simulados/{id}
+     * GET /api/simulado/{id}
      */
     public function show(int $id)
     {
-        $simulado = $this->apiGet("/Simulados/BuscarSimuladoPorId/{$id}");
+        $simulado = $this->apiGet("/Simulado/BuscarSimuladoPorId/{$id}");
 
         if (is_null($simulado)) {
             return redirect()
@@ -328,14 +328,14 @@ class SimuladoController extends Controller
     /**
      * Exibe o formulário de edição de um simulado.
      *
-     * GET /api/simulados/{id}
+     * GET /api/simulado/{id}
      * GET /api/salas?professor_id={id}
      */
     public function edit(int $id)
     {
         $professorId = Auth::id();
 
-        $simulado = $this->apiGet("/Simulados/BuscarSimuladoPorId/{$id}");
+        $simulado = $this->apiGet("/Simulado/BuscarSimuladoPorId/{$id}");
 
         if (is_null($simulado)) {
             return redirect()
@@ -359,7 +359,7 @@ class SimuladoController extends Controller
     /**
      * Atualiza um simulado via API.
      *
-     * PUT /api/simulados/{id}
+     * PUT /api/simulado/{id}
      */
     public function update(Request $request, int $id)
     {
@@ -402,7 +402,7 @@ class SimuladoController extends Controller
             'questoes'     => $questoes,
         ];
 
-        $resultado = $this->apiPut("/api/simulados/{$id}", $payload);
+        $resultado = $this->apiPut("/api/simulado/{$id}", $payload);
 
         if (is_null($resultado)) {
             return back()
@@ -418,11 +418,11 @@ class SimuladoController extends Controller
     /**
      * Remove um simulado via API.
      *
-     * DELETE /api/simulados/{id}
+     * DELETE /api/simulado/{id}
      */
     public function destroy(int $id)
     {
-        $sucesso = $this->apiDelete("/api/simulados/{$id}");
+        $sucesso = $this->apiDelete("/api/simulado/{$id}");
 
         if (! $sucesso) {
             return redirect()
@@ -438,12 +438,12 @@ class SimuladoController extends Controller
     /**
      * Ativa ou desativa um simulado.
      *
-     * PATCH /api/simulados/{id}/situacao
+     * PATCH /api/simulado/{id}/situacao
      */
     public function toggleSituacao(int $id)
     {
         // Primeiro busca o simulado para saber a situação atual
-        $simulado = $this->apiGet("/Simulados/BuscarSimuladoPorId/{$id}");
+        $simulado = $this->apiGet("/Simulado/BuscarSimuladoPorId/{$id}");
 
         if (is_null($simulado)) {
             return response()->json(['error' => 'Simulado não encontrado'], 404);
@@ -454,7 +454,7 @@ class SimuladoController extends Controller
         try {
             $response = Http::withHeaders($this->authHeaders())
                 ->timeout(15)
-                ->patch("{$this->baseUrl}/api/simulados/{$id}/situacao", [
+                ->patch("{$this->baseUrl}/api/simulado/{$id}/situacao", [
                     'situacao' => $novaSituacao,
                 ]);
 
@@ -464,7 +464,7 @@ class SimuladoController extends Controller
 
             return response()->json(['error' => 'Falha ao atualizar situação'], 500);
         } catch (\Exception $e) {
-            Log::error("[SimuladoController] PATCH /api/simulados/{$id}/situacao falhou: " . $e->getMessage());
+            Log::error("[SimuladoController] PATCH /api/simulado/{$id}/situacao falhou: " . $e->getMessage());
             return response()->json(['error' => 'Erro interno'], 500);
         }
     }
