@@ -29,7 +29,7 @@ namespace backend_dotnet.Services
                     var newSimulado = new Simulado
                     {
                         Titulo = request.Titulo,
-                        Descricao = request.Descricao,
+                        Descricao = string.IsNullOrEmpty(request.Descricao) ? null : request.Descricao,
                         Situacao = request.Situacao,
                         IdMateria = request.IdMateria,
                         IdUser = request.IdUser,
@@ -81,18 +81,19 @@ namespace backend_dotnet.Services
 
             return true;
         }
+
         public async Task<IEnumerable<Simulado>> RetornaTodosSimuladosAsync()
         {
-            return await _context.Simulados.Include(x => x.SimuladoQuestao).ToListAsync();
+            return await _context.Simulados.Include(x => x.SimuladoQuestao).Include(x => x.Materia).ToListAsync();
         }
         public async Task<Simulado> RetornaSimuladoPorIdAsync(int idSimulado, int idUsuario)
         {
-            return await _context.Simulados.Include(x => x.SimuladoQuestao).FirstOrDefaultAsync(x => x.IdSimulado == idSimulado && x.IdUser == idUsuario);
+            return await _context.Simulados.Include(x => x.SimuladoQuestao).Include(x => x.Materia).FirstOrDefaultAsync(x => x.IdSimulado == idSimulado && x.IdUser == idUsuario);
         }
 
         public async Task<IEnumerable<Simulado>> RetornaSimuladosPorMateriaAsync(int idMateria, int idUsuario)
         {
-            return await _context.Simulados.Where(x => x.IdMateria == idMateria && x.IdUser == idUsuario).Include(x => x.SimuladoQuestao).ToListAsync();
+            return await _context.Simulados.Where(x => x.IdMateria == idMateria && x.IdUser == idUsuario).Include(x => x.SimuladoQuestao).Include(x => x.Materia).ToListAsync();
         }
 
         public async Task<IEnumerable<SimuladoQuestao>> RetornaSimuladoQuestoesPorIdSimulado(int idSimulado)
@@ -105,6 +106,7 @@ namespace backend_dotnet.Services
             var simulados = await _context.Simulados
                 .Where(x => x.IdUser == idUsuario)
                 .Include(x => x.SimuladoQuestao)
+                .Include(x => x.Materia)
                 .AsNoTracking()
                 .ToListAsync();
 
@@ -118,6 +120,7 @@ namespace backend_dotnet.Services
                 IdUser = s.IdUser,
                 CreatedAt = s.CreatedAt,
                 UpdatedAt = s.UpdatedAt,
+                Materia = s.Materia,
                 QuantidadeQuestoes = s.SimuladoQuestao?.Count ?? 0
             }).ToList();
 
@@ -137,7 +140,7 @@ namespace backend_dotnet.Services
                 if(simuladoDb == null) return false;
 
                 simuladoDb.Titulo = request.Titulo;
-                simuladoDb.Descricao = request.Descricao;
+                simuladoDb.Descricao = string.IsNullOrEmpty(request.Descricao) ? null : request.Descricao;
                 simuladoDb.Situacao = request?.Situacao ?? true;
                 simuladoDb.IdMateria = request.IdMateria;
                 simuladoDb.UpdatedAt = DateTime.Now;

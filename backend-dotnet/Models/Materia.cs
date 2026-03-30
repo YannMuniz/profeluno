@@ -1,4 +1,6 @@
-﻿namespace backend_dotnet.Models
+﻿using System.Text.Json.Serialization;
+
+namespace backend_dotnet.Models
 {
     public class Materia
     {
@@ -8,6 +10,7 @@
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 
+        [JsonIgnore]
         public virtual ICollection<Simulado> Simulados { get; set; } = new List<Simulado>();
     }
 }
