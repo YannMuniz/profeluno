@@ -80,7 +80,9 @@ class SimuladoController extends Controller
                 ->put("{$this->baseUrl}/v1/{$endpoint}", $data);
 
             if ($response->successful()) {
-                return $response->json();
+                // API pode retornar JSON ou string vazia (ex: 200/201 sem body)
+                $json = $response->json();
+                return is_array($json) ? $json : [];
             }
 
             Log::warning("[SimuladoController] PUT {$endpoint} retornou {$response->status()}", [
@@ -279,8 +281,8 @@ class SimuladoController extends Controller
         $payload = [
             'titulo'       => $request->titulo,
             'descricao'    => $request->descricao,
-            'idMateria'   => (int) $request->materia_id,
-            'idUser' => Auth::id(),
+            'idMateria'    => (int) $request->materia_id,
+            'idUser'       => Auth::id(),
             'situacao'     => true,
             'simuladoQuestoesRequests'     => $questoes,
         ];
@@ -363,7 +365,7 @@ class SimuladoController extends Controller
         $request->validate([
             'titulo'                            => 'required|string|max:255',
             'descricao'                         => 'nullable|string',
-            'sala_aula_id'                      => 'required|integer',
+            'materia_id'                        => 'required|integer',
             'situacao'                          => 'boolean',
             'questoes'                          => 'required|array|min:1',
             'questoes.*.enunciado'              => 'required|string',
@@ -381,25 +383,27 @@ class SimuladoController extends Controller
                 return [
                     'ordem'           => $index + 1,
                     'enunciado'       => $q['enunciado'],
-                    'questao_a'       => $q['questao_a'],
-                    'questao_b'       => $q['questao_b'],
-                    'questao_c'       => $q['questao_c'],
-                    'questao_d'       => $q['questao_d'],
-                    'questao_e'       => $q['questao_e'] ?? null,
-                    'questao_correta' => (int) $q['questao_correta'],
+                    'questaoA'       => $q['questao_a'],
+                    'questaoB'       => $q['questao_b'],
+                    'questaoC'       => $q['questao_c'],
+                    'questaoD'       => $q['questao_d'],
+                    'questaoE'       => $q['questao_e'] ?? null,
+                    'questaoCorreta' => (int) $q['questao_correta'],
                 ];
             })
             ->toArray();
 
         $payload = [
+            'idSimulado'   => $id,
             'titulo'       => $request->titulo,
             'descricao'    => $request->descricao,
-            'sala_aula_id' => (int) $request->sala_aula_id,
+            'idMateria'    => (int) $request->materia_id,
+            'idUser'       => Auth::id(),
             'situacao'     => $request->boolean('situacao', true),
-            'questoes'     => $questoes,
+            'simuladoQuestoesRequests'     => $questoes,
         ];
 
-        $resultado = $this->apiPut("/api/simulado/{$id}", $payload);
+        $resultado = $this->apiPut("Simulado/AtualizarSimulado", $payload);
 
         if (is_null($resultado)) {
             return back()
@@ -419,7 +423,7 @@ class SimuladoController extends Controller
      */
     public function destroy(int $id)
     {
-        $sucesso = $this->apiDelete("/api/simulado/{$id}");
+        $sucesso = $this->apiDelete("Simulado/DeletarSimulado/{$id}");
 
         if (! $sucesso) {
             return redirect()
