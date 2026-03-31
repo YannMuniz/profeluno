@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('titulo');
             $table->foreignId('user_id')->nullable()->constrained('users');
+            $table->foreignId('materia_id')->nullable()->constrained('materias');
             $table->text('descricao')->nullable();
             $table->enum('tipo', ['pdf', 'slide', 'document'])->default('null');
             $table->binary('arquivo')->nullable();
