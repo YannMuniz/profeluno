@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class ConteudoController extends Controller
 {
@@ -185,7 +187,7 @@ class ConteudoController extends Controller
         </a>";
         $title = '<i class="fas fa-plus"></i> Novo Conteúdo';
         $subtitle = 'Adicione um conteúdo de apoio para a sala';
-        return view('professor.conteudo.create', compact('title', 'subtitle', 'ultimapagina'));
+        return view('professor.conteudo.create', compact('title', 'subtitle', 'ultimapagina', 'materias'));
     }
 
     public function store() {
