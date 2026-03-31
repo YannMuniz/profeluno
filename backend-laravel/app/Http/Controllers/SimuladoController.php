@@ -134,7 +134,7 @@ class SimuladoController extends Controller
         $simulados = $this->apiGet("Simulado/RetornaSimuladosPorUsuario/{$professorId}");
         $title    = '<i class="fas fa-list-ol"></i> Simulados';
         $subtitle = 'Gerencie os simulados vinculados às suas salas de aula';
-
+        $simulados = $simulados ?? [];
         return view('professor.simulado.index', compact('simulados', 'title', 'subtitle'));
     }
 

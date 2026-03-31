@@ -43,7 +43,7 @@
                 <option value="0">Inativos</option>
             </select>
             <span class="table-count" id="tableCount">
-                {{ count($simulados) }} simulado(s) encontrado(s)
+                {{ count($simulados ?? 0) }} simulado(s) encontrado(s)
             </span>
         </div>
     </div>
