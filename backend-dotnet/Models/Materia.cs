@@ -12,5 +12,8 @@ namespace backend_dotnet.Models
 
         [JsonIgnore]
         public virtual ICollection<Simulado> Simulados { get; set; } = new List<Simulado>();
+
+        [JsonIgnore]
+        public virtual ICollection<Conteudo> Conteudos { get; set; } = new List<Conteudo>();
     }
 }

@@ -11,6 +11,7 @@ public static class DependencyInjectionConfig
         services.AddScoped<ICargoService, CargoServices>();
         services.AddScoped<IMateriaService, MateriaService>();
         services.AddScoped<ISimuladoService, SimuladoService>();
+        services.AddScoped<IConteudoService, ConteudoService>();
 
         return services;
     }

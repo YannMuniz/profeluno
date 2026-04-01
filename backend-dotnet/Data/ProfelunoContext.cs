@@ -64,30 +64,35 @@ public partial class ProfelunoContext : DbContext
 
         modelBuilder.Entity<Conteudo>(entity =>
         {
-            entity.ToTable("material");
+            entity.ToTable("conteudo");
             entity.HasKey(e => e.IdConteudo);
             entity.Property(e => e.IdConteudo).HasColumnName("id");
+            entity.Property(e => e.Titulo)
+                .HasColumnName("titulo");
+            entity.Property(e => e.IdUsuario).HasColumnName("user_id");
+            entity.Property(e => e.IdMateria).HasColumnName("materia_id");
+            entity.Property(e => e.Descricao).HasColumnName("descricao");
+            entity.Property(e => e.Tipo)
+                .HasColumnName("tipo");
+            entity.Property(e => e.Arquivo)
+            .HasColumnName("arquivo")
+            .HasColumnType("bytea");
+            entity.Property(e => e.NomeArquivo)
+                .HasColumnName("nome_arquivo");
+            entity.Property(e => e.ExtensaoArquivo)
+                .HasColumnName("extensao_arquivo");
+            entity.Property(e => e.Url).HasColumnName("url");
+            entity.Property(e => e.Situacao).HasColumnName("situacao");
             entity.Property(e => e.CreatedAt)
                 .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("created_at");
-            entity.Property(e => e.Descricao).HasColumnName("descricao");
-            entity.Property(e => e.IdUsuario).HasColumnName("user_id");
-            entity.Property(e => e.FilePath)
-                .HasMaxLength(255)
-                .HasColumnName("file_path");
-            entity.Property(e => e.FileUrl)
-                .HasMaxLength(255)
-                .HasColumnName("file_url");
-            entity.Property(e => e.Titulo)
-                .HasMaxLength(255)
-                .HasColumnName("titulo");
-            entity.Property(e => e.Type)
-                .HasMaxLength(255)
-                .HasDefaultValueSql("'document'::character varying")
-                .HasColumnName("type");
             entity.Property(e => e.UpdatedAt)
                 .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("updated_at");
+
+            entity.HasOne(e => e.Materia).WithMany(e => e.Conteudos)
+            .HasForeignKey(e => e.IdMateria)
+            .HasConstraintName("material_materia_id_foreign");
         });
 
         modelBuilder.Entity<Migration>(entity =>
