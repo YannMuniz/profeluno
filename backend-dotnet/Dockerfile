@@ -10,7 +10,8 @@
 
 
     # Esta fase é usada para compilar o projeto de serviço
-    FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+    # FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+    FROM mcr.microsoft.com/dotnet/sdk@sha256:a9330090b730c2abde8f3f43b3d1e24e4b8cba028de7bab1a7fdcd50cb7a3b7e AS build
     ARG BUILD_CONFIGURATION=Release
     WORKDIR /src
     COPY ["Profeluno.csproj", "."]
