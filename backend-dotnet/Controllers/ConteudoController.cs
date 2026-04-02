@@ -37,6 +37,29 @@ namespace backend_dotnet.Controllers
             return Ok(conteudos);
         }
 
+        [HttpGet("RetornaConteudoPorIdProfessor/{idProfessor}")]
+        public async Task<IActionResult> ListarConteudosPorIdProfessorAsync(int idProfessor)
+        {
+            var conteudos = await _conteudoService.RetornaConteudoPorIdProfessor(idProfessor);
+            return Ok(conteudos);
+        }
+
+        [HttpGet("RetornaConteudoPorId/{idConteudo}")]
+        public async Task<IActionResult> ListarConteudosPorIdAsync(int idConteudo)
+        {
+            var conteudo = await _conteudoService.RetornaConteudoPorIdConteudo(idConteudo);
+            if(conteudo == null) return NotFound("Conteúdo não encontrado.");
+            return Ok(conteudo);
+        }
+
+        [HttpGet("RetornaDadosDoArquivo/{idConteudo}")]
+        public async Task<IActionResult> RetornaDadosDoArquivo(int idConteudo)
+        {
+            var arquivo = await _conteudoService.RetornaDadosArquivo(idConteudo);
+            if(arquivo == null) return NotFound("Arquivo não encontrado.");
+            return Ok(arquivo);
+        }
+
         [HttpGet("DownloadArquivoConteudo/{idConteudo}")]
         public async Task<IActionResult> DownloadArquivo(int idConteudo)
         {

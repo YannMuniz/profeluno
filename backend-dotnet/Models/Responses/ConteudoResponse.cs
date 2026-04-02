@@ -14,5 +14,7 @@
         public bool Situacao { get; set; }
         public DateTime? CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+
+        public Materia Materia { get; set; }
     }
 }

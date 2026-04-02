@@ -1,6 +1,7 @@
 ﻿using backend_dotnet.Data;
 using backend_dotnet.Models;
 using backend_dotnet.Models.Requests;
+using backend_dotnet.Models.Responses;
 using backend_dotnet.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +18,7 @@ namespace backend_dotnet.Services
 
         public async Task<IEnumerable<Conteudo>> RetornaTodosConteudosAsync()
         {
-            var response = await _context.Conteudos.ToListAsync();
+            var response = await _context.Conteudos.Include(x => x.Materia).ToListAsync();
 
             var conteudosResponse = response.Select(c => new Conteudo
             {
@@ -31,10 +32,71 @@ namespace backend_dotnet.Services
                 NomeArquivo = c.NomeArquivo,
                 ExtensaoArquivo = c.ExtensaoArquivo,
                 Url = c.Url,
-                CreatedAt = c.CreatedAt
+                CreatedAt = c.CreatedAt,
+                Materia = c.Materia,
             }).ToList();
 
             return conteudosResponse;
+        }
+
+        public async Task<ConteudoResponse> RetornaConteudoPorIdProfessor(int idUsuario)
+        {
+            var response = _context.Conteudos.Include(x => x.Materia).FirstOrDefaultAsync(x => x.IdUsuario == idUsuario);
+
+            ConteudoResponse newConteudo = new ConteudoResponse()
+            {
+                IdConteudo = response.Result.IdConteudo,
+                Titulo = response.Result.Titulo,
+                Descricao = response.Result.Descricao,
+                IdUsuario = response.Result.IdUsuario,
+                IdMateria = response.Result.IdMateria,
+                Tipo = response.Result.Tipo,
+                Situacao = response.Result.Situacao,
+                NomeArquivo = response.Result.NomeArquivo,
+                ExtensaoArquivo = response.Result.ExtensaoArquivo,
+                Url = response.Result.Url,
+                CreatedAt = response.Result.CreatedAt,
+                UpdatedAt = response.Result.UpdatedAt,
+                Materia = response.Result.Materia
+            };
+
+            return newConteudo;
+        }
+
+        public async Task<ConteudoResponse> RetornaConteudoPorIdConteudo(int idConteudo)
+        {
+            var response = _context.Conteudos.Include(x => x.Materia).FirstOrDefaultAsync(x => x.IdConteudo == idConteudo);
+
+            ConteudoResponse newConteudo = new ConteudoResponse()
+            {
+                IdConteudo = response.Result.IdConteudo,
+                Titulo = response.Result.Titulo,
+                Descricao = response.Result.Descricao,
+                IdUsuario = response.Result.IdUsuario,
+                IdMateria = response.Result.IdMateria,
+                Tipo = response.Result.Tipo,
+                Situacao = response.Result.Situacao,
+                NomeArquivo = response.Result.NomeArquivo,
+                ExtensaoArquivo = response.Result.ExtensaoArquivo,
+                Url = response.Result.Url,
+                CreatedAt = response.Result.CreatedAt,
+                UpdatedAt = response.Result.UpdatedAt,
+                Materia = response.Result.Materia
+            };
+            return newConteudo;
+        }
+
+        public async Task<ArquivoResponse> RetornaDadosArquivo(int idConteudo)
+        {
+            var response = _context.Conteudos.FirstOrDefaultAsync(x => x.IdConteudo == idConteudo);
+            ArquivoResponse arquivoResponse = new ArquivoResponse()
+            {
+                Tipo = response.Result.Tipo,
+                NomeArquivo = response.Result.NomeArquivo,
+                ExtensaoArquivo = response.Result.ExtensaoArquivo,
+                Url = response.Result.Url,
+            };
+            return arquivoResponse;
         }
 
         public async Task<bool> CadastrarConteudo (UploadConteudoRequest conteudo)
@@ -76,16 +138,9 @@ namespace backend_dotnet.Services
                 .FirstOrDefaultAsync(c => c.IdConteudo == idConteudo);
         }
 
-        public async Task<Conteudo> GetConteudoById(int id)
+        public async Task<bool> UpdateConteudo(AtualizarConteudoRequest conteudo)
         {
-            return await _context.Conteudos
-                .Include(c => c.Materia)
-                .FirstOrDefaultAsync(c => c.IdConteudo == id);
-        }
-
-        public async Task<bool> UpdateConteudo(int id, UploadConteudoRequest conteudo)
-        {
-            var entidade = await _context.Conteudos.FindAsync(id);
+            var entidade = await _context.Conteudos.FindAsync(conteudo.IdConteudo);
             if (entidade == null) return false;
 
             // Validar matéria
