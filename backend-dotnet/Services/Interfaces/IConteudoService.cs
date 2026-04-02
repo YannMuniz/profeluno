@@ -8,5 +8,8 @@ namespace backend_dotnet.Services.Interfaces
         public Task<bool> CadastrarConteudo(UploadConteudoRequest conteudo);
         public Task<IEnumerable<Conteudo>> RetornaTodosConteudosAsync();
         public Task<Conteudo> DownloadArquivoConteudo(int idConteudo);
+        public Task<Conteudo> GetConteudoById(int id);
+        public Task<bool> UpdateConteudo(int id, UploadConteudoRequest conteudo);
+        public Task<bool> DeleteConteudo(int id);
     }
 }

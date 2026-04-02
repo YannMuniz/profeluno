@@ -83,6 +83,8 @@ Route::middleware(['auth', 'role:professor'])->prefix('professor')->name('profes
  
     // conteudo (views em resources/views/conteudo/create.blade.php etc.)
     Route::resource('conteudo', ConteudoController::class);
+    Route::patch('conteudo/{conteudo}/toggle', [ConteudoController::class, 'toggle'])->name('conteudo.toggle');
+    Route::get('conteudo/{conteudo}/download', [ConteudoController::class, 'download'])->name('conteudo.download');
  
     // Simulados (views em resources/views/simulado/create.blade.php etc.)
     Route::resource('simulados', SimuladoController::class);
