@@ -408,9 +408,8 @@ class ConteudoController extends Controller
                 ->get("{$this->baseUrl}/v1/conteudo/DownloadArquivoConteudo/{$id}");
 
             if ($response->successful()) {
-                $conteudo = $this->apiGet("Conteudo/{$id}");
+                $conteudo = $this->apiGet("Conteudo/RetornaDadosDoArquivo/{$id}");
                 $nomeArquivo = $conteudo ? ($conteudo['nomeArquivo'] . $conteudo['extensaoArquivo']) : "conteudo_{$id}";
-
                 return response($response->body())
                     ->header('Content-Type', $response->header('Content-Type') ?? 'application/octet-stream')
                     ->header('Content-Disposition', 'attachment; filename="' . $nomeArquivo . '"');
