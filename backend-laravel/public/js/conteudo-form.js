@@ -1,251 +1,301 @@
-document.addEventListener('DOMContentLoaded', function () {
+/**
+ * conteudo-form.js
+ * Controla: visibilidade das seções de link/upload, pré-visualização de arquivo e link
+ */
+(function () {
+    'use strict';
 
-    // ── Mapa de tipos ────────────────────────────────────────────
-    const TIPO_MAP = {
-        pdf:      { icon: 'fa-file-pdf',  cor: '#ea5455', label: 'PDF',       anexo: 'upload' },
-        slide:    { icon: 'fa-desktop',   cor: '#ff9f43', label: 'Slide',     anexo: 'upload' },
-        link:     { icon: 'fa-film',      cor: '#00cfe8', label: 'Link',      anexo: 'link'   },
-        document: { icon: 'fa-file-word', cor: '#7367f0', label: 'Documento', anexo: 'upload' },
-        other:    { icon: 'fa-file',      cor: '#82868b', label: 'Outro',     anexo: 'ambos'  },
-    };
+    // ── Elementos ──────────────────────────────────────────────────────────────
+    const selectTipo        = document.getElementById('mat_type');
+    const inputTitulo       = document.getElementById('mat_titulo');
+    const selectMateria     = document.getElementById('materia_id');
+    const inputFileUrl      = document.getElementById('mat_file_url');
+    const inputFile         = document.getElementById('mat_file');
+    const dropZone          = document.getElementById('matFileDropZone');
 
-    // ── Hints de accept por tipo ──────────────────────────────────
-    const ACCEPT_MAP = {
-        pdf:      { accept: '.pdf',                        hint: 'PDF — Máx. 50 MB'                  },
-        slide:    { accept: '.pptx,.ppt',                  hint: 'PPTX, PPT — Máx. 50 MB'            },
-        document: { accept: '.docx,.doc',                  hint: 'DOCX, DOC — Máx. 50 MB'            },
-        other:    { accept: '.pdf,.pptx,.ppt,.docx,.doc,.mp4,.avi,.mov', hint: 'PDF, PPTX, DOCX, MP4 — Máx. 50 MB' },
-    };
+    // Seções do card de anexo
+    const secaoSemTipo      = document.getElementById('anexoSemTipo');
+    const secaoLink         = document.getElementById('secaoLink');
+    const secaoDivider      = document.getElementById('secaoDivider');
+    const secaoUpload       = document.getElementById('secaoUpload');
+    const cardAnexoTitulo   = document.getElementById('cardAnexoTitulo');
+    const cardAnexoAviso    = document.getElementById('cardAnexoAviso');
 
-    // ── Elementos do card de anexo ────────────────────────────────
-    const elCardTitulo  = document.getElementById('cardAnexoTitulo');
-    const elCardAviso   = document.getElementById('cardAnexoAviso');
-    const elSemTipo     = document.getElementById('anexoSemTipo');
-    const elSecaoLink   = document.getElementById('secaoLink');
-    const elSecaoDivider = document.getElementById('secaoDivider');
-    const elSecaoUpload = document.getElementById('secaoUpload');
-    const elFileInput   = document.getElementById('mat_file');
-    const elFileHint    = document.getElementById('matFileHint');
+    // Preview de link
+    const linkPreviewWrapper = document.getElementById('linkPreviewWrapper');
+    const linkPreviewContent = document.getElementById('linkPreviewContent');
+    const btnCloseLinkPreview= document.getElementById('btnCloseLinkPreview');
 
-    // ── Controle de campos URL / Upload por tipo ─────────────────
-    const matType      = document.getElementById('mat_type');
-    const urlField     = document.getElementById('mat_file_url');
-    const urlWrapper   = urlField?.closest('.form-group');
-    const dropZone     = document.getElementById('matFileDropZone');
-    const fileInput    = document.getElementById('mat_file');
-    const filePreview  = document.getElementById('matFilePreview');
-    const dropWrapper  = dropZone?.closest('.form-group');
+    // Preview de arquivo novo
+    const filePreviewWrapper = document.getElementById('filePreviewWrapper');
+    const filePreviewContent = document.getElementById('filePreviewContent');
+    const btnCloseFilePreview= document.getElementById('btnCloseFilePreview');
 
-    const tipoConfig = {
-        '':         { url: false, upload: false },
-        'link':     { url: true,  upload: false },  // Link
-        'pdf':      { url: false, upload: true  },
-        'slide':    { url: false, upload: true  },
-        'document': { url: false, upload: true  },
-        'other':    { url: true,  upload: true  },  // Ambos
-    };
+    // Bloco do arquivo atual (edit)
+    const arquivoAtualWrapper= document.getElementById('arquivoAtualWrapper');
 
-    function handleTipoChange() {
-        const config = tipoConfig[matType.value] ?? { url: false, upload: false };
+    // Prévia lateral
+    const matPreviewIcon    = document.getElementById('matPreviewIcon');
+    const matPreviewTitulo  = document.getElementById('matPreviewTitulo');
+    const matPreviewType    = document.getElementById('matPreviewType');
+    const matPreviewMateria = document.getElementById('matPreviewMateria');
 
-        // ── URL ──────────────────────────────────────────────────
-        if (urlWrapper) {
-            urlWrapper.style.display = config.url ? '' : 'none';
-            if (!config.url) urlField.value = '';
-        }
+    // ── Helpers ────────────────────────────────────────────────────────────────
+    function show(el) { if (el) el.classList.remove('hidden'); }
+    function hide(el) { if (el) el.classList.add('hidden'); }
 
-        // ── Upload ───────────────────────────────────────────────
-        if (dropWrapper) {
-            dropWrapper.style.display = config.upload ? '' : 'none';
-
-            if (!config.upload) {
-                // Limpa o arquivo selecionado
-                fileInput.value = '';
-                filePreview.innerHTML = '';
-                filePreview.classList.add('hidden');
-
-                // Desabilita o input para não enviar no submit
-                fileInput.disabled = true;
-                dropZone.classList.add('disabled');
-            } else {
-                fileInput.disabled = false;
-                dropZone.classList.remove('disabled');
-            }
-        }
+    function formatBytes(bytes) {
+        if (bytes < 1024)        return bytes + ' B';
+        if (bytes < 1048576)     return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / 1048576).toFixed(2) + ' MB';
     }
 
-    // ── Prévia lateral ───────────────────────────────────────────
-    const elIcon    = document.getElementById('matPreviewIcon');
-    const elTitulo  = document.getElementById('matPreviewTitulo');
-    const elType    = document.getElementById('matPreviewType');
-    const elMateria = document.getElementById('matPreviewMateria');
-
-    function updatePreview() {
-        const titulo  = document.getElementById('mat_titulo').value.trim() || 'Título do material';
-        const type    = document.getElementById('mat_type').value;
-        const matSel  = document.getElementById('materia_id');
-        const matText = matSel.options[matSel.selectedIndex]?.text ?? '';
-
-        elTitulo.textContent  = titulo;
-        elMateria.textContent = matText || 'Matéria não selecionada';
-
-        const t = TIPO_MAP[type];
-        if (t) {
-            elIcon.style.color      = t.cor;
-            elIcon.style.background = t.cor + '1a';
-            elIcon.innerHTML        = `<i class="fas ${t.icon}" style="font-size:28px"></i>`;
-            elType.textContent      = t.label;
-        } else {
-            elIcon.style.color      = '#82868b';
-            elIcon.style.background = 'rgba(130,134,139,.12)';
-            elIcon.innerHTML        = '<i class="fas fa-file" style="font-size:28px"></i>';
-            elType.textContent      = 'Tipo não selecionado';
-        }
-    }
-
-    // ── Listener: mudança de tipo ─────────────────────────────────
-    const tipoSelect = document.getElementById('mat_type');
-
-    if (tipoSelect) {
-        tipoSelect.addEventListener('change', () => {
-            updatePreview();
-            handleTipoChange();
-        });
-    }
-
-    document.getElementById('mat_titulo').addEventListener('input',  updatePreview);
-    document.getElementById('materia_id').addEventListener('change', updatePreview);
-
-    // Inicializa com o tipo já selecionado (edit) ou vazio (create)
-    updatePreview();
-    handleTipoChange();
-
-    // ── Helpers de URL ───────────────────────────────────────────
     function getYouTubeId(url) {
         const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&?/]+)/);
         return m ? m[1] : null;
     }
+
     function getGDriveId(url) {
         const m = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
         return m ? m[1] : null;
     }
 
-    // ── Preview de Link ──────────────────────────────────────────
-    const urlInput         = document.getElementById('mat_file_url');
-    const linkWrapper      = document.getElementById('linkPreviewWrapper');
-    const linkContent      = document.getElementById('linkPreviewContent');
-    const btnCloseLinkPrev = document.getElementById('btnCloseLinkPreview');
+    // Ícones e cores por tipo
+    const tipoMeta = {
+        pdf:      { icon: 'fa-file-pdf',  cor: '#ea5455', bg: 'rgba(234,84,85,0.15)',    label: 'PDF' },
+        slide:    { icon: 'fa-desktop',   cor: '#ff9f43', bg: 'rgba(255,159,67,0.15)',   label: 'Slide' },
+        link:     { icon: 'fa-film',      cor: '#00cfe8', bg: 'rgba(0,207,232,0.15)',    label: 'Link' },
+        document: { icon: 'fa-file-word', cor: '#7367f0', bg: 'rgba(115,103,240,0.15)', label: 'Documento' },
+        other:    { icon: 'fa-file',      cor: '#82868b', bg: 'rgba(130,134,139,0.15)', label: 'Outro' },
+    };
 
+    // ── Visibilidade das seções ────────────────────────────────────────────────
+    // LÓGICA DE VISIBILIDADE:
+    // - link:                 mostra APENAS field de URL
+    // - pdf/slide/doc/other:  mostra APENAS field de upload (arquivo)
+    // - default (nenhum):     mostra aviso de seleção obrigatória
+    function atualizarSecaoAnexo(tipo) {
+        // Oculta todas as seções inicialmente
+        hide(secaoSemTipo);
+        hide(secaoLink);
+        hide(secaoDivider);
+        hide(secaoUpload);
+
+        if (cardAnexoAviso) cardAnexoAviso.style.display = 'none';
+
+        switch (tipo) {
+            case 'link':
+                // Tipo LINK: mostra APENAS URL field
+                if (cardAnexoTitulo) cardAnexoTitulo.textContent = 'URL do Conteúdo';
+                show(secaoLink);
+                break;
+            case 'pdf':
+            case 'slide':
+            case 'document':
+            case 'other':
+                // Tipos ARQUIVO: mostra APENAS upload, SEM URL
+                if (cardAnexoTitulo) cardAnexoTitulo.textContent = 'Arquivo do Conteúdo';
+                show(secaoUpload);
+                break;
+            default:
+                // Nenhum tipo selecionado: mostra aviso
+                if (cardAnexoTitulo) cardAnexoTitulo.textContent = 'Arquivo ou Link';
+                show(secaoSemTipo);
+                if (cardAnexoAviso) cardAnexoAviso.style.display = '';
+        }
+    }
+
+    // ── Preview lateral ────────────────────────────────────────────────────────
+    function atualizarPrevia() {
+        const tipo    = selectTipo    ? selectTipo.value    : '';
+        const titulo  = inputTitulo   ? inputTitulo.value   : '';
+        const matOpt  = selectMateria ? selectMateria.options[selectMateria.selectedIndex] : null;
+        const matNome = matOpt && matOpt.value ? matOpt.text : 'Matéria não selecionada';
+
+        const meta = tipoMeta[tipo] || { icon: 'fa-file', cor: '#82868b', bg: 'rgba(130,134,139,0.15)', label: 'Tipo não selecionado' };
+
+        if (matPreviewIcon) {
+            matPreviewIcon.style.background = meta.bg;
+            matPreviewIcon.style.color      = meta.cor;
+            matPreviewIcon.innerHTML        = `<i class="fas ${meta.icon}" style="font-size:28px;"></i>`;
+        }
+        if (matPreviewTitulo) matPreviewTitulo.textContent = titulo || 'Título do material';
+        if (matPreviewType)   matPreviewType.textContent   = meta.label;
+        if (matPreviewMateria)matPreviewMateria.textContent= matNome;
+    }
+
+    // ── Preview de LINK ────────────────────────────────────────────────────────
     function renderLinkPreview(url) {
-        if (!url) { linkWrapper.classList.add('hidden'); return; }
+        if (!linkPreviewContent) return;
+        linkPreviewContent.innerHTML = '';
 
         const ytId = getYouTubeId(url);
         if (ytId) {
-            linkContent.innerHTML = `<iframe src="https://www.youtube.com/embed/${ytId}" allowfullscreen></iframe>`;
-            linkWrapper.classList.remove('hidden');
+            linkPreviewContent.innerHTML = `<iframe
+                src="https://www.youtube.com/embed/${ytId}"
+                style="width:100%;height:100%;min-height:400px;border:none;"
+                allowfullscreen></iframe>`;
+            show(linkPreviewWrapper);
             return;
         }
 
         const gdId = getGDriveId(url);
         if (gdId) {
-            linkContent.innerHTML = `<iframe src="https://drive.google.com/file/d/${gdId}/preview"></iframe>`;
-            linkWrapper.classList.remove('hidden');
+            linkPreviewContent.innerHTML = `<iframe
+                src="https://drive.google.com/file/d/${gdId}/preview"
+                style="width:100%;height:100%;min-height:400px;border:none;"></iframe>`;
+            show(linkPreviewWrapper);
             return;
         }
 
-        linkContent.innerHTML = `
-            <div class="generic-link-preview">
-                <i class="fas fa-external-link-alt"></i>
-                <div>
-                    <p style="margin:0 0 4px;font-size:13px;font-weight:600;">Link externo</p>
-                    <a href="${url}" target="_blank" rel="noopener">${url}</a>
-                </div>
+        // URL genérica — mostra botão de abertura
+        linkPreviewContent.innerHTML = `
+            <div style="display:flex;flex-direction:column;align-items:center;
+                        justify-content:center;height:100%;padding:32px;gap:12px;
+                        color:var(--text-secondary);text-align:center;">
+                <i class="fas fa-link" style="font-size:40px;opacity:.4;"></i>
+                <p style="margin:0;word-break:break-all;font-size:13px;">${url}</p>
+                <a href="${url}" target="_blank" rel="noopener"
+                   style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;
+                          background:var(--primary-color,#7367f0);color:#fff;border-radius:6px;
+                          text-decoration:none;font-size:13px;">
+                    <i class="fas fa-external-link-alt"></i> Abrir link
+                </a>
             </div>`;
-        linkWrapper.classList.remove('hidden');
+        show(linkPreviewWrapper);
     }
 
-    // Renderiza preview ao carregar página (edit com URL já preenchida)
-    if (urlInput && urlInput.value.trim()) renderLinkPreview(urlInput.value.trim());
+    let linkDebounce = null;
+    function onUrlInput() {
+        clearTimeout(linkDebounce);
+        const url = inputFileUrl ? inputFileUrl.value.trim() : '';
+        if (!url) { hide(linkPreviewWrapper); return; }
+        linkDebounce = setTimeout(() => renderLinkPreview(url), 600);
+    }
 
-    let linkDebounce;
-    if (urlInput) {
-        urlInput.addEventListener('input', () => {
-            clearTimeout(linkDebounce);
-            linkDebounce = setTimeout(() => renderLinkPreview(urlInput.value.trim()), 600);
+    if (btnCloseLinkPreview) {
+        btnCloseLinkPreview.addEventListener('click', () => {
+            hide(linkPreviewWrapper);
+            if (linkPreviewContent) linkPreviewContent.innerHTML = '';
         });
     }
-    if (btnCloseLinkPrev) {
-        btnCloseLinkPrev.addEventListener('click', () => {
-            linkWrapper.classList.add('hidden');
-            linkContent.innerHTML = '';
-        });
-    }
 
-    // ── Preview de Arquivo ───────────────────────────────────────
-    const fileWrapper      = document.getElementById('filePreviewWrapper');
-    const fileContent      = document.getElementById('filePreviewContent');
-    const btnCloseFilePrev = document.getElementById('btnCloseFilePreview');
-
+    // ── Preview de ARQUIVO novo selecionado ────────────────────────────────────
     function renderFilePreview(file) {
-        if (!file) { fileWrapper.classList.add('hidden'); return; }
+        if (!filePreviewContent || !filePreviewWrapper) return;
+        filePreviewContent.innerHTML = '';
 
-        fileWrapper.classList.remove('hidden');
+        const ext = file.name.split('.').pop().toLowerCase();
 
-        if (file.type === 'application/pdf') {
-            const url = URL.createObjectURL(file);
-            fileContent.innerHTML = `<iframe src="${url}" style="width:100%;height:380px;border:none;"></iframe>`;
-            return;
-        }
-
-        if (file.type.startsWith('video/')) {
-            const url = URL.createObjectURL(file);
-            fileContent.innerHTML = `
-                <video controls style="width:100%;max-height:280px;display:block;background:#000;">
-                    <source src="${url}" type="${file.type}">
-                </video>`;
-            return;
-        }
-
-        const ext  = file.name.split('.').pop().toUpperCase();
-        const size = (file.size / 1024 / 1024).toFixed(2);
-        fileContent.innerHTML = `
-            <div class="generic-link-preview">
-                <i class="fas fa-file-alt"></i>
-                <div>
-                    <p style="margin:0 0 4px;font-size:13px;font-weight:600;">${file.name}</p>
-                    <small>${ext} · ${size} MB</small>
-                </div>
+        // Cabeçalho com info do arquivo
+        const infoBar = `
+            <div style="display:flex;align-items:center;gap:10px;
+                        padding:10px 14px;background:rgba(115,103,240,0.07);
+                        border-bottom:1px solid rgba(115,103,240,0.15);font-size:13px;">
+                <i class="fas fa-file" style="color:var(--primary-color);"></i>
+                <strong>${file.name}</strong>
+                <span style="color:var(--text-secondary);margin-left:auto;">${formatBytes(file.size)}</span>
             </div>`;
+
+        if (ext === 'pdf') {
+            const objUrl = URL.createObjectURL(file);
+            filePreviewContent.innerHTML = infoBar + `<iframe
+                src="${objUrl}"
+                style="width:100%;height:440px;border:none;"
+                type="application/pdf"></iframe>`;
+        } else if (['mp4', 'avi', 'mov'].includes(ext)) {
+            const objUrl = URL.createObjectURL(file);
+            filePreviewContent.innerHTML = infoBar + `<video controls
+                style="width:100%;max-height:440px;background:#000;">
+                <source src="${objUrl}" type="video/${ext}">
+            </video>`;
+        } else {
+            // Arquivos que não têm preview nativo (docx, pptx, etc.)
+            filePreviewContent.innerHTML = infoBar + `
+                <div style="display:flex;flex-direction:column;align-items:center;
+                            justify-content:center;height:200px;gap:10px;
+                            color:var(--text-secondary);">
+                    <i class="fas fa-file" style="font-size:40px;opacity:.4;"></i>
+                    <p style="margin:0;font-size:13px;">Arquivo selecionado: <strong>${file.name}</strong></p>
+                    <p style="margin:0;font-size:12px;color:var(--text-secondary);">
+                        Tamanho: ${formatBytes(file.size)} · Tipo: .${ext.toUpperCase()}
+                    </p>
+                    <p style="font-size:11px;opacity:.6;">Pré-visualização não disponível para este formato.</p>
+                </div>`;
+        }
+
+        show(filePreviewWrapper);
+
+        // Quando seleciona novo arquivo, oculta o bloco do arquivo atual (edit)
+        if (arquivoAtualWrapper) arquivoAtualWrapper.style.display = 'none';
     }
 
-    if (fileInput) {
-        fileInput.addEventListener('change', () => renderFilePreview(fileInput.files[0] ?? null));
-    }
-
-    if (btnCloseFilePrev) {
-        btnCloseFilePrev.addEventListener('click', () => {
-            fileWrapper.classList.add('hidden');
-            fileContent.innerHTML = '';
-            fileInput.value = '';
+    if (btnCloseFilePreview) {
+        btnCloseFilePreview.addEventListener('click', () => {
+            hide(filePreviewWrapper);
+            if (filePreviewContent) filePreviewContent.innerHTML = '';
+            if (inputFile) inputFile.value = '';
+            // Restaura o bloco do arquivo atual se existir
+            if (arquivoAtualWrapper) arquivoAtualWrapper.style.display = '';
         });
     }
 
-    // ── Drag & drop ──────────────────────────────────────────────
+    // ── Drag & Drop ────────────────────────────────────────────────────────────
     if (dropZone) {
-        ['dragenter', 'dragover'].forEach(evt =>
-            dropZone.addEventListener(evt, e => { e.preventDefault(); dropZone.classList.add('drag-over'); })
-        );
-        ['dragleave', 'drop'].forEach(evt =>
-            dropZone.addEventListener(evt, e => { e.preventDefault(); dropZone.classList.remove('drag-over'); })
-        );
+        dropZone.addEventListener('dragover', e => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
         dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
             const file = e.dataTransfer.files[0];
-            if (!file) return;
-            const dt = new DataTransfer();
-            dt.items.add(file);
-            fileInput.files = dt.files;
-            renderFilePreview(file);
+            if (file && inputFile) {
+                // Simula seleção via DataTransfer
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                inputFile.files = dt.files;
+                renderFilePreview(file);
+            }
         });
     }
 
-});
+    // ── Listeners ──────────────────────────────────────────────────────────────
+    if (selectTipo) {
+        selectTipo.addEventListener('change', function () {
+            atualizarSecaoAnexo(this.value);
+            atualizarPrevia();
+        });
+    }
+
+    if (inputTitulo)   inputTitulo.addEventListener('input',  atualizarPrevia);
+    if (selectMateria) selectMateria.addEventListener('change', atualizarPrevia);
+
+    if (inputFileUrl) {
+        inputFileUrl.addEventListener('input', onUrlInput);
+        inputFileUrl.addEventListener('paste', () => setTimeout(onUrlInput, 100));
+    }
+
+    if (inputFile) {
+        inputFile.addEventListener('change', function () {
+            if (this.files && this.files[0]) {
+                renderFilePreview(this.files[0]);
+            }
+        });
+    }
+
+    // ── Init ───────────────────────────────────────────────────────────────────
+    // Dispara com o valor já selecionado (edit mode ou old())
+    if (selectTipo && selectTipo.value) {
+        atualizarSecaoAnexo(selectTipo.value);
+    }
+
+    // Se há URL já preenchida (edit), renderiza o preview de link
+    if (inputFileUrl && inputFileUrl.value.trim()) {
+        renderLinkPreview(inputFileUrl.value.trim());
+    }
+
+    atualizarPrevia();
+
+})();

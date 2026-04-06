@@ -14,10 +14,21 @@
     $titulo    = $isEdit ? ($conteudo['titulo']    ?? '') : old('titulo',     '');
     $descricao = $isEdit ? ($conteudo['descricao'] ?? '') : old('descricao',  '');
     $materiaId = $isEdit ? ($conteudo['idMateria'] ?? '') : old('materia_id', '');
-    $tipo      = $isEdit ? ($conteudo['tipo']      ?? '') : old('type',       '');
+    // Normaliza para minúsculo — API retorna 'pdf', 'link', etc.
+    $tipo      = $isEdit ? strtolower($conteudo['tipo'] ?? '') : old('type', '');
     $situacao  = $isEdit ? ($conteudo['situacao']  ?? 1)  : old('situacao',   1);
-    $fileUrl   = $isEdit ? ($conteudo['file_url']  ?? '') : old('file_url',   '');
-    $filePath  = $isEdit ? ($conteudo['file_path'] ?? '') : '';
+    $fileUrl   = $isEdit ? ($conteudo['url']       ?? '') : old('file_url',   '');
+
+    // CORRIGIDO: API retorna nomeArquivo + extensaoArquivo, não file_path
+    $nomeArquivoAtual    = $isEdit ? ($conteudo['nomeArquivo']    ?? '') : '';
+    $extensaoArquivoAtual = $isEdit ? ($conteudo['extensaoArquivo'] ?? '') : '';
+    $temArquivoAtual     = $isEdit && !empty($nomeArquivoAtual);
+    $nomeCompletoAtual   = $temArquivoAtual ? ($nomeArquivoAtual . $extensaoArquivoAtual) : '';
+
+    // URL de download do arquivo atual (para pré-visualização no edit)
+    $downloadUrlAtual = ($isEdit && $temArquivoAtual)
+        ? route('professor.conteudo.download', $conteudo['idConteudo'])
+        : null;
 @endphp
 
 <div class="form-grid-two">
@@ -143,6 +154,7 @@
                             class="form-control @error('type') is-invalid @enderror"
                             required
                         >
+                            <option value="">Selecione um tipo</option>
                             <option value="pdf"      {{ $tipo === 'pdf'      ? 'selected' : '' }}>📄 PDF</option>
                             <option value="slide"    {{ $tipo === 'slide'    ? 'selected' : '' }}>🖥️ Slide</option>
                             <option value="link"     {{ $tipo === 'link'     ? 'selected' : '' }}>🎬 Link</option>
@@ -165,7 +177,6 @@
                             <span id="cardAnexoTitulo">Arquivo ou Link</span>
                         </span>
                     </div>
-                    {{-- Aviso de tipo não selecionado --}}
                     <span id="cardAnexoAviso"
                           style="font-size: 12px; color: var(--text-secondary); font-style: italic;">
                         Selecione um tipo acima
@@ -186,6 +197,7 @@
                         Selecione o tipo do conteúdo para ver as opções de anexo.
                     </div>
 
+                    {{-- ── Seção Link ── --}}
                     <div id="secaoLink" class="hidden">
                         <div class="form-group" style="margin-bottom: 0;">
                             <label class="form-label" for="mat_file_url">
@@ -206,7 +218,10 @@
                                 <span class="invalid-feedback">{{ $message }}</span>
                             @enderror
 
-                            <div id="linkPreviewWrapper" class="link-preview-wrapper{{ empty($fileUrl) ? ' hidden' : '' }}">
+                            {{-- Pré-visualização do link — tamanho aumentado --}}
+                            <div id="linkPreviewWrapper"
+                                 class="link-preview-wrapper{{ empty($fileUrl) ? ' hidden' : '' }}"
+                                 style="margin-top: 16px;">
                                 <div class="link-preview-header">
                                     <i class="fas fa-eye"></i>
                                     <span>Pré-visualização do link</span>
@@ -214,7 +229,31 @@
                                         <i class="fas fa-times"></i>
                                     </button>
                                 </div>
-                                <div id="linkPreviewContent" class="link-preview-content"></div>
+                                <div id="linkPreviewContent"
+                                     class="link-preview-content"
+                                     style="min-height: 520px; height: 52vh;">
+                                    @if(!empty($fileUrl))
+                                        @php
+                                            preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&?\/]+)/', $fileUrl, $ytMatch);
+                                            preg_match('/drive\.google\.com\/file\/d\/([^\/]+)/', $fileUrl, $gdMatch);
+                                        @endphp
+                                        @if(!empty($ytMatch[1]))
+                                            <iframe src="https://www.youtube.com/embed/{{ $ytMatch[1] }}"
+                                                    style="width:100%;height:100%;border:none;"
+                                                    allowfullscreen></iframe>
+                                        @elseif(!empty($gdMatch[1]))
+                                            <iframe src="https://drive.google.com/file/d/{{ $gdMatch[1] }}/preview"
+                                                    style="width:100%;height:100%;border:none;"></iframe>
+                                        @else
+                                            <div style="padding:32px;text-align:center;">
+                                                <i class="fas fa-link" style="font-size:32px;opacity:.4;"></i>
+                                                <p style="margin-top:8px;">
+                                                    <a href="{{ $fileUrl }}" target="_blank" rel="noopener">{{ $fileUrl }}</a>
+                                                </p>
+                                            </div>
+                                        @endif
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -223,6 +262,7 @@
                         <span>ou faça upload de um arquivo</span>
                     </div>
 
+                    {{-- ── Seção Upload ── --}}
                     <div id="secaoUpload" class="hidden">
                         <div class="form-group" style="margin-bottom: 0;">
                             <div class="file-drop-zone" id="matFileDropZone">
@@ -240,27 +280,70 @@
                                 >
                             </div>
 
-                            <div id="filePreviewWrapper" class="link-preview-wrapper hidden">
+                            {{-- Pré-visualização do arquivo NOVO selecionado --}}
+                            <div id="filePreviewWrapper" class="link-preview-wrapper hidden"
+                                 style="margin-top: 16px;">
                                 <div class="link-preview-header">
                                     <i class="fas fa-eye"></i>
-                                    <span>Pré-visualização do arquivo</span>
+                                    <span>Pré-visualização do arquivo selecionado</span>
                                     <button type="button" id="btnCloseFilePreview" class="link-preview-close">
                                         <i class="fas fa-times"></i>
                                     </button>
                                 </div>
-                                <div id="filePreviewContent" class="link-preview-content"></div>
+                                <div id="filePreviewContent"
+                                     class="link-preview-content"
+                                     style="min-height: 520px; height: 52vh;"></div>
                             </div>
 
-                            @if($isEdit && !empty($filePath))
-                            <div class="current-file-info">
-                                <i class="fas fa-paperclip"></i>
-                                <span>Arquivo atual: <strong>{{ basename($filePath) }}</strong></span>
-                                <small>(deixe vazio para manter o arquivo atual)</small>
+                            {{-- Arquivo ATUAL (somente no edit, quando há arquivo salvo e nenhum novo foi selecionado) --}}
+                            @if($isEdit && $temArquivoAtual)
+                            <div id="arquivoAtualWrapper" style="margin-top: 16px;">
+                                <div class="link-preview-header" style="
+                                    display: flex; align-items: center; gap: 8px;
+                                    padding: 10px 14px;
+                                    background: rgba(115,103,240,0.08);
+                                    border-radius: 8px 8px 0 0;
+                                    border: 1px solid rgba(115,103,240,0.2);
+                                    border-bottom: none;">
+                                    <i class="fas fa-paperclip" style="color: var(--primary-color);"></i>
+                                    <span style="font-weight: 600; font-size: 13px;">Arquivo atual: {{ $nomeCompletoAtual }}</span>
+                                    <small style="color: var(--text-secondary); margin-left: auto;">(substitua com novo upload acima, ou mantenha)</small>
+                                </div>
+                                <div id="arquivoAtualPreview" style="
+                                    min-height: 520px;
+                                    height: 52vh;
+                                    border: 1px solid rgba(115,103,240,0.2);
+                                    border-radius: 0 0 8px 8px;
+                                    overflow: hidden;
+                                    background: #f9f9f9;">
+                                    @php
+                                        $extAtual = strtolower(ltrim($extensaoArquivoAtual, '.'));
+                                    @endphp
+                                    @if($extAtual === 'pdf' && $downloadUrlAtual)
+                                        <iframe src="{{ $downloadUrlAtual }}"
+                                                style="width:100%;height:100%;border:none;"
+                                                type="application/pdf"
+                                                sandbox="allow-same-origin"></iframe>
+                                    @else
+                                        {{-- Para outros tipos (docx, pptx, etc.) não é possível preview direto --}}
+                                        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:var(--text-secondary);">
+                                            <i class="fas fa-file" style="font-size: 48px; opacity: .4;"></i>
+                                            <p style="font-size: 14px; margin: 0;">{{ $nomeCompletoAtual }}</p>
+                                            <a href="{{ $downloadUrlAtual }}"
+                                               class="btn-action-download"
+                                               download
+                                               style="display:inline-flex;gap:6px;">
+                                                <i class="fas fa-download"></i>
+                                                Baixar arquivo atual
+                                            </a>
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
                             @endif
 
                             @error('file_path')
-                                <span class="invalid-feedback">{{ $message }}</span>
+                                <span class="invalid-feedback" style="display:block;margin-top:6px;">{{ $message }}</span>
                             @enderror
                         </div>
                     </div>
@@ -339,4 +422,29 @@
 
 @push('scripts')
 <script src="{{ asset('js/conteudo-form.js') }}"></script>
+<script>
+// ── Oculta o wrapper do arquivo atual assim que o usuário escolher um novo arquivo ──
+(function () {
+    const inputFile    = document.getElementById('mat_file');
+    const wrapperAtual = document.getElementById('arquivoAtualWrapper');
+
+    if (inputFile && wrapperAtual) {
+        inputFile.addEventListener('change', function () {
+            if (this.files && this.files.length > 0) {
+                // Usuário escolheu novo arquivo: oculta preview do atual
+                wrapperAtual.style.display = 'none';
+            }
+        });
+    }
+
+    // Ao fechar o preview do novo arquivo, re-exibe o atual
+    const btnClose = document.getElementById('btnCloseFilePreview');
+    if (btnClose && wrapperAtual) {
+        btnClose.addEventListener('click', function () {
+            wrapperAtual.style.display = '';
+            if (inputFile) inputFile.value = '';
+        });
+    }
+})();
+</script>
 @endpush

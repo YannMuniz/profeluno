@@ -11,6 +11,10 @@
     display: none !important;
 }
 
+.hidden {
+    display: none !important;
+}
+
 .link-preview-header {
     display: flex;
     align-items: center;
@@ -38,7 +42,7 @@
 .link-preview-content { padding: 0; line-height: 0; }
 .link-preview-content iframe {
     width: 100%;
-    height: 280px;
+    min-height: 520px;
     border: none;
     display: block;
 }
@@ -111,7 +115,7 @@
 
 /* ── Modal de visualização de link ────────────────────── */
 #linkViewModal .modal-box {
-    max-width: 760px;
+    max-width: 900px;
     width: 95vw;
     padding: 0;
     overflow: hidden;
@@ -143,7 +147,7 @@
 .modal-view-body iframe,
 .modal-view-body video {
     width: 100%;
-    height: 400px;
+    min-height: 520px;
     border: none;
     display: block;
 }

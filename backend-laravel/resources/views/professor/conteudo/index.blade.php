@@ -41,8 +41,9 @@
                 <option value="">Todos os tipos</option>
                 <option value="pdf">📄 PDF</option>
                 <option value="slide">🖥️ Slide</option>
-                <option value="Link">🎬 Link</option>
+                <option value="link">🎬 Link</option>
                 <option value="document">📝 Documento</option>
+                <option value="other">📦 Outro</option>
             </select>
             <span class="table-count" id="tableCount">
                 {{ count($conteudos) }} conteúdo(s) encontrado(s)
@@ -65,29 +66,31 @@
         <tbody>
             @forelse($conteudos as $conteudo)
             @php
-                $id              = $conteudo['idConteudo']             ?? '—';
-                $titulo          = $conteudo['titulo']                 ?? '—';
-                $nomeMateria     = $conteudo['materia']['nomeMateria'] ?? '—';
-                $tipo            = $conteudo['tipo']                   ?? 'other';
-                $situacao        = $conteudo['situacao']               ?? true;
-                $criadoEm        = $conteudo['createdAt']              ?? null;
-                $fileUrl         = $conteudo['url']                    ?? null;   // ← campo correto da API
-                $nomeArquivo     = $conteudo['nomeArquivo']            ?? null;   // ← usado para saber se tem arquivo
+                $id          = $conteudo['idConteudo']             ?? '—';
+                $titulo      = $conteudo['titulo']                 ?? '—';
+                $nomeMateria = $conteudo['materia']['nomeMateria'] ?? '—';
+                // API sempre retorna tipo em minúsculo — normalizar aqui para garantir
+                $tipo        = strtolower($conteudo['tipo']        ?? 'other');
+                $situacao    = $conteudo['situacao']               ?? true;
+                $criadoEm   = $conteudo['createdAt']              ?? null;
+                $fileUrl     = $conteudo['url']                    ?? null;
+                $nomeArquivo = $conteudo['nomeArquivo']            ?? null;
 
+                // Mapeamento com chaves TODAS em minúsculo para evitar mismatch
                 $tipoIcones = [
                     'pdf'      => ['icon' => 'fa-file-pdf',  'cor' => '#ea5455', 'bg' => 'rgba(234,84,85,0.12)',    'label' => 'PDF'],
                     'slide'    => ['icon' => 'fa-desktop',   'cor' => '#ff9f43', 'bg' => 'rgba(255,159,67,0.12)',   'label' => 'Slide'],
-                    'Link'     => ['icon' => 'fa-film',      'cor' => '#00cfe8', 'bg' => 'rgba(0,207,232,0.12)',    'label' => 'Link'],
+                    'link'     => ['icon' => 'fa-film',      'cor' => '#00cfe8', 'bg' => 'rgba(0,207,232,0.12)',    'label' => 'Link'],
                     'document' => ['icon' => 'fa-file-word', 'cor' => '#7367f0', 'bg' => 'rgba(115,103,240,0.12)', 'label' => 'Documento'],
                     'other'    => ['icon' => 'fa-file',      'cor' => '#82868b', 'bg' => 'rgba(130,134,139,0.12)', 'label' => 'Outro'],
                 ];
 
                 $info = $tipoIcones[$tipo] ?? $tipoIcones['other'];
 
-                // Link  → botão "Abrir"  (usa campo url da API)
-                // Arquivo → botão "Baixar" (usa nomeArquivo para confirmar que existe arquivo)
-                $hasLink = !empty($fileUrl)     && $tipo === 'Link';
-                $hasFile = !empty($nomeArquivo) && in_array($tipo, ['pdf', 'slide', 'document']);
+                // Link  → botão "Abrir"  — tipo minúsculo agora bate corretamente
+                // Arquivo → botão "Baixar"
+                $hasLink = !empty($fileUrl)     && $tipo === 'link';
+                $hasFile = !empty($nomeArquivo) && in_array($tipo, ['pdf', 'slide', 'document', 'other']);
             @endphp
             <tr data-tipo="{{ $tipo }}">
                 <td>{{ $id }}</td>
@@ -99,7 +102,22 @@
                             <i class="fas {{ $info['icon'] }}" style="font-size: 14px;"></i>
                         </div>
                         <div>
-                            <strong>{{ $titulo }}</strong>
+                            @if($hasLink)
+                                {{-- Título clicável para links --}}
+                                <strong>
+                                    <a href="#"
+                                       onclick="openLinkModal({{ json_encode($titulo) }}, {{ json_encode($fileUrl) }}); return false;"
+                                       style="color: inherit; text-decoration: none;"
+                                       title="Visualizar link">
+                                        {{ $titulo }}
+                                        <i class="fas fa-external-link-alt"
+                                           style="font-size: 10px; opacity: .6; margin-left: 4px;"></i>
+                                    </a>
+                                </strong>
+                            @else
+                                <strong>{{ $titulo }}</strong>
+                            @endif
+
                             @if(!empty($conteudo['descricao']))
                             <p style="font-size: 12px; color: var(--text-secondary); margin: 2px 0 0;">
                                 {{ Str::limit($conteudo['descricao'], 55) }}
@@ -143,7 +161,7 @@
                         <button
                             class="btn-action-link"
                             title="Visualizar link"
-                            onclick="openLinkModal('{{ addslashes($titulo) }}', '{{ addslashes($fileUrl) }}')"
+                            onclick="openLinkModal({{ json_encode($titulo) }}, {{ json_encode($fileUrl) }})"
                         >
                             <i class="fas fa-play-circle"></i>
                             Abrir
@@ -197,8 +215,9 @@
 </div>
 @endif
 
+{{-- Modal: Visualizar Link --}}
 <div class="modal-overlay" id="linkViewModal">
-    <div class="modal-box" style="padding:0;">
+    <div class="modal-box" style="padding:0; max-width: 900px; width: 95vw;">
         <div class="modal-view-header">
             <i class="fas fa-external-link-alt" style="color: var(--primary-color);"></i>
             <span id="linkViewTitle">—</span>
@@ -210,10 +229,13 @@
                 onclick="closeLinkModal()"
             ><i class="fas fa-times"></i></button>
         </div>
-        <div class="modal-view-body" id="linkViewBody"></div>
+        {{-- Aumentado: altura fixa grande para o iframe --}}
+        <div class="modal-view-body" id="linkViewBody"
+             style="min-height: 520px; height: 60vh;"></div>
     </div>
 </div>
 
+{{-- Modal: Excluir --}}
 <div class="modal-overlay" id="deleteModal">
     <div class="modal-box">
         <div class="modal-icon">
@@ -294,17 +316,27 @@ function openLinkModal(titulo, url) {
 
     const ytId = getYouTubeId(url);
     if (ytId) {
-        body.innerHTML = `<iframe src="https://www.youtube.com/embed/${ytId}" allowfullscreen></iframe>`;
+        body.innerHTML = `<iframe
+            src="https://www.youtube.com/embed/${ytId}"
+            style="width:100%;height:100%;min-height:520px;border:none;"
+            allowfullscreen></iframe>`;
     } else {
         const gdId = getGDriveId(url);
         if (gdId) {
-            body.innerHTML = `<iframe src="https://drive.google.com/file/d/${gdId}/preview"></iframe>`;
+            body.innerHTML = `<iframe
+                src="https://drive.google.com/file/d/${gdId}/preview"
+                style="width:100%;height:100%;min-height:520px;border:none;"></iframe>`;
         } else {
             body.innerHTML = `
-                <div class="generic-link-view">
-                    <i class="fas fa-external-link-alt"></i>
-                    <p style="margin: 8px 0 4px; font-weight:600;">${titulo}</p>
-                    <a href="${url}" target="_blank" rel="noopener">${url}</a>
+                <div class="generic-link-view" style="padding: 40px; text-align: center;">
+                    <i class="fas fa-external-link-alt" style="font-size: 48px; opacity:.4; margin-bottom: 16px;"></i>
+                    <p style="margin: 8px 0 4px; font-weight:600; font-size: 16px;">${titulo}</p>
+                    <a href="${url}" target="_blank" rel="noopener"
+                       style="word-break: break-all; color: var(--primary-color);">${url}</a>
+                    <br><br>
+                    <a href="${url}" target="_blank" rel="noopener" class="btn-form-submit" style="display:inline-flex;gap:6px;">
+                        <i class="fas fa-external-link-alt"></i> Abrir link
+                    </a>
                 </div>`;
         }
     }

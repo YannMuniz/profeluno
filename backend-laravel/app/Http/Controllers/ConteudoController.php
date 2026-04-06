@@ -15,14 +15,12 @@ class ConteudoController extends Controller
     {
         $this->baseUrl = env('DOTNET_API_URL', 'http://profeluno_dotnet:9000');
     }
-    
+
     private function authHeaders(): array
     {
         $token = session('api_token');
-
         return [
             'Accept'        => 'application/json',
-            'Content-Type'  => 'application/json',
             'Authorization' => "Bearer {$token}",
         ];
     }
@@ -33,65 +31,66 @@ class ConteudoController extends Controller
             $response = Http::withHeaders($this->authHeaders())
                 ->timeout(15)
                 ->get("{$this->baseUrl}/v1/{$endpoint}");
+
             if ($response->successful()) {
                 return $response->json();
             }
 
-            Log::warning("[SimuladoController] GET {$endpoint} retornou {$response->status()}", [
-                'body' => $response->body(),
-            ]);
-
+            Log::warning("[ConteudoController] GET {$endpoint} retornou {$response->status()}", ['body' => $response->body()]);
             return null;
         } catch (\Exception $e) {
-            Log::error("[SimuladoController] GET {$endpoint} falhou: " . $e->getMessage());
+            Log::error("[ConteudoController] GET {$endpoint} falhou: " . $e->getMessage());
             return null;
         }
     }
 
-    private function apiPost(string $endpoint, array $data): ?array
+    /**
+     * POST com parâmetros na query string.
+     * A API .NET usa [FromQuery], portanto o body fica vazio.
+     */
+    private function apiPostQuery(string $endpoint, array $data): ?array
     {
         try {
-            $response = Http::withHeaders($this->authHeaders())
-                ->timeout(15)
-                ->post("{$this->baseUrl}/v1/{$endpoint}", $data);
+            $url      = "{$this->baseUrl}/v1/{$endpoint}?" . http_build_query($data);
+            $response = Http::withHeaders($this->authHeaders())->timeout(15)->send('POST', $url);
 
             if ($response->successful()) {
-                // API pode retornar JSON ou string vazia (ex: 200/201 sem body)
                 $json = $response->json();
                 return is_array($json) ? $json : [];
             }
 
-            Log::warning("[SimuladoController] POST {$endpoint} retornou {$response->status()}", [
+            Log::warning("[ConteudoController] POST(query) {$endpoint} retornou {$response->status()}", [
+                'url'  => $url,
                 'body' => $response->body(),
             ]);
-
             return null;
         } catch (\Exception $e) {
-            Log::error("[SimuladoController] POST {$endpoint} falhou: " . $e->getMessage());
+            Log::error("[ConteudoController] POST(query) {$endpoint} falhou: " . $e->getMessage());
             return null;
         }
     }
 
-    private function apiPut(string $endpoint, array $data): ?array
+    /**
+     * PUT com parâmetros na query string.
+     */
+    private function apiPutQuery(string $endpoint, array $data): ?array
     {
         try {
-            $response = Http::withHeaders($this->authHeaders())
-                ->timeout(15)
-                ->put("{$this->baseUrl}/v1/{$endpoint}", $data);
+            $url      = "{$this->baseUrl}/v1/{$endpoint}?" . http_build_query($data);
+            $response = Http::withHeaders($this->authHeaders())->timeout(15)->send('PUT', $url);
 
             if ($response->successful()) {
-                // API pode retornar JSON ou string vazia (ex: 200/201 sem body)
                 $json = $response->json();
                 return is_array($json) ? $json : [];
             }
 
-            Log::warning("[SimuladoController] PUT {$endpoint} retornou {$response->status()}", [
+            Log::warning("[ConteudoController] PUT(query) {$endpoint} retornou {$response->status()}", [
+                'url'  => $url,
                 'body' => $response->body(),
             ]);
-
             return null;
         } catch (\Exception $e) {
-            Log::error("[SimuladoController] PUT {$endpoint} falhou: " . $e->getMessage());
+            Log::error("[ConteudoController] PUT(query) {$endpoint} falhou: " . $e->getMessage());
             return null;
         }
     }
@@ -99,73 +98,59 @@ class ConteudoController extends Controller
     private function apiDelete(string $endpoint): bool
     {
         try {
-            $response = Http::withHeaders($this->authHeaders())
-                ->timeout(15)
+            $response = Http::withHeaders($this->authHeaders())->timeout(15)
                 ->delete("{$this->baseUrl}/v1/{$endpoint}");
 
-            if ($response->successful()) {
-                return true;
-            }
+            if ($response->successful()) return true;
 
-            Log::warning("[SimuladoController] DELETE {$endpoint} retornou {$response->status()}", [
-                'body' => $response->body(),
-            ]);
-
+            Log::warning("[ConteudoController] DELETE {$endpoint} retornou {$response->status()}", ['body' => $response->body()]);
             return false;
         } catch (\Exception $e) {
-            Log::error("[SimuladoController] DELETE {$endpoint} falhou: " . $e->getMessage());
+            Log::error("[ConteudoController] DELETE {$endpoint} falhou: " . $e->getMessage());
             return false;
         }
     }
-    
+
+    // ─────────────────────────────────────────────────────────────
+
     public function index()
     {
-        $professorId = Auth::id();
-        $conteudos = $this->apiGet("Conteudo/ListarConteudos");
-       
-        $conteudos = $conteudos ?? [];
-
-        $title = '<i class="fas fa-folder-open"></i> Conteúdos';
-        $subtitle = 'Gerencie os materiais e conteudos das suas salas de aula';
+        $conteudos = $this->apiGet("Conteudo/ListarConteudos") ?? [];
+        $title    = '<i class="fas fa-folder-open"></i> Conteúdos';
+        $subtitle = 'Gerencie os materiais e conteúdos das suas salas de aula';
         return view('professor.conteudo.index', compact('conteudos', 'title', 'subtitle'));
     }
 
     public function create()
     {
-        $materias = $this->apiGet("Materia/ListarMaterias") ?? [];
-
-        $ultimapagina = "<a href='" . route('professor.conteudo.index') . "' class='back-link'>
-            <i class='fas fa-arrow-left'></i>
-            Voltar
-        </a>";
-        $title = '<i class="fas fa-plus"></i> Novo Conteúdo';
-        $subtitle = 'Adicione um conteúdo de apoio para a sala';
+        $materias     = $this->apiGet("Materia/ListarMaterias") ?? [];
+        $ultimapagina = "<a href='" . route('professor.conteudo.index') . "' class='back-link'><i class='fas fa-arrow-left'></i> Voltar</a>";
+        $title        = '<i class="fas fa-plus"></i> Novo Conteúdo';
+        $subtitle     = 'Adicione um conteúdo de apoio para a sala';
         return view('professor.conteudo.create', compact('title', 'subtitle', 'ultimapagina', 'materias'));
     }
 
     public function store(Request $request)
     {
-        Log::info('Conteudo store called', [
-            'user_id' => Auth::id(),
-            'user_cargo' => session('user_cargo'),
-            'request_all' => $request->all(),
-            'files' => $request->hasFile('file_path') ? 'yes' : 'no',
+        Log::info('[ConteudoController] store()', [
+            'payload'  => $request->except(['file_path', '_token']),
+            'has_file' => $request->hasFile('file_path') ? 'yes' : 'no',
         ]);
 
         $request->validate([
-            'titulo'      => 'required|string|max:255',
-            'descricao'   => 'nullable|string',
-            'materia_id'  => 'required|integer',
-            'type'        => 'required|string|in:pdf,slide,link,document,other',
-            'situacao'    => 'nullable|boolean',
-            'file_url'    => 'nullable|url|required_if:type,link',
-            'file_path'   => [
-                'nullable',
-                'file',
-                'max:51200',
+            'titulo'     => 'required|string|max:255',
+            'descricao'  => 'nullable|string',
+            'materia_id' => 'required|integer',
+            'type'       => 'required|string|in:pdf,slide,link,document,other',
+            'situacao'   => 'nullable|boolean',
+            'file_url'   => 'nullable|url|required_if:type,link',
+            'file_path'  => [
+                'nullable', 'file', 'max:51200',
                 'mimes:pdf,pptx,ppt,docx,doc,mp4,avi,mov',
                 function ($attribute, $value, $fail) use ($request) {
-                    if ($request->input('type') !== 'link' && empty($request->input('file_url')) && !$value) {
+                    if ($request->input('type') !== 'link'
+                        && empty($request->input('file_url'))
+                        && !$value) {
                         $fail('Envie um arquivo ou informe uma URL.');
                     }
                 },
@@ -180,74 +165,72 @@ class ConteudoController extends Controller
             'file_path.mimes'      => 'Formato de arquivo não permitido.',
         ]);
 
-        Log::info('Validation passed');
-
         $professorId = Auth::id();
-        $tipo        = $request->input('type');
+        $tipo        = strtolower($request->input('type'));
         $fileUrl     = $request->input('file_url', '');
+        $situacao    = $request->boolean('situacao', true);
 
-        // dd($request->all());
-        // ── Com arquivo físico → multipart/form-data ──────────────────────────
+        // ── Com arquivo físico ──────────────────────────────────────────────
         if ($request->hasFile('file_path') && $request->file('file_path')->isValid()) {
             $arquivo  = $request->file('file_path');
+            // getClientOriginalExtension() funciona mesmo que o filename temporário não tenha extensão
             $nomeOrig = pathinfo($arquivo->getClientOriginalName(), PATHINFO_FILENAME);
             $extensao = '.' . $arquivo->getClientOriginalExtension();
+
+            Log::info('[ConteudoController] store() com arquivo', [
+                'nome' => $nomeOrig, 'ext' => $extensao, 'size' => $arquivo->getSize(),
+            ]);
+
+            // Parâmetros via query string + arquivo via multipart
+            $queryParams = http_build_query([
+                'Titulo'          => $request->input('titulo'),
+                'IdUsuario'       => $professorId,
+                'Descricao'       => $request->input('descricao', ''),
+                'IdMateria'       => (int) $request->input('materia_id'),
+                'Tipo'            => $tipo,
+                'Situacao'        => $situacao ? 'true' : 'false',
+                'NomeArquivo'     => $nomeOrig,
+                'ExtensaoArquivo' => $extensao,
+                'Url'             => $fileUrl,
+            ]);
 
             try {
                 $response = Http::withToken(session('api_token'))
                     ->timeout(60)
-                    ->attach(
-                        'Arquivo',                                       // <-- campo C#
-                        file_get_contents($arquivo->getRealPath()),
-                        $arquivo->getClientOriginalName()
-                    )
-                    ->post("{$this->baseUrl}/v1/Conteudo/CadastrarConteudo", [
-                    'Titulo'           => $request->input('titulo'),
-                    'IdUsuario'        => $professorId,
-                    'Descricao'        => $request->input('descricao', ''),
-                    'IdMateria'        => (int) $request->input('materia_id'),
-                    'Tipo'             => strtolower($tipo),
-                    'Situacao'         => $request->boolean('situacao', true) ? 'true' : 'false',
-                    'NomeArquivo'      => $nomeOrig,
-                    'ExtensaoArquivo'  => $extensao,
-                    'Url'              => $fileUrl,
-                ]);
-
+                    ->attach('Arquivo', file_get_contents($arquivo->getRealPath()), $arquivo->getClientOriginalName())
+                    ->post("{$this->baseUrl}/v1/Conteudo/CadastrarConteudo?{$queryParams}");
             } catch (\Exception $e) {
-                Log::error('[ConteudoController] store() multipart falhou: ' . $e->getMessage());
+                Log::error('[ConteudoController] store() multipart: ' . $e->getMessage());
                 return back()->withInput()->with('error', 'Erro ao conectar com o servidor.');
             }
 
             if (!$response->successful()) {
-                Log::warning('[ConteudoController] API recusou cadastro', [
-                    'status' => $response->status(),
-                    'body'   => $response->body(),
+                Log::warning('[ConteudoController] store() multipart recusado', [
+                    'status' => $response->status(), 'body' => $response->body(),
                 ]);
                 return back()->withInput()->with('error', $response->json('message') ?? 'Erro ao cadastrar conteúdo.');
             }
 
-        // ── Sem arquivo (link/URL externa) → JSON ─────────────────────────────
+        // ── Sem arquivo (link) → query string ──────────────────────────────
         } else {
-            $result = $this->apiPost('Conteudo/CadastrarConteudo', [
-                'Titulo'           => $request->input('titulo'),
-                'IdUsuario'        => $professorId,
-                'Descricao'        => $request->input('descricao', ''),
-                'IdMateria'        => $request->input('materia_id'),
-                'Tipo'             => strtolower($tipo),
-                'Situacao'         => $request->boolean('situacao', true),
-                'NomeArquivo'      => '',
-                'ExtensaoArquivo'  => '',
-                'Url'              => $fileUrl,
+            $result = $this->apiPostQuery('Conteudo/CadastrarConteudo', [
+                'Titulo'          => $request->input('titulo'),
+                'IdUsuario'       => $professorId,
+                'Descricao'       => $request->input('descricao', ''),
+                'IdMateria'       => (int) $request->input('materia_id'),
+                'Tipo'            => $tipo,
+                'Situacao'        => $situacao ? 'true' : 'false',
+                'NomeArquivo'     => '',
+                'ExtensaoArquivo' => '',
+                'Url'             => $fileUrl,
             ]);
 
             if ($result === null) {
-                return back()->withInput()->with('error', 'Não foi possível cadastrar o conteúdo.');
+                return back()->withInput()->with('error', 'Não foi possível cadastrar o conteúdo. Verifique os dados e tente novamente.');
             }
         }
 
-        return redirect()
-            ->route('professor.conteudo.index')
-            ->with('success', 'Conteúdo cadastrado com sucesso!');
+        return redirect()->route('professor.conteudo.index')->with('success', 'Conteúdo cadastrado com sucesso!');
     }
 
     public function show($id)
@@ -257,37 +240,29 @@ class ConteudoController extends Controller
 
     public function edit($id)
     {
-        $conteudo = $this->apiGet("Conteudo/{$id}");
+        $conteudo = $this->apiGet("Conteudo/RetornaConteudoPorId/{$id}");
         if ($conteudo === null) {
             return redirect()->route('professor.conteudo.index')->with('error', 'Conteúdo não encontrado.');
         }
 
-        $materias = $this->apiGet("Materia/ListarMaterias") ?? [];
+        $materias     = $this->apiGet("Materia/ListarMaterias") ?? [];
+        $ultimapagina = "<a href='" . route('professor.conteudo.index') . "' class='back-link'><i class='fas fa-arrow-left'></i> Voltar</a>";
+        $title        = '<i class="fas fa-edit"></i> Editar Conteúdo';
+        $subtitle     = 'Atualize as informações do conteúdo';
 
-        $ultimapagina = "<a href='" . route('professor.conteudo.index') . "' class='back-link'>
-            <i class='fas fa-arrow-left'></i>
-            Voltar
-        </a>";
-        $title = '<i class="fas fa-edit"></i> Editar Conteúdo';
-        $subtitle = 'Atualize as informações do conteúdo';
         return view('professor.conteudo.edit', compact('conteudo', 'materias', 'title', 'subtitle', 'ultimapagina'));
     }
 
     public function update(Request $request, $id)
     {
         $request->validate([
-            'titulo'      => 'required|string|max:255',
-            'descricao'   => 'nullable|string',
-            'materia_id'  => 'required|integer',
-            'type'        => 'required|string|in:pdf,slide,link,document,other',
-            'situacao'    => 'nullable|boolean',
-            'file_url'    => 'nullable|url|required_if:type,link',
-            'file_path'   => [
-                'nullable',
-                'file',
-                'max:51200',
-                'mimes:pdf,pptx,ppt,docx,doc,mp4,avi,mov',
-            ],
+            'titulo'     => 'required|string|max:255',
+            'descricao'  => 'nullable|string',
+            'materia_id' => 'required|integer',
+            'type'       => 'required|string|in:pdf,slide,link,document,other',
+            'situacao'   => 'nullable|boolean',
+            'file_url'   => 'nullable|url|required_if:type,link',
+            'file_path'  => ['nullable', 'file', 'max:51200', 'mimes:pdf,pptx,ppt,docx,doc,mp4,avi,mov'],
         ], [
             'titulo.required'      => 'O título é obrigatório.',
             'materia_id.required'  => 'Selecione uma matéria.',
@@ -299,60 +274,55 @@ class ConteudoController extends Controller
         ]);
 
         $professorId = Auth::id();
-        $tipo        = $request->input('type');
+        $tipo        = strtolower($request->input('type'));
         $fileUrl     = $request->input('file_url', '');
+        $situacao    = $request->boolean('situacao', true);
 
-        // ── Com arquivo físico → multipart/form-data ──────────────────────────
         if ($request->hasFile('file_path') && $request->file('file_path')->isValid()) {
-            $arquivo  = $request->file('file_path');
-            $nomeOrig = pathinfo($arquivo->getClientOriginalName(), PATHINFO_FILENAME);
-            $extensao = '.' . $arquivo->getClientOriginalExtension();
+            $arquivo     = $request->file('file_path');
+            $nomeOrig    = pathinfo($arquivo->getClientOriginalName(), PATHINFO_FILENAME);
+            $extensao    = '.' . $arquivo->getClientOriginalExtension();
+            $queryParams = http_build_query([
+                'IdConteudo'      => (int) $id,
+                'Titulo'          => $request->input('titulo'),
+                'IdUsuario'       => $professorId,
+                'Descricao'       => $request->input('descricao', ''),
+                'IdMateria'       => (int) $request->input('materia_id'),
+                'Tipo'            => $tipo,
+                'Situacao'        => $situacao ? 'true' : 'false',
+                'NomeArquivo'     => $nomeOrig,
+                'ExtensaoArquivo' => $extensao,
+                'Url'             => $fileUrl,
+            ]);
 
             try {
                 $response = Http::withToken(session('api_token'))
                     ->timeout(60)
-                    ->attach(
-                        'Arquivo',
-                        file_get_contents($arquivo->getRealPath()),
-                        $arquivo->getClientOriginalName()
-                    )
-                    ->put("{$this->baseUrl}/v1/Conteudo/{$id}", [
-                        'Titulo'           => $request->input('titulo'),
-                        'IdUsuario'        => $professorId,
-                        'Descricao'        => $request->input('descricao', ''),
-                        'IdMateria'        => $request->input('materia_id'),
-                        'Tipo'             => strtolower($tipo),
-                        'Situacao'         => $request->boolean('situacao', true),
-                        'NomeArquivo'      => $nomeOrig,
-                        'ExtensaoArquivo'  => $extensao,
-                        'Url'              => $fileUrl,
-                    ]);
-
+                    ->attach('Arquivo', file_get_contents($arquivo->getRealPath()), $arquivo->getClientOriginalName())
+                    ->put("{$this->baseUrl}/v1/Conteudo/AtualizarConteudo?{$queryParams}");
             } catch (\Exception $e) {
-                Log::error('[ConteudoController] update() multipart falhou: ' . $e->getMessage());
+                Log::error('[ConteudoController] update() multipart: ' . $e->getMessage());
                 return back()->withInput()->with('error', 'Erro ao conectar com o servidor.');
             }
 
             if (!$response->successful()) {
-                Log::warning('[ConteudoController] API recusou atualização', [
-                    'status' => $response->status(),
-                    'body'   => $response->body(),
+                Log::warning('[ConteudoController] update() multipart recusado', [
+                    'status' => $response->status(), 'body' => $response->body(),
                 ]);
                 return back()->withInput()->with('error', $response->json('message') ?? 'Erro ao atualizar conteúdo.');
             }
-
-        // ── Sem arquivo → JSON ─────────────────────────────
         } else {
-            $result = $this->apiPut("Conteudo/{$id}", [
-                'Titulo'           => $request->input('titulo'),
-                'IdUsuario'        => $professorId,
-                'Descricao'        => $request->input('descricao', ''),
-                'IdMateria'        => $request->input('materia_id'),
-                'Tipo'             => strtolower($tipo),
-                'Situacao'         => $request->boolean('situacao', true),
-                'NomeArquivo'      => '',
-                'ExtensaoArquivo'  => '',
-                'Url'              => $fileUrl,
+            $result = $this->apiPutQuery('Conteudo/AtualizarConteudo', [
+                'IdConteudo'      => (int) $id,
+                'Titulo'          => $request->input('titulo'),
+                'IdUsuario'       => $professorId,
+                'Descricao'       => $request->input('descricao', ''),
+                'IdMateria'       => (int) $request->input('materia_id'),
+                'Tipo'            => $tipo,
+                'Situacao'        => $situacao ? 'true' : 'false',
+                'NomeArquivo'     => '',
+                'ExtensaoArquivo' => '',
+                'Url'             => $fileUrl,
             ]);
 
             if ($result === null) {
@@ -360,44 +330,45 @@ class ConteudoController extends Controller
             }
         }
 
-        return redirect()
-            ->route('professor.conteudo.index')
-            ->with('success', 'Conteúdo atualizado com sucesso!');
+        return redirect()->route('professor.conteudo.index')->with('success', 'Conteúdo atualizado com sucesso!');
     }
-    
+
     public function destroy($id)
     {
-        $result = $this->apiDelete("Conteudo/{$id}");
-
+        $result = $this->apiDelete("Conteudo/DeletarConteudo/{$id}");
         if ($result) {
             return redirect()->route('professor.conteudo.index')->with('success', 'Conteúdo deletado com sucesso!');
-        } else {
-            return redirect()->route('professor.conteudo.index')->with('error', 'Erro ao deletar conteúdo.');
         }
+        return redirect()->route('professor.conteudo.index')->with('error', 'Erro ao deletar conteúdo.');
     }
 
     public function toggle($id)
     {
-        $conteudo = $this->apiGet("Conteudo/{$id}");
+        $conteudo = $this->apiGet("Conteudo/RetornaConteudoPorId/{$id}");
         if ($conteudo === null) {
             return response()->json(['error' => 'Conteúdo não encontrado.'], 404);
         }
 
         $novaSituacao = !$conteudo['situacao'];
 
-        $result = $this->apiPut("Conteudo/{$id}/Toggle", [
-            'Situacao' => $novaSituacao,
+        $result = $this->apiPutQuery('Conteudo/AtualizarConteudo', [
+            'IdConteudo'      => (int) $id,
+            'Situacao'        => $novaSituacao ? 'true' : 'false',
+            'Titulo'          => $conteudo['titulo']          ?? '',
+            'IdUsuario'       => $conteudo['idUsuario']       ?? 0,
+            'Descricao'       => $conteudo['descricao']       ?? '',
+            'IdMateria'       => $conteudo['idMateria']       ?? 0,
+            'Tipo'            => $conteudo['tipo']            ?? '',
+            'NomeArquivo'     => $conteudo['nomeArquivo']     ?? '',
+            'ExtensaoArquivo' => $conteudo['extensaoArquivo'] ?? '',
+            'Url'             => $conteudo['url']             ?? '',
         ]);
 
         if ($result !== null) {
-            return response()->json([
-                'success' => true,
-                'situacao' => $novaSituacao,
-                'message' => 'Situação alterada com sucesso!'
-            ]);
-        } else {
-            return response()->json(['error' => 'Erro ao alterar situação.'], 500);
+            return response()->json(['success' => true, 'situacao' => $novaSituacao, 'message' => 'Situação alterada com sucesso!']);
         }
+
+        return response()->json(['error' => 'Erro ao alterar situação.'], 500);
     }
 
     public function download($id)
@@ -405,23 +376,34 @@ class ConteudoController extends Controller
         try {
             $response = Http::withHeaders($this->authHeaders())
                 ->timeout(60)
-                ->get("{$this->baseUrl}/v1/conteudo/DownloadArquivoConteudo/{$id}");
+                ->get("{$this->baseUrl}/v1/Conteudo/DownloadArquivoConteudo/{$id}");
 
-            if ($response->successful()) {
-                $conteudo = $this->apiGet("Conteudo/RetornaDadosDoArquivo/{$id}");
-                $nomeArquivo = $conteudo ? ($conteudo['nomeArquivo'] . $conteudo['extensaoArquivo']) : "conteudo_{$id}";
+            if ($response->successful() && strlen($response->body()) > 0) {
+                $dados       = $this->apiGet("Conteudo/RetornaDadosDoArquivo/{$id}");
+                $nomeArquivo = $dados
+                    ? (($dados['nomeArquivo'] ?? 'conteudo') . ($dados['extensaoArquivo'] ?? ''))
+                    : "conteudo_{$id}";
+
+                    $contentType = $response->header('Content-Type') ?? 'application/octet-stream';
+
+                Log::info("[ConteudoController] Download {$id}: type={$contentType}, nome={$nomeArquivo}");
+
+                // inline para permitir visualização no iframe (PDF, etc.); attachment para forçar download
                 return response($response->body())
-                    ->header('Content-Type', $response->header('Content-Type') ?? 'application/octet-stream')
-                    ->header('Content-Disposition', 'attachment; filename="' . $nomeArquivo . '"');
-            } else {
-                Log::warning("[ConteudoController] Download {$id} retornou {$response->status()}", [
-                    'body' => $response->body(),
-                ]);
-                return redirect()->back()->with('error', 'Arquivo não encontrado ou erro no download.');
+                    ->header('Content-Type', $contentType)
+                    ->header('Content-Disposition', 'inline; filename="' . $nomeArquivo . '"')
+                    ->header('Cache-Control', 'public, max-age=3600')
+                    ->header('Accept-Ranges', 'bytes');
             }
+
+            Log::warning("[ConteudoController] Download {$id}: status {$response->status()} ou body vazio");
+            // Não redireciona em erro (evita diálogo de "salvar como"), retorna 404 direto
+            return response('Arquivo não encontrado', 404);
+
         } catch (\Exception $e) {
             Log::error("[ConteudoController] Download {$id} falhou: " . $e->getMessage());
-            return redirect()->back()->with('error', 'Erro ao conectar com o servidor.');
+            // Não redireciona em erro, retorna 500 direto para evitar popup "salvar como"
+            return response('Erro ao conectar com o servidor', 500);
         }
     }
 }

@@ -13,7 +13,8 @@
 @include('professor.conteudo._form', [
     'conteudo' => $conteudo,
     'materias' => $materias,
-    'action'   => route('professor.conteudo.update', $conteudo['id']),
+    {{-- CORRIGIDO: API retorna 'idConteudo', não 'id' --}}
+    'action'   => route('professor.conteudo.update', $conteudo['idConteudo']),
     'method'   => 'PUT',
 ])
 
