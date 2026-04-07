@@ -54,6 +54,31 @@
         </div>
     </div>
 </div>
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon success">
+                <i class="fas fa-chalkboard"></i>
+            </div>
+        </div>
+        <div class="stat-value">
+            <h3>{{-- $totalConteudos --}}</h3>
+            <p class="stat-label">Conteúdos Criados</p>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon warning">
+                <i class="fas fa-play-circle"></i>
+            </div>
+        </div>
+        <div class="stat-value">
+            <h3>{{-- $totalSimulados --}}</h3>
+            <p class="stat-label">Simulados Criados</p>
+        </div>
+    </div>
+</div>
 
 <!-- Quick Actions -->
 <div class="quick-actions">
