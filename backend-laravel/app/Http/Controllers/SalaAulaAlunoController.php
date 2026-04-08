@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class ClassroomAlunoController extends Controller
+class SalaAulaAlunoController extends Controller
 {
     private string $baseUrl;
 

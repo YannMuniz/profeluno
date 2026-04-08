@@ -4,8 +4,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ClassroomAlunoController;
-use App\Http\Controllers\ClassroomProfessorController;
+use App\Http\Controllers\SalaAulaAlunoController;
+use App\Http\Controllers\SalaAulaProfessorController;
 use App\Http\Controllers\ConteudoController;
 use App\Http\Controllers\SimuladoController;
 use App\Http\Controllers\UserController;
@@ -40,11 +40,11 @@ Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])
 // ─── Aluno ────────────────────────────────────────────────────────────────────
 Route::middleware(['auth', 'role:aluno'])->prefix('aluno')->name('aluno.')->group(function () {
     Route::get('/dashboard',         [DashboardController::class, 'DashboardAluno'])->name('dashboard');
-    Route::get('/buscar-sala',       [ClassroomAlunoController::class, 'BuscarSalaAluno'])->name('buscar-sala');
-    Route::get('/historico-aulas',   [ClassroomAlunoController::class, 'HistoricoAulasAluno'])->name('minhas-aulas');
-    Route::get('/simulados',         [ClassroomAlunoController::class, 'SimuladosAluno'])->name('simulados');
-    Route::get('/sala/{id}',         [ClassroomAlunoController::class, 'showClassroom'])->name('show');
-    Route::post('/sala/{id}/entrar', [ClassroomAlunoController::class, 'join'])->name('join');
+    Route::get('/buscar-sala',       [SalaAulaAlunoController::class, 'BuscarSalaAluno'])->name('buscar-sala');
+    Route::get('/historico-aulas',   [SalaAulaAlunoController::class, 'HistoricoAulasAluno'])->name('minhas-aulas');
+    Route::get('/simulados',         [SalaAulaAlunoController::class, 'SimuladosAluno'])->name('simulados');
+    Route::get('/sala/{id}',         [SalaAulaAlunoController::class, 'showClassroom'])->name('show');
+    Route::post('/sala/{id}/entrar', [SalaAulaAlunoController::class, 'join'])->name('join');
 });
 
 // ─── Professor ────────────────────────────────────────────────────────────────
@@ -77,9 +77,9 @@ Route::middleware(['auth', 'role:professor'])->prefix('professor')->name('profes
     Route::get('/dashboard', [DashboardController::class, 'DashboardProfessor'])->name('dashboard');
  
     // Salas de Aula
-    Route::resource('salas', ClassroomProfessorController::class);
-    Route::patch('salas/{sala}/iniciar',  [ClassroomProfessorController::class, 'iniciar'])->name('salas.iniciar');
-    Route::patch('salas/{sala}/encerrar', [ClassroomProfessorController::class, 'encerrar'])->name('salas.encerrar');
+    Route::resource('salas', SalaAulaProfessorController::class);
+    Route::patch('salas/{sala}/iniciar',  [SalaAulaProfessorController::class, 'iniciar'])->name('salas.iniciar');
+    Route::patch('salas/{sala}/encerrar', [SalaAulaProfessorController::class, 'encerrar'])->name('salas.encerrar');
  
     // conteudo (views em resources/views/conteudo/create.blade.php etc.)
     Route::resource('conteudo', ConteudoController::class);
@@ -90,8 +90,8 @@ Route::middleware(['auth', 'role:professor'])->prefix('professor')->name('profes
     Route::resource('simulados', SimuladoController::class);
  
     // Outras seções
-    Route::get('/avaliacoes', [ClassroomProfessorController::class, 'teacherEvaluations'])->name('avaliacoes');
-    Route::get('/relatorios', [ClassroomProfessorController::class, 'teacherReports'])->name('relatorios');
+    Route::get('/avaliacoes', [SalaAulaProfessorController::class, 'teacherEvaluations'])->name('avaliacoes');
+    Route::get('/relatorios', [SalaAulaProfessorController::class, 'teacherReports'])->name('relatorios');
 });
 
 // ─── Admin ────────────────────────────────────────────────────────────────────
