@@ -386,7 +386,7 @@ class SalaAulaProfessorController extends Controller
 
         // ── Gera o room_name único para o Jitsi ──────────────────────────
         $roomName = Str::uuid()->toString();
-
+        $url = env('JITSI_BASE_URL', 'https://meet.jit.si') . '/' . $roomName;
         // ── Monta payload para a API ──────────────────────────────────────
         $payload = [
             'titulo'           => $validated['titulo'],
@@ -398,9 +398,10 @@ class SalaAulaProfessorController extends Controller
             'status'           => $validated['status'],
             'conteudo_id'      => $validated['conteudo_id']      ?? null,
             'simulado_id'      => $validated['simulado_id']      ?? null,
-            'room_name'        => $roomName,
+            'url'              => $url,
         ];
 
+        dd($payload);
         // ── Se veio simulado inline, cria o simulado primeiro ────────────
         if (!empty($validated['questoes']) && empty($validated['simulado_id'])) {
             $simuladoPayload = [

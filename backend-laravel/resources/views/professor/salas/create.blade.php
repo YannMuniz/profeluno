@@ -5,6 +5,7 @@
 
 @section('styles')
 <link rel="stylesheet" href="{{ asset('css/sala-professor.css') }}">
+<link rel="stylesheet" href="{{ asset('css/steps-conteudo-simulado.css') }}">
 @endsection
 
 @section('content')
@@ -190,33 +191,8 @@
                             </div>
                         </div>
 
-                        {{-- URL externa + Status --}}
+                        {{-- Status --}}
                         <div class="form-row-two">
-                            <div class="form-group">
-                                <label for="url" class="form-label">
-                                    Link Externo
-                                    <span class="optional-tag">Opcional</span>
-                                </label>
-                                <div class="input-with-icon">
-                                    <i class="fas fa-link"></i>
-                                    <input
-                                        type="url"
-                                        id="url"
-                                        name="url"
-                                        class="form-control @error('url') is-invalid @enderror"
-                                        placeholder="https://meet.google.com/..."
-                                        value="{{ old('url') }}"
-                                    >
-                                </div>
-                                <span class="field-hint">
-                                    <i class="fas fa-info-circle"></i>
-                                    Se vazio, será usada a sala Jitsi gerada automaticamente.
-                                </span>
-                                @error('url')
-                                    <span class="error-message">{{ $message }}</span>
-                                @enderror
-                            </div>
-
                             <div class="form-group">
                                 <label for="status" class="form-label">Status Inicial</label>
                                 <select
@@ -320,9 +296,15 @@
                         Para cadastrar um novo, acesse a área de <strong>Conteúdos</strong>.
                     </p>
 
+                    {{-- Grid de cards de conteúdo --}}
                     <div class="conteudo-grid" id="conteudoGrid">
                         @foreach($conteudos as $conteudo)
-                        <label class="conteudo-card" for="conteudo_{{ $conteudo['idConteudo'] }}">
+                        <label
+                            class="conteudo-card"
+                            for="conteudo_{{ $conteudo['idConteudo'] }}"
+                            data-url="{{ $conteudo['url'] ?? '' }}"
+                            data-tipo="{{ $conteudo['tipo'] ?? 'other' }}"
+                        >
                             <input
                                 type="radio"
                                 id="conteudo_{{ $conteudo['idConteudo'] }}"
@@ -354,6 +336,29 @@
                             </div>
                         </label>
                         @endforeach
+                    </div>
+
+                    {{-- Preview do conteúdo selecionado --}}
+                    <div class="conteudo-preview-wrapper" id="conteudoPreviewWrapper">
+                        <div class="conteudo-preview-header">
+                            <span>
+                                <i class="fas fa-eye"></i>
+                                <span id="conteudoPreviewTitle">Prévia</span>
+                            </span>
+                            <a href="#" target="_blank" id="btnAbrirNovaAba" class="btn-abrir-nova-aba">
+                                <i class="fas fa-external-link-alt"></i> Abrir em nova aba
+                            </a>
+                        </div>
+                        {{-- Iframe para links e vídeos --}}
+                        <iframe
+                            id="conteudoIframe"
+                            class="conteudo-iframe"
+                            src=""
+                            allowfullscreen
+                            style="display:none;"
+                        ></iframe>
+                        {{-- Fallback para PDFs, PPTX, DOCX --}}
+                        <div id="conteudoFallback" class="conteudo-preview-fallback" style="display:none;"></div>
                     </div>
 
                     {{-- Opção de nenhum conteúdo --}}
@@ -388,7 +393,6 @@
                             <i class="fas fa-plus"></i> Cadastrar Conteúdo
                         </a>
                     </div>
-                    {{-- Campo hidden para garantir que conteudo_id vai como null --}}
                     <input type="hidden" name="conteudo_id" value="">
                 @endif
 
@@ -472,6 +476,19 @@
                             </label>
                             @endforeach
                         </div>
+
+                        {{-- Preview das questões do simulado selecionado --}}
+                        <div class="simulado-questoes-preview" id="simuladoQuestoesPreview">
+                            <div class="simulado-preview-header">
+                                <span>
+                                    <i class="fas fa-list-ol"></i>
+                                    Questões do simulado
+                                </span>
+                                <span class="simulado-preview-count" id="simuladoQuestoesCount">0 questões</span>
+                            </div>
+                            <div class="simulado-questoes-list" id="simuladoQuestoesList"></div>
+                        </div>
+
                     @else
                         <div class="empty-state-inline">
                             <i class="fas fa-clipboard-list"></i>
@@ -585,7 +602,7 @@
                 <i class="fas fa-times"></i>
             </button>
         </div>
-        <div class="form-group">
+        <div class="form-group" style="padding: 0 20px;">
             <label class="form-label">
                 Enunciado <span class="required">*</span>
             </label>
@@ -596,7 +613,7 @@
                 placeholder="Digite o enunciado da questão..."
             ></textarea>
         </div>
-        <div class="alternativas-grid">
+        <div class="alternativas-grid" style="padding: 0 20px;">
             <div class="alternativa-item">
                 <span class="alt-label">A</span>
                 <input type="text" name="questoes[__INDEX__][questao_a]" class="form-control" placeholder="Alternativa A">
@@ -618,7 +635,7 @@
                 <input type="text" name="questoes[__INDEX__][questao_e]" class="form-control" placeholder="Alternativa E (opcional)">
             </div>
         </div>
-        <div class="form-group">
+        <div class="form-group" style="padding: 0 20px 20px;">
             <label class="form-label">
                 Alternativa Correta <span class="required">*</span>
             </label>
@@ -637,8 +654,37 @@
 
 @section('scripts')
 <script src="{{ asset('js/sala-professor.js') }}"></script>
+
+{{-- Dados dos simulados expostos para o JS (questões para preview) --}}
 <script>
-// ── Prévia do card ────────────────────────────────────────────────────────────
+window.simuladosData = {
+    @foreach($simulados as $simulado)
+    "{{ $simulado['idSimulado'] }}": {
+        titulo: @json($simulado['titulo']),
+        questoes: [
+            @if(!empty($simulado['questoes']))
+                @foreach($simulado['questoes'] as $q)
+                {
+                    enunciado:       @json($q['enunciado'] ?? ''),
+                    questao_a:       @json($q['questao_a'] ?? ''),
+                    questao_b:       @json($q['questao_b'] ?? ''),
+                    questao_c:       @json($q['questao_c'] ?? ''),
+                    questao_d:       @json($q['questao_d'] ?? ''),
+                    questao_e:       @json($q['questao_e'] ?? ''),
+                    questao_correta: @json($q['questao_correta'] ?? ''),
+                },
+                @endforeach
+            @endif
+        ]
+    },
+    @endforeach
+};
+</script>
+
+<script src="{{ asset('js/steps-conteudo-simulado.js') }}"></script>
+
+<script>
+// ── Prévia do card ─────────────────────────────────────────────────────────
 const materiaSelect = document.getElementById('materia_id');
 const materiaNames  = {
     @foreach($materias as $m)
@@ -672,12 +718,11 @@ function updatePreview() {
     document.getElementById(id)?.addEventListener('change', updatePreview);
 });
 
-// Contador de caracteres do título
 document.getElementById('titulo').addEventListener('input', function () {
     document.getElementById('tituloCount').textContent = this.value.length;
 });
 
-// ── Navegação entre steps ─────────────────────────────────────────────────────
+// ── Navegação entre steps ──────────────────────────────────────────────────
 function goToStep(n) {
     document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
     document.getElementById(`step-${n}`).classList.add('active');
@@ -692,7 +737,6 @@ function goToStep(n) {
 }
 
 document.getElementById('nextToStep2')?.addEventListener('click', () => {
-    // Valida step 1 antes de avançar
     const titulo    = document.getElementById('titulo');
     const materiaId = document.getElementById('materia_id');
     const maxAlunos = document.getElementById('max_alunos');
@@ -713,7 +757,7 @@ document.getElementById('nextToStep3')?.addEventListener('click', () => {
 });
 document.getElementById('backToStep2')?.addEventListener('click', () => goToStep(2));
 
-// ── Tabs do simulado ──────────────────────────────────────────────────────────
+// ── Tabs do simulado ───────────────────────────────────────────────────────
 document.querySelectorAll('.simulado-tab').forEach(tab => {
     tab.addEventListener('click', function () {
         document.querySelectorAll('.simulado-tab').forEach(t => t.classList.remove('active'));
@@ -721,7 +765,6 @@ document.querySelectorAll('.simulado-tab').forEach(tab => {
         this.classList.add('active');
         document.getElementById(`simuladoTab-${this.dataset.simuladoTab}`).classList.add('active');
 
-        // Se mudou para "nenhum" ou "existente", limpa campos de novo simulado
         if (this.dataset.simuladoTab !== 'novo') {
             document.getElementById('questoesContainer').innerHTML = '';
             questaoIndex = 0;
@@ -729,7 +772,7 @@ document.querySelectorAll('.simulado-tab').forEach(tab => {
     });
 });
 
-// ── Questões inline ───────────────────────────────────────────────────────────
+// ── Questões inline ────────────────────────────────────────────────────────
 let questaoIndex = 0;
 const template   = document.getElementById('questaoTemplate');
 
@@ -758,7 +801,7 @@ function renumberQuestoes() {
 
 document.getElementById('addQuestao')?.addEventListener('click', addQuestao);
 
-// ── Resumo final ──────────────────────────────────────────────────────────────
+// ── Resumo final ───────────────────────────────────────────────────────────
 function updateResumo() {
     const matId      = materiaSelect.value;
     const inicio     = document.getElementById('data_hora_inicio').value;

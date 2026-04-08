@@ -1,0 +1,535 @@
+/* ================================================
+   STEP 2 — Conteúdo: Cards de seleção
+   ================================================ */
+
+.section-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: rgba(115, 103, 240, 0.06);
+    border: 1px solid rgba(115, 103, 240, 0.2);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 4px;
+}
+
+.section-hint i {
+    color: var(--primary-color);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+/* Grid de cards de conteúdo */
+.conteudo-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Card individual */
+.conteudo-card {
+    display: block;
+    cursor: pointer;
+    border-radius: 12px;
+    transition: all 0.2s;
+}
+
+.conteudo-card input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.conteudo-card-inner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--card-bg);
+    transition: all 0.2s;
+    position: relative;
+}
+
+.conteudo-card:hover .conteudo-card-inner {
+    border-color: rgba(115, 103, 240, 0.4);
+    background: rgba(115, 103, 240, 0.03);
+}
+
+/* Estado selecionado */
+.conteudo-card input[type="radio"]:checked + .conteudo-card-inner {
+    border-color: var(--primary-color);
+    background: rgba(115, 103, 240, 0.07);
+    box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.12);
+}
+
+/* Ícone do tipo */
+.conteudo-tipo-badge {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+    font-weight: 600;
+    gap: 4px;
+}
+
+.conteudo-tipo-badge.pdf      { background: rgba(234, 84, 85, 0.12);  color: var(--danger-color); }
+.conteudo-tipo-badge.pptx     { background: rgba(255, 159, 67, 0.12); color: var(--warning-color); }
+.conteudo-tipo-badge.docx     { background: rgba(115, 103, 240, 0.12); color: var(--primary-color); }
+.conteudo-tipo-badge.mp4      { background: rgba(0, 207, 232, 0.12);  color: var(--info-color); }
+.conteudo-tipo-badge.link     { background: rgba(40, 199, 111, 0.12); color: var(--success-color); }
+.conteudo-tipo-badge.none     { background: rgba(130, 134, 139, 0.12); color: var(--text-secondary); }
+.conteudo-tipo-badge.simulado { background: rgba(115, 103, 240, 0.12); color: var(--primary-color); }
+.conteudo-tipo-badge.other    { background: rgba(130, 134, 139, 0.12); color: var(--text-secondary); }
+
+/* Info do conteúdo */
+.conteudo-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.conteudo-info strong {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.conteudo-info span {
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Ícone de check (aparece quando selecionado) */
+.conteudo-check {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: transparent;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    background: transparent;
+}
+
+.conteudo-card input[type="radio"]:checked ~ .conteudo-card-inner .conteudo-check,
+.conteudo-card input[type="radio"]:checked + .conteudo-card-inner .conteudo-check {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+}
+
+/* Card "Sem conteúdo" */
+.conteudo-none .conteudo-card-inner {
+    border-style: dashed;
+}
+
+/* Badge de questões */
+.badge-questoes {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(115, 103, 240, 0.12);
+    color: var(--primary-color);
+    border-radius: 20px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    width: fit-content;
+    margin-top: 2px;
+}
+
+/* Empty state inline */
+.empty-state-inline {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.empty-state-inline i {
+    font-size: 36px;
+    opacity: 0.4;
+}
+
+.empty-state-inline p {
+    font-size: 14px;
+    margin: 0;
+}
+
+.empty-state-inline.muted i { color: var(--text-secondary); }
+
+/* -----------------------------------------------
+   PREVIEW DE CONTEÚDO (iframe / fallback)
+   ----------------------------------------------- */
+.conteudo-preview-wrapper {
+    margin-top: 6px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--dark-bg);
+    display: none; /* mostrado via JS quando há seleção */
+}
+
+.conteudo-preview-wrapper.visible {
+    display: block;
+}
+
+.conteudo-preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(115, 103, 240, 0.05);
+}
+
+.conteudo-preview-header span {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.conteudo-preview-header span i { color: var(--primary-color); }
+
+.btn-abrir-nova-aba {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--primary-color);
+    background: transparent;
+    border: 1px solid rgba(115, 103, 240, 0.3);
+    border-radius: 7px;
+    padding: 5px 10px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.btn-abrir-nova-aba:hover {
+    background: rgba(115, 103, 240, 0.1);
+    color: var(--primary-color);
+}
+
+/* Iframe do conteúdo */
+.conteudo-iframe {
+    width: 100%;
+    height: 340px;
+    border: none;
+    display: block;
+    background: #fff;
+}
+
+/* Fallback quando o tipo não suporta iframe (PDF protegido, PPTX, etc.) */
+.conteudo-preview-fallback {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    height: 180px;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+.conteudo-preview-fallback i {
+    font-size: 32px;
+    opacity: 0.5;
+}
+
+/* ================================================
+   STEP 3 — Simulado: Tabs
+   ================================================ */
+
+.simulado-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    background: var(--dark-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 6px;
+    width: fit-content;
+    flex-wrap: wrap;
+}
+
+.simulado-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'Montserrat', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.simulado-tab:hover:not(.active) {
+    background: rgba(115, 103, 240, 0.08);
+    color: var(--primary-color);
+}
+
+.simulado-tab.active {
+    background: var(--primary-color);
+    color: #fff;
+}
+
+.simulado-tab-content {
+    display: none;
+}
+
+.simulado-tab-content.active {
+    display: block;
+    animation: fadeIn 0.2s ease;
+}
+
+/* -----------------------------------------------
+   PREVIEW DE QUESTÕES DO SIMULADO EXISTENTE
+   ----------------------------------------------- */
+.simulado-questoes-preview {
+    margin-top: 16px;
+    display: none;
+    flex-direction: column;
+    gap: 0;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.simulado-questoes-preview.visible {
+    display: flex;
+}
+
+.simulado-preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: rgba(115, 103, 240, 0.06);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.simulado-preview-header span {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.simulado-preview-header span i { color: var(--primary-color); }
+
+.simulado-preview-count {
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: var(--border-color);
+    border-radius: 20px;
+    padding: 2px 10px;
+}
+
+.simulado-questoes-list {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Item de questão no preview */
+.sq-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.15s;
+}
+
+.sq-item:last-child { border-bottom: none; }
+
+.sq-item:hover { background: rgba(115, 103, 240, 0.03); }
+
+.sq-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: rgba(115, 103, 240, 0.12);
+    color: var(--primary-color);
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.sq-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.sq-enunciado {
+    font-size: 13px;
+    color: var(--text-primary);
+    font-weight: 500;
+    line-height: 1.45;
+    margin-bottom: 8px;
+}
+
+.sq-alternativas {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sq-alt {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background 0.15s;
+}
+
+/* Alternativa correta em destaque */
+.sq-alt.correta {
+    background: rgba(40, 199, 111, 0.08);
+    color: var(--success-color);
+    font-weight: 600;
+}
+
+.sq-alt-letter {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    background: var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    flex-shrink: 0;
+    color: var(--text-secondary);
+}
+
+.sq-alt.correta .sq-alt-letter {
+    background: var(--success-color);
+    color: #fff;
+}
+
+.sq-alt-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Mostrar mais questões */
+.simulado-preview-more {
+    padding: 12px 16px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-secondary);
+    background: rgba(0, 0, 0, 0.05);
+    border-top: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.simulado-preview-more:hover {
+    background: rgba(115, 103, 240, 0.06);
+    color: var(--primary-color);
+}
+
+/* -----------------------------------------------
+   Resumo Final (step 3)
+   ----------------------------------------------- */
+.resumo-card {
+    margin-top: 8px;
+}
+
+.resumo-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0 !important;
+}
+
+.resumo-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 22px;
+    border-bottom: 1px solid var(--border-color);
+    gap: 16px;
+}
+
+.resumo-item:last-child { border-bottom: none; }
+
+.resumo-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.resumo-label i { color: var(--primary-color); width: 14px; }
+
+.resumo-value {
+    font-size: 13px;
+    color: var(--text-primary);
+    font-weight: 500;
+    text-align: right;
+    word-break: break-word;
+}
+
+/* -----------------------------------------------
+   field-hint
+   ----------------------------------------------- */
+.field-hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.field-hint i { color: var(--primary-color); font-size: 11px; }
