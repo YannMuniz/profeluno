@@ -18,11 +18,13 @@ return new class extends Migration
             $table->foreignId('user_id')->nullable()->constrained('users');
             $table->dateTime('data_hora_inicio')->nullable();
             $table->dateTime('data_hora_fim')->nullable();
-            $table->string('materia');
-            $table->foreignId('conteudo_id')->nullable()->constrained('conteudo');
-            $table->integer('qtd_alunos');
-            $table->string('url');
-            $table->float('avaliacao');
+            $table->foreignId('materia_id')->nullable()->constrained('materias')->nullOnDelete();
+            $table->foreignId('conteudo_id')->nullable()->constrained('conteudo')->nullOnDelete();
+            $table->foreignId('simulado_id')->nullable()->constrained('simulado')->nullOnDelete();
+            $table->integer('max_alunos')->default(30); 
+            $table->string('url'); // verificar se precisa excluir ou não
+            $table->string('room_name')->unique()->nullable(); // UUID da sala Jitsi
+            $table->float('avaliacao')->nullable()->default(null);
             $table->enum('status', ['active', 'completed', 'pending'])->default('active');
             $table->timestamps();
         });
