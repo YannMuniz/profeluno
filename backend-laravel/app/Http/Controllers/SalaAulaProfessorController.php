@@ -359,7 +359,7 @@ class SalaAulaProfessorController extends Controller
         $simulados = is_array($simulados) && isset($simulados[0])
             ? $simulados
             : (isset($simulados['idSimulado']) ? [$simulados] : []);
-
+        dd($sala);
         return view('professor.salas.edit', compact('sala', 'materias', 'conteudos', 'simulados'));
     }
 
@@ -439,6 +439,12 @@ class SalaAulaProfessorController extends Controller
                 ->with('error', 'Sala não encontrada.');
         }
 
+        // Só inicia se estiver pending
+        if (($dadosAtuais['status'] ?? '') !== 'pending') {
+            return redirect()->route('professor.salas.index')
+                ->with('error', 'Esta sala não pode ser iniciada.');
+        }
+
         $resultado = $this->apiPut('SalaAula/AtualizarSalaAula', [
             'idSalaAula'     => $id,
             'titulo'         => $dadosAtuais['titulo'],
@@ -460,7 +466,10 @@ class SalaAulaProfessorController extends Controller
                 ->with('error', 'Não foi possível iniciar a sala. Tente novamente.');
         }
 
-        return redirect()->route('professor.salas.show', $id)
-            ->with('success', 'Aula iniciada!');
+        // Passa o timestamp de início real para o JS salvar no localStorage
+        return redirect()->route('professor.salas.index')
+            ->with('success', 'Aula iniciada!')
+            ->with('sala_iniciada_id', $id)
+            ->with('sala_iniciada_at', now()->toIso8601String());
     }
 }

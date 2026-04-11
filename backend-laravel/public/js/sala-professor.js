@@ -563,4 +563,97 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Dispara ao carregar para respeitar o old() do Laravel
     handleTipoChange();
+
+    // ─── AUTO-DETECT: salas pending que já passaram do horário ───────────────────
+    function verificarSalasProntas() {
+        const agora = new Date();
+        document.querySelectorAll('.countdown-badge').forEach(badge => {
+            const inicio = new Date(badge.dataset.start);
+            const quinzeMinutesAntes = new Date(inicio.getTime() - 15 * 60 * 1000);
+
+            if (agora >= quinzeMinutesAntes) {
+                // Já está na janela de início — troca badge por botão
+                const card = badge.closest('.scheduled-card');
+                const btnIniciar = card?.querySelector('.btn-confirmar-inicio');
+                if (!btnIniciar) {
+                    // Cria botão dinamicamente se ainda não existe
+                    const salaId = badge.closest('[data-id]')?.dataset.id
+                        || badge.closest('.scheduled-card')?.querySelector('[data-id]')?.dataset.id;
+                    badge.outerHTML = `
+                        <button class="btn-start-now btn-confirmar-inicio"
+                                data-id="${salaId}"
+                                data-titulo="Sala">
+                            <i class="fas fa-play"></i> Iniciar Agora
+                        </button>`;
+                    bindIniciarBtns();
+                }
+            } else {
+                // Mostra contagem regressiva
+                const diff = inicio - agora;
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                const label = badge.querySelector('.countdown-label');
+                if (label) {
+                    label.textContent = h > 0 ? `Em ${h}h ${m}min` : `Em ${m}min`;
+                }
+            }
+        });
+    }
+
+    // ─── MODAL DE CONFIRMAÇÃO DE INÍCIO ─────────────────────────────────────────
+    function bindIniciarBtns() {
+        document.querySelectorAll('.btn-confirmar-inicio').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id     = btn.dataset.id;
+                const titulo = btn.dataset.titulo;
+                document.getElementById('iniciar-sala-titulo').textContent = titulo;
+                document.getElementById('iniciarForm').action =
+                    `/professor/salas/${id}/iniciar`;
+                document.getElementById('iniciarModal').classList.add('active');
+            });
+        });
+    }
+
+    document.getElementById('cancelIniciar')?.addEventListener('click', () => {
+        document.getElementById('iniciarModal').classList.remove('active');
+    });
+
+    bindIniciarBtns();
+    setInterval(verificarSalasProntas, 30000); // verifica a cada 30s
+    verificarSalasProntas(); // roda imediatamente
+
+    // ─── TIMER DA AULA AO VIVO (com localStorage) ────────────────────────────────
+    const metaIniciada = document.getElementById('sala-iniciada-meta');
+    if (metaIniciada) {
+        const salaId  = metaIniciada.dataset.salaId;
+        const iniciadaAt = metaIniciada.dataset.iniciadaAt;
+        localStorage.setItem(`sala_active_start_${salaId}`, iniciadaAt);
+    }
+
+    const metaLive = document.getElementById('live-sala-meta');
+    if (metaLive) {
+        const salaId     = metaLive.dataset.salaId;
+        const storageKey = `sala_active_start_${salaId}`;
+        const timerEl    = document.getElementById('live-timer');
+
+        // Usa localStorage se disponível, senão usa dataHoraInicio como fallback
+        let startTime = localStorage.getItem(storageKey)
+            ? new Date(localStorage.getItem(storageKey))
+            : new Date(metaLive.dataset.horaInicio);
+
+        function atualizarTimer() {
+            const agora = new Date();
+            const diff  = Math.max(0, agora - startTime);
+            const h = Math.floor(diff / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+
+            timerEl.textContent = h > 0
+                ? `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+                : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        }
+
+        atualizarTimer();
+        setInterval(atualizarTimer, 1000);
+    }
 });
