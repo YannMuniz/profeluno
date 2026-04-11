@@ -26,7 +26,6 @@ return new class extends Migration
             $table->string('room_name')->unique()->nullable(); // UUID da sala Jitsi
             $table->float('avaliacao')->nullable()->default(null);
             $table->enum('status', ['active', 'completed', 'pending'])->default('active');
-            $table->datetime('data_hora_inicio')->nullable();
             $table->timestamps();
         });
     }
