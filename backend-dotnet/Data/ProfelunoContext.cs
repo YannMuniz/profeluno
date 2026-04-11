@@ -128,10 +128,10 @@ public partial class ProfelunoContext : DbContext
             entity.Property(e => e.IdProfessor).HasColumnName("user_id");
             entity.Property(e => e.Avaliacao).HasColumnName("avaliacao");
             entity.Property(e => e.DataHoraFim)
-                .HasColumnType("timestamp(0) with time zone")
+                .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("data_hora_fim");
             entity.Property(e => e.DataHoraInicio)
-                .HasColumnType("timestamp(0) with time zone")
+                .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("data_hora_inicio");
             entity.Property(e => e.IdMateria)
                 .HasMaxLength(255)
@@ -148,10 +148,10 @@ public partial class ProfelunoContext : DbContext
                 .HasDefaultValueSql("'active'::character varying")
                 .HasColumnName("status");
             entity.Property(e => e.CreatedAt)
-                .HasColumnType("timestamp(0) with time zone")
+                .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("created_at");
             entity.Property(e => e.UpdatedAt)
-                .HasColumnType("timestamp(0) with time zone")
+                .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("updated_at");
 
             entity.HasOne(x => x.Conteudo)

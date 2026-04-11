@@ -1,5 +1,7 @@
 using backend_dotnet.Configuration;
 
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDatabaseConfiguration(builder.Configuration);

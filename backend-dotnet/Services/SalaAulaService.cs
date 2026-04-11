@@ -33,19 +33,19 @@ namespace backend_dotnet.Services
         {
             SalaAula newSalaAula = new SalaAula
             {
-              Titulo = request.Titulo,
-              Descricao = request.Descricao,
-              IdMateria = request.IdMateria,
-              IdProfessor = request.IdProfessor,
-              MaxAlunos = request.MaxAlunos,
-              DataHoraInicio = request.DataHoraInicio,
-              DataHoraFim = request.DataHoraFim,
-              Status = request.Status,
-              IdConteudo = request.IdConteudo == null || request.IdConteudo == 0 ? null : request.IdConteudo,
-              IdSimulado = request.IdSimulado == null || request.IdSimulado == 0 ? null : request.IdSimulado,
-              Url = request.Url,
-              NomeSala = request.NomeSala,
-              CreatedAt = DateTimeOffset.Now  
+                Titulo = request.Titulo,
+                Descricao = request.Descricao,
+                IdMateria = request.IdMateria,
+                IdProfessor = request.IdProfessor,
+                MaxAlunos = request.MaxAlunos,
+                DataHoraInicio = request.DataHoraInicio,
+                DataHoraFim = request.DataHoraFim,
+                Status = request.Status,
+                IdConteudo = request.IdConteudo == null || request.IdConteudo == 0 ? null : request.IdConteudo,
+                IdSimulado = request.IdSimulado == null || request.IdSimulado == 0 ? null : request.IdSimulado,
+                Url = request.Url,
+                NomeSala = request.NomeSala,
+                CreatedAt = DateTime.UtcNow
             };
 
             await _context.SalaAulas.AddAsync(newSalaAula);
@@ -70,9 +70,7 @@ namespace backend_dotnet.Services
             salaAula.Status = request.Status;
             salaAula.IdConteudo = request.IdConteudo == null || request.IdConteudo == 0 ? null : request.IdConteudo;
             salaAula.IdSimulado = request.IdSimulado == null || request.IdSimulado == 0 ? null : request.IdSimulado;
-            salaAula.Url = request.Url;
-            salaAula.NomeSala = request.NomeSala;
-            salaAula.UpdatedAt = DateTimeOffset.Now;
+            salaAula.UpdatedAt = DateTime.Now;
 
             await _context.SaveChangesAsync();
 

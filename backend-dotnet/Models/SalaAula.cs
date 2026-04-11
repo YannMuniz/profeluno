@@ -6,8 +6,8 @@ public partial class SalaAula
     public string Titulo { get; set; } = null!;
     public string? Descricao { get; set; }
     public int? IdProfessor { get; set; }
-    public DateTimeOffset? DataHoraInicio { get; set; }
-    public DateTimeOffset? DataHoraFim { get; set; }
+    public DateTime? DataHoraInicio { get; set; }
+    public DateTime? DataHoraFim { get; set; }
     public int IdMateria { get; set; }
     public int? IdConteudo { get; set; }
     public int? IdSimulado { get; set; }
@@ -16,8 +16,8 @@ public partial class SalaAula
     public string? NomeSala { get; set; }
     public double Avaliacao { get; set; }
     public string? Status { get; set; }
-    public DateTimeOffset? CreatedAt { get; set; }
-    public DateTimeOffset? UpdatedAt { get; set; }
+    public DateTime? CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 
     public virtual ICollection<AlunoSala> AlunoSalas { get; set; } = new List<AlunoSala>();
     public virtual Conteudo? Conteudo { get; set; }

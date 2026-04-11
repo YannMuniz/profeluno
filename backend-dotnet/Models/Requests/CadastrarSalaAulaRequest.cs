@@ -6,8 +6,8 @@ namespace backend_dotnet.Models.Requests
         public string? Descricao { get; set; }
         public int? IdProfessor { get; set; }
         public int MaxAlunos { get; set; }
-        public DateTimeOffset? DataHoraInicio { get; set; }
-        public DateTimeOffset? DataHoraFim { get; set; }
+        public DateTime? DataHoraInicio { get; set; }
+        public DateTime? DataHoraFim { get; set; }
         public int IdMateria { get; set; }
         public string? Status { get; set; }
         public int? IdConteudo { get; set; }
