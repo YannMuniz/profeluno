@@ -1,6 +1,7 @@
 using backend_dotnet.Data;
 using backend_dotnet.Models;
 using backend_dotnet.Models.Requests;
+using backend_dotnet.Models.Responses;
 using backend_dotnet.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -94,6 +95,24 @@ namespace backend_dotnet.Services
             _context.SalaAulas.Remove(salaAula);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<TrocaStatusSalaAulaResponse> TrocarStatusSalaAula(TrocaStatusSalaAulaRequest request)
+        {
+            var salaAula = await _context.SalaAulas.FirstOrDefaultAsync(x => x.IdSalaAula == request.IdSalaAula);
+            if(salaAula == null) return null;
+            salaAula.DataHoraInicio = request.DataHoraInicio;
+            salaAula.DataHoraFim = request.DataHoraFim;
+            salaAula.Status = request.Status;
+            await _context.SaveChangesAsync();
+
+            return new TrocaStatusSalaAulaResponse
+            {
+                IdSalaAula = salaAula.IdSalaAula,
+                DataHoraInicio = salaAula.DataHoraInicio,
+                DataHoraFim = salaAula.DataHoraFim,
+                Status = salaAula.Status
+            };
         }
     }
 }

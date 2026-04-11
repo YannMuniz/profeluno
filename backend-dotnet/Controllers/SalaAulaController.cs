@@ -61,5 +61,13 @@ namespace backend_dotnet.Controllers
             if(response == false) return BadRequest();
             return Ok(true);
         }
+
+        [HttpPut("TrocarStatusSalaAula")]
+        public async Task<IActionResult> TrocarStatusSalaAula([FromBody] TrocaStatusSalaAulaRequest request)
+        {
+            var response = await _salaAulaService.TrocarStatusSalaAula(request);
+            if(response == null) return BadRequest();
+            return Ok(response);
+        }
     }
 }
