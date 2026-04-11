@@ -1,10 +1,11 @@
 {{-- resources/views/professor/salas/edit.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Editar Sala de Aula')
+@section('title', 'Editar Sala — ' . ($sala->titulo ?? ''))
 
 @section('styles')
 <link rel="stylesheet" href="{{ asset('css/sala-professor.css') }}">
+<link rel="stylesheet" href="{{ asset('css/steps-conteudo-simulado.css') }}">
 @endsection
 
 @section('content')
@@ -16,486 +17,662 @@
             Voltar
         </a>
         <h1 class="page-title">Editar Sala de Aula</h1>
-        <p class="page-subtitle">Ajuste os dados e atualize sua sala</p>
+        <p class="page-subtitle">{{ $sala->titulo ?? '' }}</p>
     </div>
     <div class="page-header-right">
-        <div class="steps-indicator">
-            <div class="step active" data-step="1">
-                <span class="step-num">1</span>
-                <span class="step-label">Informações</span>
-            </div>
-            <div class="step-line"></div>
-            <div class="step" data-step="2">
-                <span class="step-num">2</span>
-                <span class="step-label">Material</span>
-            </div>
-            <div class="step-line"></div>
-            <div class="step" data-step="3">
-                <span class="step-num">3</span>
-                <span class="step-label">Simulado</span>
-            </div>
-        </div>
+        <span class="status-badge {{ $sala->status ?? 'pending' }}">
+            @if(($sala->status ?? '') === 'active')
+                <i class="fas fa-circle pulse-dot"></i> Ao Vivo
+            @elseif(($sala->status ?? '') === 'completed')
+                <i class="fas fa-check-circle"></i> Concluída
+            @else
+                <i class="fas fa-clock"></i> Agendada
+            @endif
+        </span>
     </div>
 </div>
 
-@if(session('error'))
-<div class="alert alert-danger">
-    <i class="fas fa-exclamation-circle"></i>
-    {{ session('error') }}
-</div>
+{{-- Alertas --}}
+@if($errors->has('api'))
+    <div class="alert alert-danger">
+        <i class="fas fa-exclamation-circle"></i>
+        {{ $errors->first('api') }}
+    </div>
 @endif
 
-@if($errors->any())
-<div class="alert alert-danger">
-    <ul style="margin:0; padding-left: 18px;">
-        @foreach($errors->all() as $error)
-            <li>{{ $error }}</li>
-        @endforeach
-    </ul>
-</div>
+@if($errors->any() && !$errors->has('api'))
+    <div class="alert alert-danger">
+        <ul style="margin:0; padding-left: 18px;">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
 @endif
 
-<form action="{{ route('professor.salas.update', $sala->id) }}" method="POST" enctype="multipart/form-data" id="formCriarSala">
+@if(session('warning'))
+    <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle"></i>
+        {{ session('warning') }}
+    </div>
+@endif
+
+@php
+    // Normaliza os valores salvos para preencher os campos
+    $salaMateriaId  = old('materia_id',  $sala->idMateria  ?? '');
+    $salaMaxAlunos  = old('max_alunos',  $sala->maxAlunos  ?? $sala->qtd_alunos ?? '');
+    $salaDataInicio = old('data_hora_inicio', optional($sala->data_hora_inicio)->format('Y-m-d\TH:i'));
+    $salaDataFim    = old('data_hora_fim',    optional($sala->data_hora_fim)->format('Y-m-d\TH:i'));
+    $salaStatus     = old('status',      $sala->status     ?? 'pending');
+    $salaConteudoId = old('conteudo_id', $sala->idConteudo ?? '');
+    $salaSimuladoId = old('simulado_id', $sala->idSimulado ?? '');
+    $salaUrl        = old('url',         $sala->url        ?? '');
+@endphp
+
+<form
+    action="{{ route('professor.salas.update', $sala->id) }}"
+    method="POST"
+    id="formEditarSala"
+>
     @csrf
     @method('PUT')
 
-    @php
-        $salaMateriaId = old('materia_id', $sala->materia_id ?? $sala->idMateria ?? '');
-        $salaMaxAlunos = old('max_alunos', $sala->max_alunos ?? $sala->qtd_alunos ?? '');
-        $salaDataInicio = old('data_hora_inicio', optional($sala->data_hora_inicio)->format('Y-m-d\TH:i'));
-        $salaDataFim    = old('data_hora_fim', optional($sala->data_hora_fim)->format('Y-m-d\TH:i'));
-        $salaStatus     = old('status', $sala->status ?? 'pending');
-        $salaConteudoId = old('conteudo_id', $sala->conteudo_id ?? $sala->idConteudo ?? '');
-        $salaSimuladoId = old('simulado_id', $sala->simulado_id ?? $sala->idSimulado ?? '');
-    @endphp
+    <div class="form-grid-two">
 
-    <div class="form-step active" id="step-1">
-        <div class="form-grid-two">
+        {{-- Coluna principal --}}
+        <div class="form-col-main">
 
-            <div class="form-col-main">
-                <div class="form-card">
-                    <div class="form-card-header">
-                        <i class="fas fa-info-circle"></i>
-                        <h3>Dados Principais</h3>
-                    </div>
-                    <div class="form-card-body">
-
-                        <div class="form-group">
-                            <label for="titulo" class="form-label">
-                                Título da Sala <span class="required">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                id="titulo"
-                                name="titulo"
-                                class="form-control @error('titulo') is-invalid @enderror"
-                                placeholder="Ex: Álgebra Linear — Turma A"
-                                value="{{ old('titulo', $sala->titulo ?? '') }}"
-                                maxlength="150"
-                                required
-                            >
-                            <span class="char-count"><span id="tituloCount">0</span>/150</span>
-                            @error('titulo')
-                                <span class="error-message">{{ $message }}</span>
-                            @enderror
-                        </div>
-
-                        <div class="form-group">
-                            <label for="descricao" class="form-label">Descrição</label>
-                            <textarea
-                                id="descricao"
-                                name="descricao"
-                                class="form-control @error('descricao') is-invalid @enderror"
-                                rows="4"
-                                placeholder="Descreva o conteúdo que será abordado nesta sala..."
-                            >{{ old('descricao', $sala->descricao ?? '') }}</textarea>
-                            @error('descricao')
-                                <span class="error-message">{{ $message }}</span>
-                            @enderror
-                        </div>
-
-                        <div class="form-row-two">
-                            <div class="form-group">
-                                <label for="materia" class="form-label">
-                                    Matéria <span class="required">*</span>
-                                </label>
-                                <select
-                                    id="materia"
-                                    name="materia_id"
-                                    class="form-control @error('materia_id') is-invalid @enderror"
-                                    required
-                                >
-                                    <option value="">— Selecione uma matéria —</option>
-                                    @foreach($materias as $materia)
-                                        <option
-                                            value="{{ $materia['idMateria'] ?? $materia['id'] ?? '' }}"
-                                            {{ $salaMateriaId == ($materia['idMateria'] ?? $materia['id'] ?? '') ? 'selected' : '' }}
-                                        >
-                                            {{ $materia['nomeMateria'] ?? $materia['nome'] ?? 'Sem nome' }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('materia_id')
-                                    <span class="error-message">{{ $message }}</span>
-                                @enderror
-                            </div>
-
-                            <div class="form-group">
-                                <label for="qtd_alunos" class="form-label">
-                                    Qtd. Máx. de Alunos <span class="required">*</span>
-                                </label>
-                                <input
-                                    type="number"
-                                    id="qtd_alunos"
-                                    name="max_alunos"
-                                    class="form-control @error('max_alunos') is-invalid @enderror"
-                                    placeholder="Ex: 30"
-                                    value="{{ $salaMaxAlunos }}"
-                                    min="1"
-                                    max="500"
-                                    required
-                                >
-                                @error('max_alunos')
-                                    <span class="error-message">{{ $message }}</span>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="form-row-two">
-                            <div class="form-group">
-                                <label for="data_hora_inicio" class="form-label">
-                                    Data e Hora de Início
-                                </label>
-                                <input
-                                    type="datetime-local"
-                                    id="data_hora_inicio"
-                                    name="data_hora_inicio"
-                                    class="form-control @error('data_hora_inicio') is-invalid @enderror"
-                                    value="{{ $salaDataInicio }}"
-                                >
-                                @error('data_hora_inicio')
-                                    <span class="error-message">{{ $message }}</span>
-                                @enderror
-                            </div>
-
-                            <div class="form-group">
-                                <label for="data_hora_fim" class="form-label">
-                                    Data e Hora de Fim
-                                </label>
-                                <input
-                                    type="datetime-local"
-                                    id="data_hora_fim"
-                                    name="data_hora_fim"
-                                    class="form-control @error('data_hora_fim') is-invalid @enderror"
-                                    value="{{ $salaDataFim }}"
-                                >
-                                @error('data_hora_fim')
-                                    <span class="error-message">{{ $message }}</span>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="form-row-two">
-                            <div class="form-group">
-                                <label for="url" class="form-label">
-                                    URL / Link da Aula <span class="required">*</span>
-                                </label>
-                                <div class="input-with-icon">
-                                    <i class="fas fa-link"></i>
-                                    <input
-                                        type="url"
-                                        id="url"
-                                        name="url"
-                                        class="form-control @error('url') is-invalid @enderror"
-                                        placeholder="https://meet.google.com/..."
-                                        value="{{ old('url', $sala->url ?? '') }}"
-                                        required
-                                    >
-                                </div>
-                                @error('url')
-                                    <span class="error-message">{{ $message }}</span>
-                                @enderror
-                            </div>
-
-                            <div class="form-group">
-                                <label for="status" class="form-label">Status</label>
-                                <select id="status" name="status" class="form-control filter-select @error('status') is-invalid @enderror">
-                                    <option value="pending" {{ $salaStatus === 'pending' ? 'selected' : '' }}>
-                                        Agendada (Pendente)
-                                    </option>
-                                    <option value="active" {{ $salaStatus === 'active' ? 'selected' : '' }}>
-                                        Ativa
-                                    </option>
-                                    <option value="completed" {{ $salaStatus === 'completed' ? 'selected' : '' }}>
-                                        Concluída
-                                    </option>
-                                </select>
-                                @error('status')
-                                    <span class="error-message">{{ $message }}</span>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="form-row-two">
-                            <div class="form-group">
-                                <label for="conteudo_id" class="form-label">Conteúdo associado</label>
-                                <select id="conteudo_id" name="conteudo_id" class="form-control filter-select @error('conteudo_id') is-invalid @enderror">
-                                    <option value="">Nenhum conteúdo</option>
-                                    @foreach($conteudos as $conteudo)
-                                        <option
-                                            value="{{ $conteudo['idConteudo'] ?? $conteudo['id'] ?? '' }}"
-                                            {{ $salaConteudoId == ($conteudo['idConteudo'] ?? $conteudo['id'] ?? '') ? 'selected' : '' }}
-                                        >
-                                            {{ $conteudo['titulo'] ?? 'Conteúdo sem título' }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('conteudo_id')
-                                    <span class="error-message">{{ $message }}</span>
-                                @enderror
-                            </div>
-
-                            <div class="form-group">
-                                <label for="simulado_id" class="form-label">Simulado associado</label>
-                                <select id="simulado_id" name="simulado_id" class="form-control filter-select @error('simulado_id') is-invalid @enderror">
-                                    <option value="">Nenhum simulado</option>
-                                    @foreach($simulados as $simulado)
-                                        <option
-                                            value="{{ $simulado['idSimulado'] ?? $simulado['id'] ?? '' }}"
-                                            {{ $salaSimuladoId == ($simulado['idSimulado'] ?? $simulado['id'] ?? '') ? 'selected' : '' }}
-                                        >
-                                            {{ $simulado['titulo'] ?? 'Simulado sem título' }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('simulado_id')
-                                    <span class="error-message">{{ $message }}</span>
-                                @enderror
-                            </div>
-                        </div>
-
-                    </div>
+            {{-- CARD: Dados Principais --}}
+            <div class="form-card">
+                <div class="form-card-header">
+                    <i class="fas fa-info-circle"></i>
+                    <h3>Dados Principais</h3>
                 </div>
-            </div>
+                <div class="form-card-body">
 
-            <div class="form-col-side">
-                <div class="preview-card">
-                    <div class="preview-card-header">
-                        <i class="fas fa-eye"></i>
-                        Prévia do Card
-                    </div>
-                    <div class="preview-card-body">
-                        <div class="mini-class-card">
-                            <div class="mini-ribbon {{ $salaStatus === 'active' ? 'active' : 'pending' }}" id="previewRibbon">
-                                @if($salaStatus === 'active')
-                                    <i class="fas fa-circle"></i> Ao Vivo
-                                @else
-                                    <i class="fas fa-clock"></i> Agendada
-                                @endif
-                            </div>
-                            <div class="mini-card-icon">
-                                <i class="fas fa-chalkboard-teacher"></i>
-                            </div>
-                            <h4 id="previewTitulo">{{ old('titulo', $sala->titulo ?? 'Título da Sala') }}</h4>
-                            <span id="previewMateria" class="mini-subject">{{ optional(collect($materias)->firstWhere('idMateria', $salaMateriaId) ?? collect($materias)->firstWhere('id', $salaMateriaId))['nomeMateria'] ?? optional(collect($materias)->firstWhere('idMateria', $salaMateriaId) ?? collect($materias)->firstWhere('id', $salaMateriaId))['nome'] ?? 'Matéria' }}</span>
-                            <div class="mini-meta">
-                                <span><i class="fas fa-users"></i> <span id="previewAlunos">{{ $salaMaxAlunos or 0 }}</span> alunos</span>
-                                <span><i class="fas fa-calendar"></i> <span id="previewData">{{ $salaDataInicio ? optional(\Carbon\Carbon::parse($salaDataInicio))->format('d/m/Y') : 'Sem data' }}</span></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="tips-card">
-                    <div class="tips-card-header">
-                        <i class="fas fa-lightbulb"></i>
-                        Dicas
-                    </div>
-                    <ul class="tips-list">
-                        <li>Use um título claro e descritivo para facilitar a busca</li>
-                        <li>Defina a data/hora de início para que alunos se programem</li>
-                        <li>Adicione um link válido de videoconferência</li>
-                        <li>Você poderá adicionar materiais e simulados depois</li>
-                    </ul>
-                </div>
-            </div>
-
-        </div>
-
-        <div class="form-actions">
-            <a href="{{ route('professor.salas.index') }}" class="btn-form-cancel">
-                <i class="fas fa-times"></i> Cancelar
-            </a>
-            <button type="button" class="btn-form-next" id="nextToStep2">
-                Próximo: Material
-                <i class="fas fa-arrow-right"></i>
-            </button>
-        </div>
-    </div>
-
-    <div class="form-step" id="step-2">
-        <div class="form-card">
-            <div class="form-card-header">
-                <i class="fas fa-folder-open"></i>
-                <h3>Material de Apoio <span class="optional-tag">Opcional</span></h3>
-            </div>
-            <div class="form-card-body">
-
-                <div class="material-toggle-row">
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="addMaterial" name="add_material" value="1" {{ old('add_material') ? 'checked' : '' }}>
-                        <span class="toggle-slider"></span>
-                    </label>
-                    <span>Adicionar material a esta sala</span>
-                </div>
-
-                <div id="materialFields" class="hidden-fields {{ old('add_material') ? 'visible' : '' }}">
+                    {{-- Título --}}
                     <div class="form-group">
-                        <label class="form-label">Título do Material <span class="required">*</span></label>
-                        <input type="text" name="material_titulo" class="form-control" placeholder="Ex: Apostila — Capítulo 3" value="{{ old('material_titulo') }}">
+                        <label for="titulo" class="form-label">
+                            Título da Sala <span class="required">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="titulo"
+                            name="titulo"
+                            class="form-control @error('titulo') is-invalid @enderror"
+                            placeholder="Ex: Álgebra Linear — Turma A"
+                            value="{{ old('titulo', $sala->titulo ?? '') }}"
+                            maxlength="255"
+                            required
+                        >
+                        <span class="char-count">
+                            <span id="tituloCount">{{ strlen(old('titulo', $sala->titulo ?? '')) }}</span>/255
+                        </span>
+                        @error('titulo')
+                            <span class="error-message">{{ $message }}</span>
+                        @enderror
                     </div>
 
+                    {{-- Descrição --}}
                     <div class="form-group">
-                        <label class="form-label">Descrição</label>
-                        <textarea name="material_descricao" class="form-control" rows="3" placeholder="Descreva o material...">{{ old('material_descricao') }}</textarea>
+                        <label for="descricao" class="form-label">Descrição</label>
+                        <textarea
+                            id="descricao"
+                            name="descricao"
+                            class="form-control @error('descricao') is-invalid @enderror"
+                            rows="4"
+                            placeholder="Descreva o conteúdo que será abordado..."
+                        >{{ old('descricao', $sala->descricao ?? '') }}</textarea>
+                        @error('descricao')
+                            <span class="error-message">{{ $message }}</span>
+                        @enderror
                     </div>
 
+                    {{-- Matéria + Max Alunos --}}
                     <div class="form-row-two">
                         <div class="form-group">
-                            <label class="form-label">Tipo <span class="required">*</span></label>
-                            <select name="material_type" id="mat_type" class="form-control filter-select">
-                                <option value="">Selecione o tipo</option>
-                                <option value="pdf" {{ old('material_type') === 'pdf' ? 'selected' : '' }}>PDF</option>
-                                <option value="slide" {{ old('material_type') === 'slide' ? 'selected' : '' }}>Slide</option>
-                                <option value="video" {{ old('material_type') === 'video' ? 'selected' : '' }}>Vídeo</option>
-                                <option value="document" {{ old('material_type') === 'document' ? 'selected' : '' }}>Documento</option>
-                                <option value="other" {{ old('material_type') === 'other' ? 'selected' : '' }}>Outro</option>
+                            <label for="materia_id" class="form-label">
+                                Matéria <span class="required">*</span>
+                            </label>
+                            <select
+                                id="materia_id"
+                                name="materia_id"
+                                class="form-control filter-select @error('materia_id') is-invalid @enderror"
+                                required
+                            >
+                                <option value="">Selecione a matéria</option>
+                                @forelse($materias as $materia)
+                                    <option
+                                        value="{{ $materia['idMateria'] }}"
+                                        {{ $salaMateriaId == $materia['idMateria'] ? 'selected' : '' }}
+                                    >
+                                        {{ $materia['nomeMateria'] }}
+                                    </option>
+                                @empty
+                                    <option value="" disabled>Nenhuma matéria disponível</option>
+                                @endforelse
                             </select>
+                            @error('materia_id')
+                                <span class="error-message">{{ $message }}</span>
+                            @enderror
                         </div>
+
                         <div class="form-group">
-                            <label class="form-label">URL do Material</label>
+                            <label for="max_alunos" class="form-label">
+                                Máx. de Alunos <span class="required">*</span>
+                            </label>
+                            <input
+                                type="number"
+                                id="max_alunos"
+                                name="max_alunos"
+                                class="form-control @error('max_alunos') is-invalid @enderror"
+                                placeholder="Ex: 30"
+                                value="{{ $salaMaxAlunos }}"
+                                min="1"
+                                max="500"
+                                required
+                            >
+                            @error('max_alunos')
+                                <span class="error-message">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+
+                    {{-- Data/hora início + fim --}}
+                    <div class="form-row-two">
+                        <div class="form-group">
+                            <label for="data_hora_inicio" class="form-label">
+                                Data e Hora de Início
+                            </label>
+                            <input
+                                type="datetime-local"
+                                id="data_hora_inicio"
+                                name="data_hora_inicio"
+                                class="form-control @error('data_hora_inicio') is-invalid @enderror"
+                                value="{{ $salaDataInicio }}"
+                            >
+                            @error('data_hora_inicio')
+                                <span class="error-message">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label for="data_hora_fim" class="form-label">
+                                Data e Hora de Fim
+                            </label>
+                            <input
+                                type="datetime-local"
+                                id="data_hora_fim"
+                                name="data_hora_fim"
+                                class="form-control @error('data_hora_fim') is-invalid @enderror"
+                                value="{{ $salaDataFim }}"
+                            >
+                            @error('data_hora_fim')
+                                <span class="error-message">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+
+                    {{-- Status --}}
+                    <div class="form-row-two">
+                        <div class="form-group">
+                            <label for="status" class="form-label">Status</label>
+                            <select
+                                id="status"
+                                name="status"
+                                class="form-control filter-select @error('status') is-invalid @enderror"
+                            >
+                                <option value="pending"   {{ $salaStatus === 'pending'   ? 'selected' : '' }}>
+                                    Agendada (Pendente)
+                                </option>
+                                <option value="active"    {{ $salaStatus === 'active'    ? 'selected' : '' }}>
+                                    Ativa (Ao Vivo)
+                                </option>
+                                <option value="completed" {{ $salaStatus === 'completed' ? 'selected' : '' }}>
+                                    Concluída
+                                </option>
+                            </select>
+                            @error('status')
+                                <span class="error-message">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        {{-- URL da sala (somente leitura — gerada automaticamente) --}}
+                        @if($salaUrl)
+                        <div class="form-group">
+                            <label class="form-label">
+                                Link da Sala
+                                <span class="optional-tag">Gerado automaticamente</span>
+                            </label>
                             <div class="input-with-icon">
-                                <i class="fas fa-link"></i>
-                                <input type="url" id="mat_file_url" name="material_file_url" class="form-control" placeholder="https://..." value="{{ old('material_file_url') }}">
+                                <i class="fas fa-video"></i>
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="{{ $salaUrl }}"
+                                    readonly
+                                >
+                                <button
+                                    type="button"
+                                    class="btn-copy-url"
+                                    data-copy="{{ $salaUrl }}"
+                                    title="Copiar link"
+                                >
+                                    <i class="fas fa-copy"></i>
+                                </button>
                             </div>
                         </div>
+                        @endif
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Arquivo</label>
-                        <div class="file-drop-zone" id="fileDropZone">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                            <p>Arraste o arquivo aqui ou <label for="materialFile" class="file-link">clique para selecionar</label></p>
-                            <span class="file-hint">PDF, PPTX, DOCX, MP4 — Máx. 50MB</span>
-                            <input type="file" id="materialFile" name="material_file" class="file-input" accept=".pdf,.pptx,.ppt,.docx,.doc,.mp4,.avi">
+                </div>
+            </div>
+
+            {{-- CARD: Conteúdo de Apoio --}}
+            <div class="form-card">
+                <div class="form-card-header">
+                    <i class="fas fa-folder-open"></i>
+                    <h3>
+                        Conteúdo de Apoio
+                        <span class="optional-tag">Opcional</span>
+                    </h3>
+                </div>
+                <div class="form-card-body">
+
+                    @if(count($conteudos))
+                        <p class="section-hint">
+                            <i class="fas fa-info-circle"></i>
+                            Selecione o conteúdo vinculado a esta sala ou remova o vínculo.
+                        </p>
+
+                        <div class="conteudo-grid" id="conteudoGrid">
+                            @foreach($conteudos as $conteudo)
+                            <label
+                                class="conteudo-card"
+                                for="conteudo_{{ $conteudo['idConteudo'] }}"
+                                data-url="{{ $conteudo['url'] ?? '' }}"
+                                data-tipo="{{ $conteudo['tipo'] ?? 'other' }}"
+                            >
+                                <input
+                                    type="radio"
+                                    id="conteudo_{{ $conteudo['idConteudo'] }}"
+                                    name="conteudo_id"
+                                    value="{{ $conteudo['idConteudo'] }}"
+                                    {{ $salaConteudoId == $conteudo['idConteudo'] ? 'checked' : '' }}
+                                    class="conteudo-radio"
+                                >
+                                <div class="conteudo-card-inner">
+                                    <div class="conteudo-tipo-badge {{ $conteudo['tipo'] ?? 'other' }}">
+                                        @switch($conteudo['tipo'] ?? '')
+                                            @case('pdf')    <i class="fas fa-file-pdf"></i> PDF @break
+                                            @case('slide')  <i class="fas fa-file-powerpoint"></i> Slide @break
+                                            @case('document') <i class="fas fa-file-word"></i> Doc @break
+                                            @case('link')   <i class="fas fa-link"></i> Link @break
+                                            @default         <i class="fas fa-file"></i> Arquivo
+                                        @endswitch
+                                    </div>
+                                    <div class="conteudo-info">
+                                        <strong>{{ $conteudo['titulo'] }}</strong>
+                                        @if(!empty($conteudo['descricao']))
+                                            <span>{{ Str::limit($conteudo['descricao'], 60) }}</span>
+                                        @endif
+                                    </div>
+                                    <div class="conteudo-check">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                </div>
+                            </label>
+                            @endforeach
+
+                            {{-- Opção sem conteúdo --}}
+                            <label class="conteudo-card conteudo-none" for="conteudo_none">
+                                <input
+                                    type="radio"
+                                    id="conteudo_none"
+                                    name="conteudo_id"
+                                    value=""
+                                    {{ empty($salaConteudoId) ? 'checked' : '' }}
+                                    class="conteudo-radio"
+                                >
+                                <div class="conteudo-card-inner">
+                                    <div class="conteudo-tipo-badge none">
+                                        <i class="fas fa-ban"></i>
+                                    </div>
+                                    <div class="conteudo-info">
+                                        <strong>Sem conteúdo</strong>
+                                        <span>Remover vínculo de conteúdo</span>
+                                    </div>
+                                    <div class="conteudo-check">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                </div>
+                            </label>
                         </div>
-                        <div id="filePreview" class="file-preview hidden"></div>
+
+                        {{-- Preview do conteúdo selecionado --}}
+                        <div class="conteudo-preview-wrapper" id="conteudoPreviewWrapper" style="display:none;">
+                            <div class="conteudo-preview-header">
+                                <span>
+                                    <i class="fas fa-eye"></i>
+                                    <span id="conteudoPreviewTitle">Prévia</span>
+                                </span>
+                                <a href="#" target="_blank" id="btnAbrirNovaAba" class="btn-abrir-nova-aba">
+                                    <i class="fas fa-external-link-alt"></i> Abrir em nova aba
+                                </a>
+                            </div>
+                            <iframe
+                                id="conteudoIframe"
+                                class="conteudo-iframe"
+                                src=""
+                                allowfullscreen
+                                style="display:none;"
+                            ></iframe>
+                            <div id="conteudoFallback" class="conteudo-preview-fallback" style="display:none;"></div>
+                        </div>
+
+                    @else
+                        <div class="empty-state-inline">
+                            <i class="fas fa-folder-open"></i>
+                            <p>Você ainda não tem conteúdos cadastrados.</p>
+                            <a href="{{ route('professor.conteudo.create') }}" class="btn-form-next" target="_blank">
+                                <i class="fas fa-plus"></i> Cadastrar Conteúdo
+                            </a>
+                        </div>
+                        <input type="hidden" name="conteudo_id" value="">
+                    @endif
+
+                </div>
+            </div>
+
+            {{-- CARD: Simulado --}}
+            <div class="form-card">
+                <div class="form-card-header">
+                    <i class="fas fa-clipboard-list"></i>
+                    <h3>
+                        Simulado Vinculado
+                        <span class="optional-tag">Opcional</span>
+                    </h3>
+                </div>
+                <div class="form-card-body">
+
+                    @if(count($simulados))
+                        <div class="conteudo-grid">
+                            @foreach($simulados as $simulado)
+                            <label class="conteudo-card" for="simulado_{{ $simulado['idSimulado'] }}">
+                                <input
+                                    type="radio"
+                                    id="simulado_{{ $simulado['idSimulado'] }}"
+                                    name="simulado_id"
+                                    value="{{ $simulado['idSimulado'] }}"
+                                    {{ $salaSimuladoId == $simulado['idSimulado'] ? 'checked' : '' }}
+                                    class="simulado-radio"
+                                >
+                                <div class="conteudo-card-inner">
+                                    <div class="conteudo-tipo-badge simulado">
+                                        <i class="fas fa-clipboard-list"></i>
+                                    </div>
+                                    <div class="conteudo-info">
+                                        <strong>{{ $simulado['titulo'] }}</strong>
+                                        @if(!empty($simulado['descricao']))
+                                            <span>{{ Str::limit($simulado['descricao'], 60) }}</span>
+                                        @endif
+                                        @if(!empty($simulado['questoes_count']))
+                                            <span class="badge-questoes">
+                                                {{ $simulado['questoes_count'] }} questões
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <div class="conteudo-check">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                </div>
+                            </label>
+                            @endforeach
+
+                            {{-- Opção sem simulado --}}
+                            <label class="conteudo-card conteudo-none" for="simulado_none">
+                                <input
+                                    type="radio"
+                                    id="simulado_none"
+                                    name="simulado_id"
+                                    value=""
+                                    {{ empty($salaSimuladoId) ? 'checked' : '' }}
+                                    class="simulado-radio"
+                                >
+                                <div class="conteudo-card-inner">
+                                    <div class="conteudo-tipo-badge none">
+                                        <i class="fas fa-ban"></i>
+                                    </div>
+                                    <div class="conteudo-info">
+                                        <strong>Sem simulado</strong>
+                                        <span>Remover vínculo de simulado</span>
+                                    </div>
+                                    <div class="conteudo-check">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+
+                    @else
+                        <div class="empty-state-inline">
+                            <i class="fas fa-clipboard-list"></i>
+                            <p>Nenhum simulado cadastrado.</p>
+                        </div>
+                        <input type="hidden" name="simulado_id" value="">
+                    @endif
+
+                </div>
+            </div>
+
+        </div>
+
+        {{-- Coluna lateral  --}}
+        <div class="form-col-side">
+
+            {{-- Prévia do card --}}
+            <div class="preview-card">
+                <div class="preview-card-header">
+                    <i class="fas fa-eye"></i>
+                    Prévia do Card
+                </div>
+                <div class="preview-card-body">
+                    <div class="mini-class-card">
+                        <div class="mini-ribbon {{ $salaStatus }}" id="previewRibbon">
+                            @if($salaStatus === 'active')
+                                <i class="fas fa-circle"></i> Ao Vivo
+                            @elseif($salaStatus === 'completed')
+                                <i class="fas fa-check"></i> Concluída
+                            @else
+                                <i class="fas fa-clock"></i> Agendada
+                            @endif
+                        </div>
+                        <div class="mini-card-icon">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                        <h4 id="previewTitulo">{{ $sala->titulo ?? 'Título da Sala' }}</h4>
+                        <span id="previewMateria" class="mini-subject">
+                            {{ optional(collect($materias)->firstWhere('idMateria', $salaMateriaId))['nomeMateria'] ?? '—' }}
+                        </span>
+                        <div class="mini-meta">
+                            <span>
+                                <i class="fas fa-users"></i>
+                                <span id="previewAlunos">{{ $salaMaxAlunos ?: 0 }}</span> alunos
+                            </span>
+                            <span>
+                                <i class="fas fa-calendar"></i>
+                                <span id="previewData">
+                                    {{ $salaDataInicio ? \Carbon\Carbon::parse($salaDataInicio)->format('d/m/Y') : 'Sem data' }}
+                                </span>
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="form-actions">
-            <button type="button" class="btn-form-cancel" id="backToStep1">
-                <i class="fas fa-arrow-left"></i> Voltar
-            </button>
-            <button type="button" class="btn-form-next" id="nextToStep3">
-                Próximo: Simulado
-                <i class="fas fa-arrow-right"></i>
-            </button>
-        </div>
-    </div>
-
-    <div class="form-step" id="step-3">
-        <div class="form-card">
-            <div class="form-card-header">
-                <i class="fas fa-question-circle"></i>
-                <h3>Simulado <span class="optional-tag">Opcional</span></h3>
-            </div>
-            <div class="form-card-body">
-
-                <div class="material-toggle-row">
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="addSimulado" name="add_simulado" value="1" {{ old('add_simulado') || old('questoes') ? 'checked' : '' }}>
-                        <span class="toggle-slider"></span>
-                    </label>
-                    <span>Adicionar simulado a esta sala</span>
+            {{-- Informações da sala --}}
+            <div class="tips-card">
+                <div class="tips-card-header">
+                    <i class="fas fa-clock-rotate-left"></i>
+                    Informações da Sala
                 </div>
+                <ul class="tips-list">
+                    @if(!empty($sala->createdAt ?? $sala->created_at))
+                    <li>
+                        <strong>Criada em:</strong>
+                        {{ \Carbon\Carbon::parse($sala->createdAt ?? $sala->created_at)->format('d/m/Y H:i') }}
+                    </li>
+                    @endif
+                    @if($sala->avaliacao !== null)
+                    <li>
+                        <strong>Avaliação:</strong>
+                        ⭐ {{ number_format($sala->avaliacao, 1) }}
+                    </li>
+                    @endif
+                    @if($salaUrl)
+                    <li>
+                        <strong>Link da sala:</strong>
+                        <a href="{{ $salaUrl }}" target="_blank" class="truncate-link">
+                            {{ Str::limit($salaUrl, 30) }}
+                        </a>
+                    </li>
+                    @endif
+                </ul>
+            </div>
 
-                <div id="simuladoFields" class="hidden-fields {{ old('add_simulado') || old('questoes') ? 'visible' : '' }}">
-                    <div id="questoesContainer">
-                        {{-- Questão 1 é adicionada pelo JS --}}
-                    </div>
-                    <button type="button" class="btn-add-questao" id="addQuestao">
-                        <i class="fas fa-plus"></i>
-                        Adicionar Questão
+            {{-- Ações rápidas --}}
+            <div class="tips-card">
+                <div class="tips-card-header">
+                    <i class="fas fa-bolt"></i>
+                    Ações Rápidas
+                </div>
+                <div class="quick-actions" style="display: flex; flex-direction: column; gap: 10px;">
+                    @if(($sala->status ?? '') === 'pending')
+                        <a href="{{ route('professor.salas.iniciar', $sala->id) }}" class="btn-start-now">
+                            <i class="fas fa-play"></i> Iniciar Agora
+                        </a>
+                    @elseif(($sala->status ?? '') === 'active')
+                        <a href="{{ $salaUrl }}" target="_blank" class="btn-enter-live">
+                            <i class="fas fa-video"></i> Entrar na Aula
+                        </a>
+                    @endif
+                    <button
+                        type="button"
+                        class="btn-danger-outline btn-delete-sala"
+                        data-id="{{ $sala->id }}"
+                    >
+                        <i class="fas fa-trash"></i> Deletar Sala
                     </button>
                 </div>
             </div>
-        </div>
 
-        <div class="form-actions">
-            <button type="button" class="btn-form-cancel" id="backToStep2">
-                <i class="fas fa-arrow-left"></i> Voltar
-            </button>
-            <button type="submit" class="btn-form-submit">
-                <i class="fas fa-check"></i>
-                Atualizar Sala
-            </button>
         </div>
+    </div>
+
+    {{-- Ações do formulário --}}
+    <div class="form-actions">
+        <a href="{{ route('professor.salas.index') }}" class="btn-form-cancel">
+            <i class="fas fa-times"></i> Cancelar
+        </a>
+        <button type="submit" class="btn-form-submit">
+            <i class="fas fa-save"></i>
+            Salvar Alterações
+        </button>
     </div>
 
 </form>
 
-<template id="questaoTemplate">
-    <div class="questao-block" data-index="__INDEX__">
-        <div class="questao-header">
-            <span class="questao-num">Questão <strong>__NUM__</strong></span>
-            <button type="button" class="btn-remove-questao" title="Remover">
-                <i class="fas fa-times"></i>
-            </button>
+{{-- Modal de confirmação de exclusão --}}
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-box">
+        <div class="modal-icon danger">
+            <i class="fas fa-trash-alt"></i>
         </div>
-        <div class="form-group">
-            <label class="form-label">Enunciado da Questão <span class="required">*</span></label>
-            <textarea name="questoes[__INDEX__][enunciado]" class="form-control" rows="2" placeholder="Digite o enunciado..."></textarea>
-        </div>
-        <div class="alternativas-grid">
-            <div class="alternativa-item">
-                <span class="alt-label">A</span>
-                <input type="text" name="questoes[__INDEX__][questao_a]" class="form-control" placeholder="Alternativa A">
-            </div>
-            <div class="alternativa-item">
-                <span class="alt-label">B</span>
-                <input type="text" name="questoes[__INDEX__][questao_b]" class="form-control" placeholder="Alternativa B">
-            </div>
-            <div class="alternativa-item">
-                <span class="alt-label">C</span>
-                <input type="text" name="questoes[__INDEX__][questao_c]" class="form-control" placeholder="Alternativa C">
-            </div>
-            <div class="alternativa-item">
-                <span class="alt-label">D</span>
-                <input type="text" name="questoes[__INDEX__][questao_d]" class="form-control" placeholder="Alternativa D">
-            </div>
-            <div class="alternativa-item">
-                <span class="alt-label">E</span>
-                <input type="text" name="questoes[__INDEX__][questao_e]" class="form-control" placeholder="Alternativa E (opcional)">
-            </div>
-        </div>
-        <div class="form-group">
-            <label class="form-label">Alternativa Correta <span class="required">*</span></label>
-            <select name="questoes[__INDEX__][questao_correta]" class="form-control filter-select">
-                <option value="1">A</option>
-                <option value="2">B</option>
-                <option value="3">C</option>
-                <option value="4">D</option>
-                <option value="5">E</option>
-            </select>
+        <h3>Deletar Sala</h3>
+        <p>Tem certeza que deseja deletar esta sala? Esta ação não pode ser desfeita.</p>
+        <div class="modal-actions">
+            <button class="modal-btn cancel" id="cancelDelete">Cancelar</button>
+            <form method="POST" action="{{ route('professor.salas.destroy', $sala->id) }}">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="modal-btn confirm danger">Deletar</button>
+            </form>
         </div>
     </div>
-</template>
+</div>
 
 @endsection
 
 @section('scripts')
 <script src="{{ asset('js/sala-professor.js') }}"></script>
+@if(count($conteudos))
+<script src="{{ asset('js/steps-conteudo-simulado.js') }}"></script>
+@endif
+
+<script>
+// Mapa de nomes de matéria para a prévia 
+const materiaNames = {
+    @foreach($materias as $m)
+        "{{ $m['idMateria'] }}": "{{ $m['nomeMateria'] }}",
+    @endforeach
+};
+
+// Atualiza prévia em tempo real 
+function updatePreview() {
+    const titulo  = document.getElementById('titulo')?.value         || '';
+    const matId   = document.getElementById('materia_id')?.value     || '';
+    const alunos  = document.getElementById('max_alunos')?.value     || '0';
+    const inicio  = document.getElementById('data_hora_inicio')?.value;
+    const status  = document.getElementById('status')?.value         || 'pending';
+
+    document.getElementById('previewTitulo').textContent  = titulo || 'Título da Sala';
+    document.getElementById('previewMateria').textContent = materiaNames[matId] || '—';
+    document.getElementById('previewAlunos').textContent  = alunos;
+
+    if (inicio) {
+        document.getElementById('previewData').textContent =
+            new Date(inicio).toLocaleDateString('pt-BR');
+    }
+
+    const ribbon = document.getElementById('previewRibbon');
+    const labels = {
+        active:    '<i class="fas fa-circle"></i> Ao Vivo',
+        pending:   '<i class="fas fa-clock"></i> Agendada',
+        completed: '<i class="fas fa-check"></i> Concluída',
+    };
+    ribbon.className = `mini-ribbon ${status}`;
+    ribbon.innerHTML = labels[status] || labels.pending;
+}
+
+['titulo', 'materia_id', 'max_alunos', 'data_hora_inicio', 'status'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input',  updatePreview);
+    document.getElementById(id)?.addEventListener('change', updatePreview);
+});
+
+// Contador de caracteres do título
+document.getElementById('titulo')?.addEventListener('input', function () {
+    document.getElementById('tituloCount').textContent = this.value.length;
+});
+
+// Copiar URL da sala
+document.querySelector('.btn-copy-url')?.addEventListener('click', function () {
+    const url = this.dataset.copy;
+    navigator.clipboard.writeText(url).then(() => {
+        const original = this.innerHTML;
+        this.innerHTML = '<i class="fas fa-check"></i>';
+        setTimeout(() => { this.innerHTML = original; }, 2000);
+    });
+});
+
+// Modal de exclusão
+document.querySelector('.btn-delete-sala')?.addEventListener('click', () => {
+    document.getElementById('deleteModal').classList.add('active');
+});
+document.getElementById('cancelDelete')?.addEventListener('click', () => {
+    document.getElementById('deleteModal').classList.remove('active');
+});
+document.querySelector('.modal-overlay')?.addEventListener('click', function (e) {
+    if (e.target === this) this.classList.remove('active');
+});
+</script>
 @endsection

@@ -19,10 +19,7 @@ class SalaAulaProfessorController extends Controller
         $this->baseUrl = env('DOTNET_API_URL', 'http://profeluno_dotnet:9000');
     }
 
-    // ══════════════════════════════════════════════════════════════
     // HELPERS DE API
-    // ══════════════════════════════════════════════════════════════
-
     private function authHeaders(): array
     {
         $token = session('api_token');
@@ -56,6 +53,9 @@ class SalaAulaProfessorController extends Controller
         }
     }
 
+    /**
+     * POST com body JSON — usado onde a API aceita body normal.
+     */
     private function apiPost(string $endpoint, array $data): ?array
     {
         try {
@@ -79,6 +79,9 @@ class SalaAulaProfessorController extends Controller
         }
     }
 
+    /**
+     * PUT com body JSON — usado onde a API aceita body normal.
+     */
     private function apiPut(string $endpoint, array $data): ?array
     {
         try {
@@ -124,10 +127,7 @@ class SalaAulaProfessorController extends Controller
         }
     }
 
-    // ══════════════════════════════════════════════════════════════
     // NORMALIZA UM ITEM DA API → objeto com Carbon nas datas
-    // ══════════════════════════════════════════════════════════════
-
     private function normalizeSala(array $item): object
     {
         $sala = (object) $item;
@@ -141,134 +141,34 @@ class SalaAulaProfessorController extends Controller
             : null;
 
         // Garante campos que a view usa, mesmo que a API não retorne
-        $sala->avaliacao   = $sala->avaliacao   ?? null;
-        $sala->qtd_alunos  = $sala->qtd_alunos  ?? 0;   // ou max_alunos se renomear
-        $sala->material    = $sala->material    ?? false;
-        $sala->status      = $sala->status      ?? 'pending';
-        $sala->materia     = $sala->materia     ?? '—';
-        $sala->descricao   = $sala->descricao   ?? null;
+        $sala->avaliacao  = $sala->avaliacao  ?? null;
+        $sala->qtd_alunos = $sala->qtd_alunos ?? 0;
+        $sala->material   = $sala->material   ?? false;
+        $sala->status     = $sala->status     ?? 'pending';
+        $sala->materia    = $sala->materia    ?? '—';
+        $sala->descricao  = $sala->descricao  ?? null;
+
+        // Aliases para facilitar o acesso nas views
+        // A API retorna idSalaAula — expõe como id também
+        $sala->id         = $sala->idSalaAula ?? $sala->id ?? null;
 
         return $sala;
     }
 
-    // ══════════════════════════════════════════════════════════════
     // INDEX — lista paginada de salas do professor
-    // ══════════════════════════════════════════════════════════════
-
-    // ── Dados fictícios ─────────────────────────────────────────────
-    // public function index(Request $request)
-    // {
-    //     $collection = collect([
-    //         [
-    //             'id'               => 1,
-    //             'titulo'           => 'Aula de Matemática',
-    //             'materia'          => 'Matemática',
-    //             'descricao'        => 'Revisão de equações do 2º grau e funções',
-    //             'status'           => 'active',
-    //             'qtd_alunos'       => 25,
-    //             'avaliacao'        => 4.5,
-    //             'material'         => true,
-    //             'data_hora_inicio' => '2026-03-23T19:00:00',
-    //         ],
-    //         [
-    //             'id'               => 2,
-    //             'titulo'           => 'Aula de Física',
-    //             'materia'          => 'Física',
-    //             'descricao'        => 'Leis de Newton e dinâmica',
-    //             'status'           => 'pending',
-    //             'qtd_alunos'       => 18,
-    //             'avaliacao'        => 4.2,
-    //             'material'         => false,
-    //             'data_hora_inicio' => '2026-03-24T20:00:00',
-    //         ],
-    //         [
-    //             'id'               => 3,
-    //             'titulo'           => 'Aula de História',
-    //             'materia'          => 'História',
-    //             'descricao'        => 'Segunda Guerra Mundial — causas e consequências',
-    //             'status'           => 'completed',
-    //             'qtd_alunos'       => 30,
-    //             'avaliacao'        => 4.8,
-    //             'material'         => true,
-    //             'data_hora_inicio' => '2026-03-20T18:00:00',
-    //         ],
-    //         [
-    //             'id'               => 4,
-    //             'titulo'           => 'Aula de Química',
-    //             'materia'          => 'Química',
-    //             'descricao'        => 'Tabela periódica e ligações químicas',
-    //             'status'           => 'pending',
-    //             'qtd_alunos'       => 22,
-    //             'avaliacao'        => 4.0,
-    //             'material'         => true,
-    //             'data_hora_inicio' => '2026-03-25T14:00:00',
-    //         ],
-    //         [
-    //             'id'               => 5,
-    //             'titulo'           => 'Aula de Português',
-    //             'materia'          => 'Português',
-    //             'descricao'        => 'Análise sintática e redação dissertativa',
-    //             'status'           => 'completed',
-    //             'qtd_alunos'       => 28,
-    //             'avaliacao'        => 4.6,
-    //             'material'         => true,
-    //             'data_hora_inicio' => '2026-03-18T17:00:00',
-    //         ],
-    //     ]);
-
-    //     // ── Converter para objeto + tratar datas ──────────────────────────
-    //     $collection = $collection->map(function ($item) {
-    //         $item = (object) $item;
-
-    //         $item->data_hora_inicio = $item->data_hora_inicio
-    //             ? Carbon::parse($item->data_hora_inicio)
-    //             : null;
-
-    //         return $item;
-    //     });
-
-    //     // ── Paginação ────────────────────────────────────────────────────
-    //     $page = $request->get('page', 1);
-    //     $perPage = 10;
-
-    //     $salas = new LengthAwarePaginator(
-    //         $collection->forPage($page, $perPage)->values(),
-    //         $collection->count(),
-    //         $perPage,
-    //         $page,
-    //         ['path' => $request->url()]
-    //     );
-
-    //     // ── Filtros ──────────────────────────────────────────────────────
-    //     $salasAtivas     = $collection->where('status', 'active')->values();
-    //     $salasAgendadas  = $collection->where('status', 'pending')->values();
-    //     $salasConcluidas = $collection->where('status', 'completed')->values();
-    //     $salaAtiva       = $salasAtivas->first();
-
-    //     return view('professor.salas.index', compact(
-    //         'salas',
-    //         'salasAtivas',
-    //         'salasAgendadas',
-    //         'salasConcluidas',
-    //         'salaAtiva',
-    //     ));
-    // }
-
     public function index(Request $request)
     {
         $page    = (int) $request->get('page', 1);
         $perPage = 10;
 
-        // A API recebe page e perPage como query params
-        $data = $this->apiGet("salas?page={$page}&perPage={$perPage}");
+        $data     = $this->apiGet("SalaAula/ListarSalasPorProfessor/" . Auth::id());
         $materias = $this->apiGet("Materia/ListarMaterias") ?? [];
 
-        // Se a API falhar, exibe página vazia com flash de erro
         if (is_null($data)) {
             session()->flash('error', 'Não foi possível carregar as salas. Tente novamente.');
 
             $salas = new LengthAwarePaginator(
-                collect(),  // itens vazios
+                collect(),
                 0,
                 $perPage,
                 $page,
@@ -285,9 +185,7 @@ class SalaAulaProfessorController extends Controller
             ]);
         }
 
-        // ── Suporte a dois formatos de resposta da API ────────────────────
-        // Formato A: { data: [...], total: N }
-        // Formato B: [ ... ]  (array direto, sem paginação server-side)
+        // Suporte a dois formatos: { data: [...], total: N } ou [ ... ]
         if (isset($data['data']) && is_array($data['data'])) {
             $items = collect($data['data'])->map(fn($i) => $this->normalizeSala($i));
             $total = $data['total'] ?? $items->count();
@@ -304,16 +202,11 @@ class SalaAulaProfessorController extends Controller
             ['path' => $request->url()]
         );
 
-        // ── Filtros para os blocos da view ────────────────────────────────
-        // Usa os itens da página atual; se quiser counts globais a API precisa
-        // retornar totais por status (ex: data['totais']['active'])
         $salasAtivas     = $items->where('status', 'active')->values();
         $salasAgendadas  = $items->where('status', 'pending')->values();
         $salasConcluidas = $items->where('status', 'completed')->values();
         $salaAtiva       = $salasAtivas->first();
-        
-        $title    = '<h1 class="page-title">Salas de Aula</h1>';
-        $subtitle = 'Gerencie, agende e inicie suas aulas';
+
         return view('professor.salas.index', compact(
             'salas',
             'salasAtivas',
@@ -324,24 +217,20 @@ class SalaAulaProfessorController extends Controller
         ));
     }
 
-    // ══════════════════════════════════════════════════════════════
     // CREATE — formulário de criação (steps)
-    // ══════════════════════════════════════════════════════════════
-
     public function create()
     {
-        // Carrega matérias e conteúdos do professor para os selects do form
         $materias  = $this->apiGet('Materia/ListarMaterias') ?? [];
         $conteudos = $this->apiGet('Conteudo/RetornaConteudoPorIdProfessor/' . Auth::id()) ?? [];
         $conteudos = is_array($conteudos) && isset($conteudos[0])
             ? $conteudos
             : (isset($conteudos['idConteudo']) ? [$conteudos] : []);
+
         $simulados = $this->apiGet("Simulado/RetornaSimuladosPorUsuario/" . Auth::id()) ?? [];
         $simulados = is_array($simulados) && isset($simulados[0])
             ? $simulados
             : (isset($simulados['idSimulado']) ? [$simulados] : []);
 
-        // Se qualquer chamada falhar, a view recebe array vazio e exibe mensagem
         if (!$materias) {
             session()->flash('warning', 'Não foi possível carregar as matérias.');
         }
@@ -349,13 +238,9 @@ class SalaAulaProfessorController extends Controller
         return view('professor.salas.create', compact('materias', 'conteudos', 'simulados'));
     }
 
-    // ══════════════════════════════════════════════════════════════
     // STORE — salva nova sala via API
-    // ══════════════════════════════════════════════════════════════
-
     public function store(Request $request)
     {
-        // ── Validação Laravel (antes de bater na API) ─────────────────────
         $validated = $request->validate([
             'titulo'           => 'required|string|max:255',
             'descricao'        => 'nullable|string',
@@ -367,15 +252,15 @@ class SalaAulaProfessorController extends Controller
             'conteudo_id'      => 'nullable|integer',
             'simulado_id'      => 'nullable|integer',
 
-            // Simulado inline (Step 3 — criação no momento)
-            'questoes'                    => 'nullable|array|min:1',
-            'questoes.*.enunciado'        => 'required_with:questoes|string',
-            'questoes.*.questao_a'        => 'required_with:questoes|string',
-            'questoes.*.questao_b'        => 'required_with:questoes|string',
-            'questoes.*.questao_c'        => 'required_with:questoes|string',
-            'questoes.*.questao_d'        => 'required_with:questoes|string',
-            'questoes.*.questao_e'        => 'nullable|string',
-            'questoes.*.questao_correta'  => 'required_with:questoes|integer|between:1,5',
+            // Simulado inline (criação no momento — Step 3)
+            'questoes'                   => 'nullable|array|min:1',
+            'questoes.*.enunciado'       => 'required_with:questoes|string',
+            'questoes.*.questao_a'       => 'required_with:questoes|string',
+            'questoes.*.questao_b'       => 'required_with:questoes|string',
+            'questoes.*.questao_c'       => 'required_with:questoes|string',
+            'questoes.*.questao_d'       => 'required_with:questoes|string',
+            'questoes.*.questao_e'       => 'nullable|string',
+            'questoes.*.questao_correta' => 'required_with:questoes|integer|between:1,5',
         ], [
             'titulo.required'              => 'O título é obrigatório.',
             'materia_id.required'          => 'Selecione uma matéria.',
@@ -384,34 +269,22 @@ class SalaAulaProfessorController extends Controller
             'status.in'                    => 'Status inválido.',
         ]);
 
-        // ── Gera o room_name único para o Jitsi ──────────────────────────
+        // Gera sala Jitsi automática
         $roomName = Str::uuid()->toString();
-        $url = env('JITSI_BASE_URL', 'https://meet.jit.si') . '/' . $roomName;
-        // ── Monta payload para a API ──────────────────────────────────────
-        $payload = [
-            'titulo'           => $validated['titulo'],
-            'descricao'        => $validated['descricao'] ?? null,
-            'materia_id'       => $validated['materia_id'],
-            'max_alunos'       => $validated['max_alunos'],
-            'data_hora_inicio' => $validated['data_hora_inicio'] ?? null,
-            'data_hora_fim'    => $validated['data_hora_fim']    ?? null,
-            'status'           => $validated['status'],
-            'conteudo_id'      => $validated['conteudo_id']      ?? null,
-            'simulado_id'      => $validated['simulado_id']      ?? null,
-            'url'              => $url,
-        ];
+        $jitsiUrl = env('JITSI_BASE_URL', 'https://meet.jit.si') . '/' . $roomName;
 
-        dd($payload);
-        // ── Se veio simulado inline, cria o simulado primeiro ────────────
-        if (!empty($validated['questoes']) && empty($validated['simulado_id'])) {
+        // Se veio simulado inline, cria primeiro
+        $simuladoId = $validated['simulado_id'] ?? null;
+
+        if (!empty($validated['questoes']) && empty($simuladoId)) {
             $simuladoPayload = [
-                'titulo'     => $validated['titulo'] . ' — Simulado',
-                'materia_id' => $validated['materia_id'],
-                'situacao'   => true,
-                'questoes'   => array_values($validated['questoes']),
+                'titulo'    => ($validated['titulo'] ?? 'Simulado') . ' — Simulado',
+                'idMateria' => $validated['materia_id'],
+                'situacao'  => true,
+                'questoes'  => array_values($validated['questoes']),
             ];
 
-            $simuladoCriado = $this->apiPost('simulados', $simuladoPayload);
+            $simuladoCriado = $this->apiPost('Simulado/CadastrarSimulado', $simuladoPayload);
 
             if (is_null($simuladoCriado)) {
                 return back()
@@ -419,11 +292,26 @@ class SalaAulaProfessorController extends Controller
                     ->withErrors(['simulado' => 'Falha ao criar o simulado. Tente novamente.']);
             }
 
-            $payload['simulado_id'] = $simuladoCriado['id'] ?? null;
+            $simuladoId = $simuladoCriado['idSimulado'] ?? null;
         }
 
-        // ── Cria a sala ───────────────────────────────────────────────────
-        $sala = $this->apiPost('salas', $payload);
+        // Monta payload conforme contrato da API CadastrarSalaAula
+        $payload = [
+            'titulo'          => $validated['titulo'],
+            'descricao'       => $validated['descricao'] ?? null,
+            'idProfessor'     => Auth::id(),
+            'maxAlunos'       => (int) $validated['max_alunos'],
+            'dataHoraInicio'  => $validated['data_hora_inicio'] ?? null,
+            'dataHoraFim'     => $validated['data_hora_fim']    ?? null,
+            'idMateria'       => (int) $validated['materia_id'],
+            'status'          => $validated['status'],
+            'idConteudo'      => $validated['conteudo_id'] ? (int) $validated['conteudo_id'] : null,
+            'idSimulado'      => $simuladoId               ? (int) $simuladoId               : null,
+            'url'             => $jitsiUrl,
+            'nomeSala'        => $roomName,
+        ];
+
+        $sala = $this->apiPost('SalaAula/CadastrarSalaAula', $payload);
 
         if (is_null($sala)) {
             return back()
@@ -431,18 +319,24 @@ class SalaAulaProfessorController extends Controller
                 ->withErrors(['api' => 'Falha ao criar a sala. Tente novamente.']);
         }
 
+        // A API pode retornar o id como idSalaAula
+        $salaId = $sala['idSalaAula'] ?? $sala['id'] ?? null;
+
+        if ($salaId) {
+            return redirect()
+                ->route('professor.salas.show', $salaId)
+                ->with('success', 'Sala criada com sucesso!');
+        }
+
         return redirect()
-            ->route('professor.salas.show', $sala['id'])
+            ->route('professor.salas.index')
             ->with('success', 'Sala criada com sucesso!');
     }
 
-    // ══════════════════════════════════════════════════════════════
     // SHOW — detalhes de uma sala
-    // ══════════════════════════════════════════════════════════════
-
     public function show(int $id)
     {
-        $data = $this->apiGet("salas/{$id}");
+        $data = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$id}");
 
         if (is_null($data)) {
             return redirect()
@@ -455,13 +349,10 @@ class SalaAulaProfessorController extends Controller
         return view('professor.salas.show', compact('sala'));
     }
 
-    // ══════════════════════════════════════════════════════════════
     // EDIT — formulário de edição
-    // ══════════════════════════════════════════════════════════════
-
     public function edit(int $id)
     {
-        $data = $this->apiGet("salas/{$id}");
+        $data = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$id}");
 
         if (is_null($data)) {
             return redirect()
@@ -470,17 +361,21 @@ class SalaAulaProfessorController extends Controller
         }
 
         $sala      = $this->normalizeSala($data);
-        $materias  = $this->apiGet('materias')  ?? [];
-        $conteudos = $this->apiGet('conteudos') ?? [];
-        $simulados = $this->apiGet('simulados') ?? [];
+        $materias  = $this->apiGet('Materia/ListarMaterias') ?? [];
+        $conteudos = $this->apiGet('Conteudo/RetornaConteudoPorIdProfessor/' . Auth::id()) ?? [];
+        $conteudos = is_array($conteudos) && isset($conteudos[0])
+            ? $conteudos
+            : (isset($conteudos['idConteudo']) ? [$conteudos] : []);
+
+        $simulados = $this->apiGet("Simulado/RetornaSimuladosPorUsuario/" . Auth::id()) ?? [];
+        $simulados = is_array($simulados) && isset($simulados[0])
+            ? $simulados
+            : (isset($simulados['idSimulado']) ? [$simulados] : []);
 
         return view('professor.salas.edit', compact('sala', 'materias', 'conteudos', 'simulados'));
     }
 
-    // ══════════════════════════════════════════════════════════════
     // UPDATE — atualiza sala via API
-    // ══════════════════════════════════════════════════════════════
-
     public function update(Request $request, int $id)
     {
         $validated = $request->validate([
@@ -501,7 +396,22 @@ class SalaAulaProfessorController extends Controller
             'status.in'                    => 'Status inválido.',
         ]);
 
-        $resultado = $this->apiPut("salas/{$id}", $validated);
+        // Monta payload conforme contrato da API AtualizarSalaAula
+        $payload = [
+            'idSalaAula'      => $id,
+            'titulo'          => $validated['titulo'],
+            'descricao'       => $validated['descricao'] ?? null,
+            'idProfessor'     => Auth::id(),
+            'maxAlunos'       => (int) $validated['max_alunos'],
+            'dataHoraInicio'  => $validated['data_hora_inicio'] ?? null,
+            'dataHoraFim'     => $validated['data_hora_fim']    ?? null,
+            'idMateria'       => (int) $validated['materia_id'],
+            'status'          => $validated['status'],
+            'idConteudo'      => $validated['conteudo_id'] ? (int) $validated['conteudo_id'] : null,
+            'idSimulado'      => $validated['simulado_id'] ? (int) $validated['simulado_id'] : null,
+        ];
+
+        $resultado = $this->apiPut('SalaAula/AtualizarSalaAula', $payload);
 
         if (is_null($resultado)) {
             return back()
@@ -514,13 +424,10 @@ class SalaAulaProfessorController extends Controller
             ->with('success', 'Sala atualizada com sucesso!');
     }
 
-    // ══════════════════════════════════════════════════════════════
     // DESTROY — deleta sala via API
-    // ══════════════════════════════════════════════════════════════
-
     public function destroy(int $id)
     {
-        $ok = $this->apiDelete("salas/{$id}");
+        $ok = $this->apiDelete("SalaAula/DeletarSalaAula/{$id}");
 
         if (!$ok) {
             return redirect()
@@ -533,13 +440,24 @@ class SalaAulaProfessorController extends Controller
             ->with('success', 'Sala deletada com sucesso!');
     }
 
-    // ══════════════════════════════════════════════════════════════
-    // INICIAR — muda status para active e retorna dados do Jitsi
-    // ══════════════════════════════════════════════════════════════
-
+    // INICIAR — muda status para active
     public function iniciar(int $id)
     {
-        $resultado = $this->apiPut("salas/{$id}/iniciar", ['status' => 'active']);
+        // Primeiro busca os dados atuais da sala para reenviar tudo
+        $data = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$id}");
+
+        if (is_null($data)) {
+            return redirect()
+                ->route('professor.salas.index')
+                ->with('error', 'Sala não encontrada.');
+        }
+
+        $payload = array_merge($data, [
+            'idSalaAula' => $id,
+            'status'     => 'active',
+        ]);
+
+        $resultado = $this->apiPut('SalaAula/AtualizarSalaAula', $payload);
 
         if (is_null($resultado)) {
             return redirect()

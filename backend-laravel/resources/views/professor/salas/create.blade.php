@@ -53,9 +53,7 @@
 >
     @csrf
 
-    {{-- ============================================================
-         STEP 1 — Informações da Sala
-         ============================================================ --}}
+    {{-- STEP 1 — Informações da Sala --}}
     <div class="form-step active" id="step-1">
         <div class="form-grid-two">
 
@@ -275,9 +273,7 @@
         </div>
     </div>
 
-    {{-- ============================================================
-         STEP 2 — Conteúdo (opcional)
-         ============================================================ --}}
+    {{-- STEP 2 — Conteúdo (opcional) --}}
     <div class="form-step" id="step-2">
         <div class="form-card">
             <div class="form-card-header">
@@ -410,9 +406,7 @@
         </div>
     </div>
 
-    {{-- ============================================================
-         STEP 3 — Simulado (opcional)
-         ============================================================ --}}
+    {{-- STEP 3 — Simulado (opcional) --}}
     <div class="form-step" id="step-3">
         <div class="form-card">
             <div class="form-card-header">
@@ -684,7 +678,7 @@ window.simuladosData = {
 <script src="{{ asset('js/steps-conteudo-simulado.js') }}"></script>
 
 <script>
-// ── Prévia do card ─────────────────────────────────────────────────────────
+// Prévia do card
 const materiaSelect = document.getElementById('materia_id');
 const materiaNames  = {
     @foreach($materias as $m)
@@ -722,7 +716,7 @@ document.getElementById('titulo').addEventListener('input', function () {
     document.getElementById('tituloCount').textContent = this.value.length;
 });
 
-// ── Navegação entre steps ──────────────────────────────────────────────────
+// Navegação entre steps 
 function goToStep(n) {
     document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
     document.getElementById(`step-${n}`).classList.add('active');
@@ -757,7 +751,7 @@ document.getElementById('nextToStep3')?.addEventListener('click', () => {
 });
 document.getElementById('backToStep2')?.addEventListener('click', () => goToStep(2));
 
-// ── Tabs do simulado ───────────────────────────────────────────────────────
+// Tabs do simulado 
 document.querySelectorAll('.simulado-tab').forEach(tab => {
     tab.addEventListener('click', function () {
         document.querySelectorAll('.simulado-tab').forEach(t => t.classList.remove('active'));
@@ -772,7 +766,7 @@ document.querySelectorAll('.simulado-tab').forEach(tab => {
     });
 });
 
-// ── Questões inline ────────────────────────────────────────────────────────
+// Questões inline 
 let questaoIndex = 0;
 const template   = document.getElementById('questaoTemplate');
 
@@ -801,7 +795,7 @@ function renumberQuestoes() {
 
 document.getElementById('addQuestao')?.addEventListener('click', addQuestao);
 
-// ── Resumo final ───────────────────────────────────────────────────────────
+// Resumo final 
 function updateResumo() {
     const matId      = materiaSelect.value;
     const inicio     = document.getElementById('data_hora_inicio').value;
