@@ -81,9 +81,9 @@
                     <i class="fas fa-video"></i>
                     Entrar na Aula
                 </a>
-                <button class="btn-live-config" title="Configurações">
+                <!-- <button class="btn-live-config" title="Configurações">
                     <i class="fas fa-cog"></i>
-                </button>
+                </button> -->
             </div>
         </div>
     </div>

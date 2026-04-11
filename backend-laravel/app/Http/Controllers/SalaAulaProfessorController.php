@@ -317,26 +317,26 @@ class SalaAulaProfessorController extends Controller
     }
 
     // SHOW
-    // public function show(int $id)
-    // {
-    //     $data = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$id}");
+    public function show(int $id)
+    {
+        $data = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$id}");
 
-    //     if (is_null($data)) {
-    //         return redirect()->route('professor.salas.index')
-    //             ->with('error', 'Sala não encontrada.');
-    //     }
+        if (is_null($data)) {
+            return redirect()->route('professor.salas.index')
+                ->with('error', 'Sala não encontrada.');
+        }
 
-    //     $sala = $this->normalizeSala($data);
+        $sala = $this->normalizeSala($data);
 
-    //     // Resolve nome da matéria
-    //     if (isset($sala->idMateria)) {
-    //         $materias     = $this->apiGet('Materia/ListarMaterias') ?? [];
-    //         $materia      = collect($materias)->firstWhere('idMateria', $sala->idMateria);
-    //         $sala->materia = $materia['nomeMateria'] ?? '—';
-    //     }
+        // Resolve nome da matéria
+        if (isset($sala->idMateria)) {
+            $materias     = $this->apiGet('Materia/ListarMaterias') ?? [];
+            $materia      = collect($materias)->firstWhere('idMateria', $sala->idMateria);
+            $sala->materia = $materia['nomeMateria'] ?? '—';
+        }
 
-    //     return view('professor.salas.show', compact('sala'));
-    // }
+        return view('professor.salas.show', compact('sala'));
+    }
 
     // EDIT
     public function edit(int $id)
@@ -359,7 +359,6 @@ class SalaAulaProfessorController extends Controller
         $simulados = is_array($simulados) && isset($simulados[0])
             ? $simulados
             : (isset($simulados['idSimulado']) ? [$simulados] : []);
-        dd($sala);
         return view('professor.salas.edit', compact('sala', 'materias', 'conteudos', 'simulados'));
     }
 
@@ -411,7 +410,7 @@ class SalaAulaProfessorController extends Controller
                 ->withErrors(['api' => 'Falha ao atualizar a sala. Tente novamente.']);
         }
 
-        return redirect()->route('professor.salas.show', $id)
+        return redirect()->route('professor.salas.index')
             ->with('success', 'Sala atualizada com sucesso!');
     }
 
@@ -471,5 +470,9 @@ class SalaAulaProfessorController extends Controller
             ->with('success', 'Aula iniciada!')
             ->with('sala_iniciada_id', $id)
             ->with('sala_iniciada_at', now()->toIso8601String());
+    }
+
+    public function videoAula() {
+        return view('professor.salas.video-aula');
     }
 }

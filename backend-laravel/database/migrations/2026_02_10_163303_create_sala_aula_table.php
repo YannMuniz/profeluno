@@ -22,8 +22,8 @@ return new class extends Migration
             $table->foreignId('conteudo_id')->nullable()->constrained('conteudo')->nullOnDelete();
             $table->foreignId('simulado_id')->nullable()->constrained('simulado')->nullOnDelete();
             $table->integer('max_alunos')->default(30); 
-            $table->string('url'); // verificar se precisa excluir ou não
-            $table->string('room_name')->unique()->nullable(); // UUID da sala Jitsi
+            $table->string('url')->nullable(); // verificar se precisa excluir ou não
+            $table->string('room_name')->unique()->nullable(); // sala Jitsi
             $table->float('avaliacao')->nullable()->default(null);
             $table->enum('status', ['active', 'completed', 'pending'])->default('active');
             $table->timestamps();
