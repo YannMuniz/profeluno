@@ -308,34 +308,35 @@ class SalaAulaProfessorController extends Controller
                 ->withErrors(['api' => 'Falha ao criar a sala. Tente novamente.']);
         }
 
-        $salaId = $sala['idSalaAula'] ?? $sala['id'] ?? null;
+        // Correto: extrair o ID da resposta
+        $salaId = $sala['idSalaAula'] ?? null;
 
-        return $salaId
-            ? redirect()->route('professor.salas.show', $salaId)->with('success', 'Sala criada com sucesso!')
-            : redirect()->route('professor.salas.index')->with('success', 'Sala criada com sucesso!');
+        return redirect()
+            ->route('professor.salas.index')
+            ->with('success', 'Sala criada com sucesso!');
     }
 
     // SHOW
-    public function show(int $id)
-    {
-        $data = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$id}");
+    // public function show(int $id)
+    // {
+    //     $data = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$id}");
 
-        if (is_null($data)) {
-            return redirect()->route('professor.salas.index')
-                ->with('error', 'Sala não encontrada.');
-        }
+    //     if (is_null($data)) {
+    //         return redirect()->route('professor.salas.index')
+    //             ->with('error', 'Sala não encontrada.');
+    //     }
 
-        $sala = $this->normalizeSala($data);
+    //     $sala = $this->normalizeSala($data);
 
-        // Resolve nome da matéria
-        if (isset($sala->idMateria)) {
-            $materias     = $this->apiGet('Materia/ListarMaterias') ?? [];
-            $materia      = collect($materias)->firstWhere('idMateria', $sala->idMateria);
-            $sala->materia = $materia['nomeMateria'] ?? '—';
-        }
+    //     // Resolve nome da matéria
+    //     if (isset($sala->idMateria)) {
+    //         $materias     = $this->apiGet('Materia/ListarMaterias') ?? [];
+    //         $materia      = collect($materias)->firstWhere('idMateria', $sala->idMateria);
+    //         $sala->materia = $materia['nomeMateria'] ?? '—';
+    //     }
 
-        return view('professor.salas.show', compact('sala'));
-    }
+    //     return view('professor.salas.show', compact('sala'));
+    // }
 
     // EDIT
     public function edit(int $id)
