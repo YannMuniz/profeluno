@@ -23,7 +23,6 @@ class SalaAulaProfessorController extends Controller
     private function authHeaders(): array
     {
         $token = session('api_token');
-
         return [
             'Accept'        => 'application/json',
             'Content-Type'  => 'application/json',
@@ -121,22 +120,13 @@ class SalaAulaProfessorController extends Controller
         }
     }
 
-    // NORMALIZA UM ITEM DA API → objeto pronto para as views
-    //
-    // Campos reais retornados pela API (confirmados via Swagger):
-    //   idSalaAula, titulo, descricao, idProfessor,
-    //   dataHoraInicio, dataHoraFim, idMateria,
-    //   idConteudo, idSimulado, maxAlunos,
-    //   url, nomeSala, avaliacao, status,
-    //   createdAt, updatedAt, alunoSalas, conteudo, simulados
+    // NORMALIZE
     private function normalizeSala(array $item): object
     {
         $sala = (object) $item;
 
-        // ID canônico para rotas
         $sala->id = $sala->idSalaAula ?? null;
 
-        // Datas convertidas para Carbon
         $sala->data_hora_inicio = !empty($sala->dataHoraInicio)
             ? Carbon::parse($sala->dataHoraInicio)
             : null;
@@ -145,31 +135,25 @@ class SalaAulaProfessorController extends Controller
             ? Carbon::parse($sala->dataHoraFim)
             : null;
 
-        // Aliases usados pelos templates do index/buscar
         $sala->qtd_alunos = $sala->maxAlunos ?? 0;
-
-        // Nome da matéria não vem na resposta — preenchido externamente
-        // via mapa quando disponível; fallback '—'
-        $sala->materia   = $sala->materia   ?? '—';
-        $sala->avaliacao = $sala->avaliacao ?? null;
-        $sala->descricao = $sala->descricao ?? null;
-        $sala->status    = $sala->status    ?? 'pending';
-        $sala->material  = $sala->material  ?? false;
+        $sala->materia    = $sala->materia   ?? '—';
+        $sala->avaliacao  = $sala->avaliacao ?? null;
+        $sala->descricao  = $sala->descricao ?? null;
+        $sala->status     = $sala->status    ?? 'pending';
+        $sala->material   = $sala->material  ?? false;
 
         return $sala;
     }
 
-    // INDEX — lista de salas do professor
+    // INDEX
     public function index(Request $request)
     {
         $page    = (int) $request->get('page', 1);
         $perPage = 10;
 
-        // Endpoint confirmado: RetornaSalaAulaPorProfessor/{idProfessor}
         $data     = $this->apiGet("SalaAula/RetornaSalaAulaPorProfessor/" . Auth::id());
         $materias = $this->apiGet("Materia/ListarMaterias") ?? [];
 
-        // Mapa para resolver nomes: idMateria → nomeMateria
         $materiasMap = collect($materias)->keyBy('idMateria');
 
         if (is_null($data)) {
@@ -190,11 +174,9 @@ class SalaAulaProfessorController extends Controller
             ]);
         }
 
-        // API retorna array direto (confirmado)
         $items = collect($data)->map(function ($i) use ($materiasMap) {
             $sala = $this->normalizeSala($i);
 
-            // Injeta nome da matéria
             if (isset($sala->idMateria) && $materiasMap->has($sala->idMateria)) {
                 $sala->materia = $materiasMap->get($sala->idMateria)['nomeMateria'] ?? '—';
             }
@@ -250,9 +232,10 @@ class SalaAulaProfessorController extends Controller
             'descricao'        => 'nullable|string',
             'materia_id'       => 'required|integer',
             'max_alunos'       => 'required|integer|min:1|max:500',
-            'data_hora_inicio' => 'nullable|date',
-            'data_hora_fim'    => 'nullable|date|after_or_equal:data_hora_inicio',
             'status'           => 'required|in:active,pending',
+            // inicio: obrigatório só se agendada (pending)
+            'data_hora_inicio' => 'nullable|date',
+            'data_hora_fim'    => 'nullable|date',
             'conteudo_id'      => 'nullable|integer',
             'simulado_id'      => 'nullable|integer',
 
@@ -265,12 +248,20 @@ class SalaAulaProfessorController extends Controller
             'questoes.*.questao_e'       => 'nullable|string',
             'questoes.*.questao_correta' => 'required_with:questoes|integer|between:1,5',
         ], [
-            'titulo.required'              => 'O título é obrigatório.',
-            'materia_id.required'          => 'Selecione uma matéria.',
-            'max_alunos.required'          => 'Informe a quantidade máxima de alunos.',
-            'data_hora_fim.after_or_equal' => 'O fim deve ser após o início.',
-            'status.in'                    => 'Status inválido.',
+            'titulo.required'     => 'O título é obrigatório.',
+            'materia_id.required' => 'Selecione uma matéria.',
+            'max_alunos.required' => 'Informe a quantidade máxima de alunos.',
+            'status.in'           => 'Status inválido.',
         ]);
+
+        // Se for ao vivo (active), dataHoraInicio = agora
+        if ($validated['status'] === 'active') {
+            $dataHoraInicio = now()->toIso8601String();
+        } else {
+            $dataHoraInicio = $validated['data_hora_inicio'] ?? null;
+        }
+
+        $dataHoraFim = $validated['data_hora_fim'] ?? null;
 
         $simuladoId = $validated['simulado_id'] ?? null;
 
@@ -295,8 +286,8 @@ class SalaAulaProfessorController extends Controller
             'descricao'      => $validated['descricao'] ?? null,
             'idProfessor'    => Auth::id(),
             'maxAlunos'      => (int) $validated['max_alunos'],
-            'dataHoraInicio' => $validated['data_hora_inicio'] ?? null,
-            'dataHoraFim'    => $validated['data_hora_fim']    ?? null,
+            'dataHoraInicio' => $dataHoraInicio,
+            'dataHoraFim'    => $dataHoraFim,
             'idMateria'      => (int) $validated['materia_id'],
             'status'         => $validated['status'],
             'idConteudo'     => $validated['conteudo_id'] ? (int) $validated['conteudo_id'] : null,
@@ -308,8 +299,15 @@ class SalaAulaProfessorController extends Controller
                 ->withErrors(['api' => 'Falha ao criar a sala. Tente novamente.']);
         }
 
-        // Correto: extrair o ID da resposta
-        $salaId = $sala['idSalaAula'] ?? null;
+        // Se foi criada como ao vivo, redireciona direto para a sala
+        if ($validated['status'] === 'active') {
+            $salaId = $sala['idSalaAula'] ?? null;
+            if ($salaId) {
+                return redirect()
+                    ->route('professor.salas.video-aula', $salaId)
+                    ->with('success', 'Sala criada e iniciada!');
+            }
+        }
 
         return redirect()
             ->route('professor.salas.index')
@@ -328,10 +326,9 @@ class SalaAulaProfessorController extends Controller
 
         $sala = $this->normalizeSala($data);
 
-        // Resolve nome da matéria
         if (isset($sala->idMateria)) {
-            $materias     = $this->apiGet('Materia/ListarMaterias') ?? [];
-            $materia      = collect($materias)->firstWhere('idMateria', $sala->idMateria);
+            $materias      = $this->apiGet('Materia/ListarMaterias') ?? [];
+            $materia       = collect($materias)->firstWhere('idMateria', $sala->idMateria);
             $sala->materia = $materia['nomeMateria'] ?? '—';
         }
 
@@ -359,6 +356,7 @@ class SalaAulaProfessorController extends Controller
         $simulados = is_array($simulados) && isset($simulados[0])
             ? $simulados
             : (isset($simulados['idSimulado']) ? [$simulados] : []);
+
         return view('professor.salas.edit', compact('sala', 'materias', 'conteudos', 'simulados'));
     }
 
@@ -370,25 +368,32 @@ class SalaAulaProfessorController extends Controller
             'descricao'        => 'nullable|string',
             'materia_id'       => 'required|integer',
             'max_alunos'       => 'required|integer|min:1|max:500',
-            'data_hora_inicio' => 'nullable|date',
-            'data_hora_fim'    => 'nullable|date|after_or_equal:data_hora_inicio',
             'status'           => 'required|in:active,completed,pending',
+            'data_hora_inicio' => 'nullable|date',
+            'data_hora_fim'    => 'nullable|date',
             'conteudo_id'      => 'nullable|integer',
             'simulado_id'      => 'nullable|integer',
         ], [
-            'titulo.required'              => 'O título é obrigatório.',
-            'materia_id.required'          => 'Selecione uma matéria.',
-            'max_alunos.required'          => 'Informe a quantidade máxima de alunos.',
-            'data_hora_fim.after_or_equal' => 'O fim deve ser após o início.',
-            'status.in'                    => 'Status inválido.',
+            'titulo.required'     => 'O título é obrigatório.',
+            'materia_id.required' => 'Selecione uma matéria.',
+            'max_alunos.required' => 'Informe a quantidade máxima de alunos.',
+            'status.in'           => 'Status inválido.',
         ]);
 
-        // Busca dados atuais para preservar url e nomeSala
         $dadosAtuais = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$id}");
 
         if (is_null($dadosAtuais)) {
             return back()->withInput()
                 ->withErrors(['api' => 'Não foi possível recuperar os dados da sala.']);
+        }
+
+        // Se mudou para active e não tinha início definido, usar agora
+        if ($validated['status'] === 'active') {
+            $dataHoraInicio = now()->toIso8601String();
+        } else {
+            $dataHoraInicio = $validated['data_hora_inicio']
+                ?? $dadosAtuais['dataHoraInicio']
+                ?? null;
         }
 
         $resultado = $this->apiPut('SalaAula/AtualizarSalaAula', [
@@ -397,12 +402,14 @@ class SalaAulaProfessorController extends Controller
             'descricao'      => $validated['descricao'] ?? null,
             'idProfessor'    => Auth::id(),
             'maxAlunos'      => (int) $validated['max_alunos'],
-            'dataHoraInicio' => $validated['data_hora_inicio'] ?? null,
-            'dataHoraFim'    => $validated['data_hora_fim']    ?? null,
+            'dataHoraInicio' => $dataHoraInicio,
+            'dataHoraFim'    => $validated['data_hora_fim'] ?? $dadosAtuais['dataHoraFim'] ?? null,
             'idMateria'      => (int) $validated['materia_id'],
             'status'         => $validated['status'],
             'idConteudo'     => $validated['conteudo_id'] ? (int) $validated['conteudo_id'] : null,
             'idSimulado'     => $validated['simulado_id'] ? (int) $validated['simulado_id'] : null,
+            'url'            => $dadosAtuais['url']      ?? null,
+            'nomeSala'       => $dadosAtuais['nomeSala'] ?? null,
         ]);
 
         if (is_null($resultado)) {
@@ -417,6 +424,20 @@ class SalaAulaProfessorController extends Controller
     // DESTROY
     public function destroy(int $id)
     {
+        // Verifica se a sala pertence ao professor antes de deletar
+        $data = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$id}");
+
+        if (is_null($data)) {
+            return redirect()->route('professor.salas.index')
+                ->with('error', 'Sala não encontrada.');
+        }
+
+        // Não permite deletar sala ativa
+        if (($data['status'] ?? '') === 'active') {
+            return redirect()->route('professor.salas.index')
+                ->with('error', 'Não é possível deletar uma sala que está ao vivo. Encerre-a primeiro.');
+        }
+
         $ok = $this->apiDelete("SalaAula/DeletarSalaAula/{$id}");
 
         if (!$ok) {
@@ -431,6 +452,19 @@ class SalaAulaProfessorController extends Controller
     // INICIAR
     public function iniciar(int $id)
     {
+        // Verifica se já existe uma sala ativa para este professor
+        $todasSalas = $this->apiGet("SalaAula/RetornaSalaAulaPorProfessor/" . Auth::id());
+
+        if (!is_null($todasSalas)) {
+            $salaAtivaExistente = collect($todasSalas)
+                ->first(fn($s) => ($s['status'] ?? '') === 'active' && ($s['idSalaAula'] ?? 0) !== $id);
+
+            if ($salaAtivaExistente) {
+                return redirect()->route('professor.salas.index')
+                    ->with('error', 'Você já possui uma aula ao vivo ativa. Encerre-a antes de iniciar outra.');
+            }
+        }
+
         $dadosAtuais = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$id}");
 
         if (is_null($dadosAtuais)) {
@@ -438,7 +472,6 @@ class SalaAulaProfessorController extends Controller
                 ->with('error', 'Sala não encontrada.');
         }
 
-        // Só inicia se estiver pending
         if (($dadosAtuais['status'] ?? '') !== 'pending') {
             return redirect()->route('professor.salas.index')
                 ->with('error', 'Esta sala não pode ser iniciada.');
@@ -450,7 +483,7 @@ class SalaAulaProfessorController extends Controller
             'descricao'      => $dadosAtuais['descricao']      ?? null,
             'idProfessor'    => $dadosAtuais['idProfessor'],
             'maxAlunos'      => $dadosAtuais['maxAlunos'],
-            'dataHoraInicio' => $dadosAtuais['dataHoraInicio'] ?? null,
+            'dataHoraInicio' => now()->toIso8601String(), // marca o início real agora
             'dataHoraFim'    => $dadosAtuais['dataHoraFim']    ?? null,
             'idMateria'      => $dadosAtuais['idMateria'],
             'status'         => 'active',
@@ -465,14 +498,82 @@ class SalaAulaProfessorController extends Controller
                 ->with('error', 'Não foi possível iniciar a sala. Tente novamente.');
         }
 
-        // Passa o timestamp de início real para o JS salvar no localStorage
-        return redirect()->route('professor.salas.index')
-            ->with('success', 'Aula iniciada!')
-            ->with('sala_iniciada_id', $id)
-            ->with('sala_iniciada_at', now()->toIso8601String());
+        // Redireciona para a sala de vídeo
+        return redirect()->route('professor.salas.video-aula', $id)
+            ->with('success', 'Aula iniciada!');
     }
 
-    public function videoAula() {
-        return view('professor.salas.video-aula');
+    // ENCERRAR
+    public function encerrar(int $id)
+    {
+        $dadosAtuais = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$id}");
+
+        if (is_null($dadosAtuais)) {
+            return redirect()->route('professor.salas.index')
+                ->with('error', 'Sala não encontrada.');
+        }
+
+        if (($dadosAtuais['status'] ?? '') !== 'active') {
+            return redirect()->route('professor.salas.index')
+                ->with('error', 'Esta sala não está ativa.');
+        }
+
+        $resultado = $this->apiPut('SalaAula/AtualizarSalaAula', [
+            'idSalaAula'     => $id,
+            'titulo'         => $dadosAtuais['titulo'],
+            'descricao'      => $dadosAtuais['descricao']      ?? null,
+            'idProfessor'    => $dadosAtuais['idProfessor'],
+            'maxAlunos'      => $dadosAtuais['maxAlunos'],
+            'dataHoraInicio' => $dadosAtuais['dataHoraInicio'] ?? null,
+            'dataHoraFim'    => now()->toIso8601String(), // marca o fim real agora
+            'idMateria'      => $dadosAtuais['idMateria'],
+            'status'         => 'completed',
+            'idConteudo'     => $dadosAtuais['idConteudo']     ?? null,
+            'idSimulado'     => $dadosAtuais['idSimulado']     ?? null,
+            'url'            => $dadosAtuais['url']            ?? null,
+            'nomeSala'       => $dadosAtuais['nomeSala']       ?? null,
+        ]);
+
+        if (is_null($resultado)) {
+            return redirect()->route('professor.salas.index')
+                ->with('error', 'Não foi possível encerrar a sala. Tente novamente.');
+        }
+
+        return redirect()->route('professor.salas.index')
+            ->with('success', 'Aula encerrada com sucesso!');
+    }
+
+    // VIDEO AULA (professor)
+    public function videoAula(int $id)
+    {
+        $data = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$id}");
+
+        if (is_null($data)) {
+            return redirect()->route('professor.salas.index')
+                ->with('error', 'Sala não encontrada.');
+        }
+
+        $sala = $this->normalizeSala($data);
+
+        // Só professor dono pode entrar
+        if (($data['idProfessor'] ?? null) != Auth::id()) {
+            return redirect()->route('professor.salas.index')
+                ->with('error', 'Acesso não autorizado.');
+        }
+
+        // Sala precisa estar ativa
+        if ($sala->status !== 'active') {
+            return redirect()->route('professor.salas.index')
+                ->with('error', 'Esta sala não está ao vivo.');
+        }
+
+        // Resolve nome da matéria
+        if (isset($sala->idMateria)) {
+            $materias      = $this->apiGet('Materia/ListarMaterias') ?? [];
+            $materia       = collect($materias)->firstWhere('idMateria', $sala->idMateria);
+            $sala->materia = $materia['nomeMateria'] ?? '—';
+        }
+
+        return view('professor.salas.video-aula', compact('sala'));
     }
 }

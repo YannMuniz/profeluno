@@ -80,13 +80,14 @@ Route::middleware(['auth', 'role:professor'])->prefix('professor')->name('profes
     Route::resource('salas', SalaAulaProfessorController::class);
     Route::patch('salas/{sala}/iniciar',  [SalaAulaProfessorController::class, 'iniciar'])->name('salas.iniciar');
     Route::patch('salas/{sala}/encerrar', [SalaAulaProfessorController::class, 'encerrar'])->name('salas.encerrar');
+    Route::get('salas/{sala}/video-aula', [SalaAulaProfessorController::class, 'videoAula'])->name('salas.video-aula');
  
-    // conteudo (views em resources/views/conteudo/create.blade.php etc.)
+    // Conteúdo
     Route::resource('conteudo', ConteudoController::class);
     Route::patch('conteudo/{conteudo}/toggle', [ConteudoController::class, 'toggle'])->name('conteudo.toggle');
     Route::get('conteudo/{conteudo}/download', [ConteudoController::class, 'download'])->name('conteudo.download');
  
-    // Simulados (views em resources/views/simulado/create.blade.php etc.)
+    // Simulados
     Route::resource('simulados', SimuladoController::class);
  
     // Outras seções

@@ -6,6 +6,185 @@
 @section('styles')
 <link rel="stylesheet" href="{{ asset('css/sala-professor.css') }}">
 <link rel="stylesheet" href="{{ asset('css/steps-conteudo-simulado.css') }}">
+<style>
+    /* ── BOTÃO COPIAR URL ── */
+    .input-with-icon {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 0;
+    }
+
+    .input-with-icon > i {
+        position: absolute;
+        left: 12px;
+        color: var(--primary-color, #7367f0);
+        font-size: 13px;
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    .input-with-icon .form-control {
+        padding-left: 34px;
+        padding-right: 44px;
+        background: var(--light-bg, #f8f8f8);
+        color: var(--text-muted, #6e6b7b);
+        cursor: default;
+    }
+
+    .btn-copy-url {
+        position: absolute;
+        right: 8px;
+        width: 30px;
+        height: 30px;
+        background: rgba(115, 103, 240, .1);
+        border: 1px solid rgba(115, 103, 240, .35);
+        border-radius: 6px;
+        color: var(--primary-color, #7367f0);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        transition: .2s;
+        z-index: 3;
+    }
+
+    .btn-copy-url:hover {
+        background: var(--primary-color, #7367f0);
+        color: #fff;
+        border-color: var(--primary-color, #7367f0);
+    }
+
+    /* ── BOTÃO DELETAR (ações rápidas) ── */
+    .btn-danger-outline {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background: transparent;
+        border: 1px solid rgba(234, 84, 85, .45);
+        border-radius: 8px;
+        color: #ea5455;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        width: 100%;
+        transition: .2s;
+        text-align: left;
+    }
+
+    .btn-danger-outline:hover {
+        background: rgba(234, 84, 85, .08);
+        border-color: #ea5455;
+    }
+
+    /* ── BOTÃO ENTRAR NA AULA (sidebar) ── */
+    .btn-enter-live-side {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background: #28c76f;
+        border: none;
+        border-radius: 8px;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        width: 100%;
+        text-decoration: none;
+        transition: .2s;
+    }
+
+    .btn-enter-live-side:hover {
+        background: #24b263;
+        color: #fff;
+    }
+
+    /* ── BOTÃO INICIAR AGORA (sidebar) ── */
+    .btn-iniciar-side {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background: var(--primary-color, #7367f0);
+        border: none;
+        border-radius: 8px;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        width: 100%;
+        text-decoration: none;
+        transition: .2s;
+    }
+
+    .btn-iniciar-side:hover {
+        background: #6258d3;
+        color: #fff;
+    }
+
+    /* ── HINT DE STATUS (campos data) ── */
+    .field-hint {
+        font-size: 12px;
+        color: var(--text-muted, #6e6b7b);
+        margin-top: 4px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .field-hint i { color: var(--primary-color, #7367f0); }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal-box {
+        background: var(--card-bg, #fff);
+        border: 1px solid var(--border-color, #e5e7eb);
+        border-radius: 16px;
+        padding: 32px;
+        max-width: 420px;
+        width: 90%;
+        text-align: center;
+        box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    }
+
+    .modal-icon {
+        width: 60px; height: 60px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 26px; margin: 0 auto 18px;
+    }
+
+    .modal-icon.danger  { background: rgba(234,84,85,.12);  color: #ea5455; }
+
+    .modal-box h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .modal-box p  { font-size: 14px; color: var(--text-muted, #6e6b7b); margin-bottom: 24px; line-height: 1.6; }
+
+    .modal-actions { display: flex; gap: 12px; justify-content: center; }
+
+    .modal-btn {
+        padding: 10px 28px; border-radius: 8px;
+        font-weight: 600; font-size: 14px;
+        cursor: pointer; border: none; transition: .25s;
+    }
+
+    .modal-btn.cancel { background: var(--light-bg, #f8f8f8); border: 1px solid var(--border-color, #e5e7eb); color: var(--text-muted, #6e6b7b); }
+    .modal-btn.danger { background: #ea5455; color: #fff; }
+    .modal-btn.cancel:hover { background: var(--border-color, #e5e7eb); }
+    .modal-btn.danger:hover { background: #d84545; }
+</style>
 @endsection
 
 @section('content')
@@ -58,7 +237,6 @@
 @endif
 
 @php
-    // Normaliza os valores salvos para preencher os campos
     $salaMateriaId  = old('materia_id',  $sala->idMateria  ?? '');
     $salaMaxAlunos  = old('max_alunos',  $sala->maxAlunos  ?? $sala->qtd_alunos ?? '');
     $salaDataInicio = old('data_hora_inicio', optional($sala->data_hora_inicio)->format('Y-m-d\TH:i'));
@@ -79,7 +257,7 @@
 
     <div class="form-grid-two">
 
-        {{-- Coluna principal --}}
+        {{-- ── COLUNA PRINCIPAL ── --}}
         <div class="form-col-main">
 
             {{-- CARD: Dados Principais --}}
@@ -178,92 +356,140 @@
                         </div>
                     </div>
 
-                    {{-- Data/hora início + fim --}}
-                    <div class="form-row-two">
-                        <div class="form-group">
-                            <label for="data_hora_inicio" class="form-label">
-                                Data e Hora de Início
-                            </label>
-                            <input
-                                type="datetime-local"
-                                id="data_hora_inicio"
-                                name="data_hora_inicio"
-                                class="form-control @error('data_hora_inicio') is-invalid @enderror"
-                                value="{{ $salaDataInicio }}"
-                            >
-                            @error('data_hora_inicio')
-                                <span class="error-message">{{ $message }}</span>
-                            @enderror
-                        </div>
+                    {{-- Status --}}
+                    <div class="form-group">
+                        <label for="status" class="form-label">Status</label>
+                        <select
+                            id="status"
+                            name="status"
+                            class="form-control filter-select @error('status') is-invalid @enderror"
+                        >
+                            <option value="pending"   {{ $salaStatus === 'pending'   ? 'selected' : '' }}>
+                                Agendada (Pendente)
+                            </option>
+                            <option value="active"    {{ $salaStatus === 'active'    ? 'selected' : '' }}>
+                                Ativa (Ao Vivo)
+                            </option>
+                            <option value="completed" {{ $salaStatus === 'completed' ? 'selected' : '' }}>
+                                Concluída
+                            </option>
+                        </select>
+                        @error('status')
+                            <span class="error-message">{{ $message }}</span>
+                        @enderror
+                    </div>
 
+                    {{-- Data/hora — dinâmico conforme status --}}
+                    {{-- Bloco ao vivo: só mostra campo de fim --}}
+                    <div id="block-active" style="{{ $salaStatus === 'active' ? '' : 'display:none' }}">
                         <div class="form-group">
-                            <label for="data_hora_fim" class="form-label">
-                                Data e Hora de Fim
+                            <label for="data_hora_fim_active" class="form-label">
+                                Previsão de Término
                             </label>
                             <input
                                 type="datetime-local"
-                                id="data_hora_fim"
-                                name="data_hora_fim"
+                                id="data_hora_fim_active"
                                 class="form-control @error('data_hora_fim') is-invalid @enderror"
                                 value="{{ $salaDataFim }}"
                             >
+                            <p class="field-hint">
+                                <i class="fas fa-info-circle"></i>
+                                O início foi registrado quando a aula foi iniciada.
+                            </p>
                             @error('data_hora_fim')
                                 <span class="error-message">{{ $message }}</span>
                             @enderror
                         </div>
                     </div>
 
-                    {{-- Status --}}
-                    <div class="form-row-two">
-                        <div class="form-group">
-                            <label for="status" class="form-label">Status</label>
-                            <select
-                                id="status"
-                                name="status"
-                                class="form-control filter-select @error('status') is-invalid @enderror"
-                            >
-                                <option value="pending"   {{ $salaStatus === 'pending'   ? 'selected' : '' }}>
-                                    Agendada (Pendente)
-                                </option>
-                                <option value="active"    {{ $salaStatus === 'active'    ? 'selected' : '' }}>
-                                    Ativa (Ao Vivo)
-                                </option>
-                                <option value="completed" {{ $salaStatus === 'completed' ? 'selected' : '' }}>
-                                    Concluída
-                                </option>
-                            </select>
-                            @error('status')
-                                <span class="error-message">{{ $message }}</span>
-                            @enderror
-                        </div>
-
-                        {{-- URL da sala (somente leitura — gerada automaticamente) --}}
-                        @if($salaUrl)
-                        <div class="form-group">
-                            <label class="form-label">
-                                Link da Sala
-                                <span class="optional-tag">Gerado automaticamente</span>
-                            </label>
-                            <div class="input-with-icon">
-                                <i class="fas fa-video"></i>
+                    {{-- Bloco agendada: mostra início e fim --}}
+                    <div id="block-pending" style="{{ $salaStatus === 'pending' ? '' : 'display:none' }}">
+                        <div class="form-row-two">
+                            <div class="form-group">
+                                <label for="data_hora_inicio" class="form-label">
+                                    Previsão de Início
+                                </label>
                                 <input
-                                    type="text"
-                                    class="form-control"
-                                    value="{{ $salaUrl }}"
-                                    readonly
+                                    type="datetime-local"
+                                    id="data_hora_inicio"
+                                    name="data_hora_inicio"
+                                    class="form-control @error('data_hora_inicio') is-invalid @enderror"
+                                    value="{{ $salaDataInicio }}"
                                 >
-                                <button
-                                    type="button"
-                                    class="btn-copy-url"
-                                    data-copy="{{ $salaUrl }}"
-                                    title="Copiar link"
+                                @error('data_hora_inicio')
+                                    <span class="error-message">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            <div class="form-group">
+                                <label for="data_hora_fim_pending" class="form-label">
+                                    Previsão de Término
+                                </label>
+                                <input
+                                    type="datetime-local"
+                                    id="data_hora_fim_pending"
+                                    class="form-control @error('data_hora_fim') is-invalid @enderror"
+                                    value="{{ $salaDataFim }}"
                                 >
-                                    <i class="fas fa-copy"></i>
-                                </button>
+                                @error('data_hora_fim')
+                                    <span class="error-message">{{ $message }}</span>
+                                @enderror
                             </div>
                         </div>
-                        @endif
                     </div>
+
+                    {{-- Bloco concluída: campos readonly --}}
+                    <div id="block-completed" style="{{ $salaStatus === 'completed' ? '' : 'display:none' }}">
+                        <div class="form-row-two">
+                            <div class="form-group">
+                                <label class="form-label">Início Real</label>
+                                <input
+                                    type="datetime-local"
+                                    class="form-control"
+                                    value="{{ $salaDataInicio }}"
+                                    readonly
+                                >
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Término Real</label>
+                                <input
+                                    type="datetime-local"
+                                    class="form-control"
+                                    value="{{ $salaDataFim }}"
+                                    readonly
+                                >
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Inputs hidden que enviam os valores corretos para o controller --}}
+                    <input type="hidden" id="data_hora_fim" name="data_hora_fim" value="{{ $salaDataFim }}">
+
+                    {{-- URL da sala (somente leitura) --}}
+                    @if($salaUrl)
+                    <div class="form-group" style="margin-top: 8px;">
+                        <label class="form-label">
+                            Link da Sala
+                            <span class="optional-tag">Gerado automaticamente</span>
+                        </label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-video"></i>
+                            <input
+                                type="text"
+                                class="form-control"
+                                value="{{ $salaUrl }}"
+                                readonly
+                            >
+                            <button
+                                type="button"
+                                class="btn-copy-url"
+                                data-copy="{{ $salaUrl }}"
+                                title="Copiar link"
+                            >
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                    @endif
 
                 </div>
             </div>
@@ -308,7 +534,7 @@
                                             @case('slide')  <i class="fas fa-file-powerpoint"></i> Slide @break
                                             @case('document') <i class="fas fa-file-word"></i> Doc @break
                                             @case('link')   <i class="fas fa-link"></i> Link @break
-                                            @default         <i class="fas fa-file"></i> Arquivo
+                                            @default        <i class="fas fa-file"></i> Arquivo
                                         @endswitch
                                     </div>
                                     <div class="conteudo-info">
@@ -324,7 +550,6 @@
                             </label>
                             @endforeach
 
-                            {{-- Opção sem conteúdo --}}
                             <label class="conteudo-card conteudo-none" for="conteudo_none">
                                 <input
                                     type="radio"
@@ -349,7 +574,6 @@
                             </label>
                         </div>
 
-                        {{-- Preview do conteúdo selecionado --}}
                         <div class="conteudo-preview-wrapper" id="conteudoPreviewWrapper" style="display:none;">
                             <div class="conteudo-preview-header">
                                 <span>
@@ -429,7 +653,6 @@
                             </label>
                             @endforeach
 
-                            {{-- Opção sem simulado --}}
                             <label class="conteudo-card conteudo-none" for="simulado_none">
                                 <input
                                     type="radio"
@@ -467,7 +690,7 @@
 
         </div>
 
-        {{-- Coluna lateral  --}}
+        {{-- ── COLUNA LATERAL ── --}}
         <div class="form-col-side">
 
             {{-- Prévia do card --}}
@@ -546,23 +769,32 @@
                     <i class="fas fa-bolt"></i>
                     Ações Rápidas
                 </div>
-                <div class="quick-actions" style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; flex-direction: column; gap: 10px;">
                     @if(($sala->status ?? '') === 'pending')
-                        <a href="{{ route('professor.salas.iniciar', $sala->id) }}" class="btn-start-now">
+                        <button
+                            type="button"
+                            class="btn-iniciar-side btn-confirmar-inicio"
+                            data-id="{{ $sala->id }}"
+                            data-titulo="{{ $sala->titulo }}"
+                        >
                             <i class="fas fa-play"></i> Iniciar Agora
-                        </a>
+                        </button>
                     @elseif(($sala->status ?? '') === 'active')
-                        <a href="{{ $salaUrl }}" target="_blank" class="btn-enter-live">
+                        <a href="{{ route('professor.salas.video-aula', $sala->id) }}"
+                           class="btn-enter-live-side">
                             <i class="fas fa-video"></i> Entrar na Aula
                         </a>
                     @endif
+
+                    @if(($sala->status ?? '') !== 'completed')
                     <button
                         type="button"
-                        class="btn-danger-outline btn-delete-sala"
-                        data-id="{{ $sala->id }}"
+                        class="btn-danger-outline"
+                        id="btnDeleteSala"
                     >
                         <i class="fas fa-trash"></i> Deletar Sala
                     </button>
+                    @endif
                 </div>
             </div>
 
@@ -589,13 +821,34 @@
             <i class="fas fa-trash-alt"></i>
         </div>
         <h3>Deletar Sala</h3>
-        <p>Tem certeza que deseja deletar esta sala? Esta ação não pode ser desfeita.</p>
+        <p>Tem certeza que deseja deletar <strong>"{{ $sala->titulo }}"</strong>?<br>
+           Esta ação não pode ser desfeita.</p>
         <div class="modal-actions">
             <button class="modal-btn cancel" id="cancelDelete">Cancelar</button>
             <form method="POST" action="{{ route('professor.salas.destroy', $sala->id) }}">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="modal-btn confirm danger">Deletar</button>
+                <button type="submit" class="modal-btn danger">Deletar</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- Modal de confirmação de início --}}
+<div class="modal-overlay" id="iniciarModal">
+    <div class="modal-box">
+        <div class="modal-icon" style="background:rgba(40,199,111,.12);color:#28c76f">
+            <i class="fas fa-play-circle"></i>
+        </div>
+        <h3>Iniciar Aula</h3>
+        <p>Deseja iniciar <strong id="iniciar-sala-titulo"></strong> agora?<br>
+           Você será redirecionado para a sala ao vivo.</p>
+        <div class="modal-actions">
+            <button class="modal-btn cancel" id="cancelIniciar">Cancelar</button>
+            <form id="iniciarForm" method="POST">
+                @csrf
+                @method('PATCH')
+                <button type="submit" class="modal-btn" style="background:#28c76f;color:#fff">Iniciar</button>
             </form>
         </div>
     </div>
@@ -610,28 +863,74 @@
 @endif
 
 <script>
-// Mapa de nomes de matéria para a prévia 
+/* ── MAPA DE MATÉRIAS (prévia) ── */
 const materiaNames = {
     @foreach($materias as $m)
         "{{ $m['idMateria'] }}": "{{ $m['nomeMateria'] }}",
     @endforeach
 };
 
-// Atualiza prévia em tempo real 
+/* ── LÓGICA DE CAMPOS DE DATA POR STATUS ── */
+const statusSelect       = document.getElementById('status');
+const blockActive        = document.getElementById('block-active');
+const blockPending       = document.getElementById('block-pending');
+const blockCompleted     = document.getElementById('block-completed');
+
+// Inputs reais que alimentam os hidden
+const inputFimActive     = document.getElementById('data_hora_fim_active');
+const inputInicioPending = document.getElementById('data_hora_inicio');
+const inputFimPending    = document.getElementById('data_hora_fim_pending');
+
+// Inputs hidden enviados ao controller
+const hiddenFim          = document.getElementById('data_hora_fim');
+
+function syncHiddens() {
+    const st = statusSelect.value;
+    if (st === 'active') {
+        hiddenFim.value = inputFimActive?.value || '';
+    } else if (st === 'pending') {
+        hiddenFim.value = inputFimPending?.value || '';
+    }
+    // completed: valores já estão readonly, não alteramos
+}
+
+function toggleDateBlocks() {
+    const st = statusSelect.value;
+    blockActive.style.display    = st === 'active'    ? '' : 'none';
+    blockPending.style.display   = st === 'pending'   ? '' : 'none';
+    blockCompleted.style.display = st === 'completed' ? '' : 'none';
+    syncHiddens();
+    updatePreview();
+}
+
+statusSelect?.addEventListener('change', toggleDateBlocks);
+
+// Sincroniza os hiddens ao alterar qualquer campo de data
+[inputFimActive, inputInicioPending, inputFimPending].forEach(function (el) {
+    el?.addEventListener('change', syncHiddens);
+});
+
+/* ── PRÉVIA ── */
 function updatePreview() {
-    const titulo  = document.getElementById('titulo')?.value         || '';
-    const matId   = document.getElementById('materia_id')?.value     || '';
-    const alunos  = document.getElementById('max_alunos')?.value     || '0';
-    const inicio  = document.getElementById('data_hora_inicio')?.value;
-    const status  = document.getElementById('status')?.value         || 'pending';
+    const titulo  = document.getElementById('titulo')?.value       || '';
+    const matId   = document.getElementById('materia_id')?.value   || '';
+    const alunos  = document.getElementById('max_alunos')?.value   || '0';
+    const status  = statusSelect?.value                            || 'pending';
+
+    // Data para a prévia: pega do bloco visível
+    let inicio = '';
+    if (status === 'active')    inicio = inputFimActive?.value     || '';
+    if (status === 'pending')   inicio = inputInicioPending?.value || '';
 
     document.getElementById('previewTitulo').textContent  = titulo || 'Título da Sala';
     document.getElementById('previewMateria').textContent = materiaNames[matId] || '—';
     document.getElementById('previewAlunos').textContent  = alunos;
 
     if (inicio) {
-        document.getElementById('previewData').textContent =
-            new Date(inicio).toLocaleDateString('pt-BR');
+        try {
+            document.getElementById('previewData').textContent =
+                new Date(inicio).toLocaleDateString('pt-BR');
+        } catch(e) {}
     }
 
     const ribbon = document.getElementById('previewRibbon');
@@ -644,35 +943,65 @@ function updatePreview() {
     ribbon.innerHTML = labels[status] || labels.pending;
 }
 
-['titulo', 'materia_id', 'max_alunos', 'data_hora_inicio', 'status'].forEach(id => {
+['titulo', 'materia_id', 'max_alunos', 'status',
+ 'data_hora_inicio', 'data_hora_fim_active', 'data_hora_fim_pending'].forEach(function (id) {
     document.getElementById(id)?.addEventListener('input',  updatePreview);
     document.getElementById(id)?.addEventListener('change', updatePreview);
 });
 
-// Contador de caracteres do título
+/* ── CONTADOR TÍTULO ── */
 document.getElementById('titulo')?.addEventListener('input', function () {
     document.getElementById('tituloCount').textContent = this.value.length;
 });
 
-// Copiar URL da sala
+/* ── COPIAR URL ── */
 document.querySelector('.btn-copy-url')?.addEventListener('click', function () {
     const url = this.dataset.copy;
     navigator.clipboard.writeText(url).then(() => {
-        const original = this.innerHTML;
-        this.innerHTML = '<i class="fas fa-check"></i>';
-        setTimeout(() => { this.innerHTML = original; }, 2000);
+        const icon = this.querySelector('i');
+        icon.className = 'fas fa-check';
+        setTimeout(() => { icon.className = 'fas fa-copy'; }, 2000);
     });
 });
 
-// Modal de exclusão
-document.querySelector('.btn-delete-sala')?.addEventListener('click', () => {
-    document.getElementById('deleteModal').classList.add('active');
+/* ── MODAL DELETE ── */
+const deleteModal  = document.getElementById('deleteModal');
+const cancelDelete = document.getElementById('cancelDelete');
+
+document.getElementById('btnDeleteSala')?.addEventListener('click', function () {
+    deleteModal.classList.add('active');
 });
-document.getElementById('cancelDelete')?.addEventListener('click', () => {
-    document.getElementById('deleteModal').classList.remove('active');
+
+cancelDelete?.addEventListener('click', function () {
+    deleteModal.classList.remove('active');
 });
-document.querySelector('.modal-overlay')?.addEventListener('click', function (e) {
+
+deleteModal?.addEventListener('click', function (e) {
     if (e.target === this) this.classList.remove('active');
 });
+
+/* ── MODAL INICIAR ── */
+const iniciarModal  = document.getElementById('iniciarModal');
+const iniciarForm   = document.getElementById('iniciarForm');
+const cancelIniciar = document.getElementById('cancelIniciar');
+
+document.querySelectorAll('.btn-confirmar-inicio').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        document.getElementById('iniciar-sala-titulo').textContent = '"' + this.dataset.titulo + '"';
+        iniciarForm.action = '/professor/salas/' + this.dataset.id + '/iniciar';
+        iniciarModal.classList.add('active');
+    });
+});
+
+cancelIniciar?.addEventListener('click', function () {
+    iniciarModal.classList.remove('active');
+});
+
+iniciarModal?.addEventListener('click', function (e) {
+    if (e.target === this) this.classList.remove('active');
+});
+
+// Inicializa os blocos corretamente ao carregar
+toggleDateBlocks();
 </script>
 @endsection
