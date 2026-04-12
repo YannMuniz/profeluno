@@ -34,17 +34,17 @@ public partial class ProfelunoContext : DbContext
             entity.ToTable("aluno_sala");
             entity.HasKey(e => e.IdAlunoSala);
             entity.Property(e => e.IdAlunoSala).HasColumnName("id");
-            entity.Property(e => e.IdAluno).HasColumnName("aluno_id");
-            entity.Property(e => e.CreatedAt)
-                .HasColumnType("timestamp(0) without time zone")
-                .HasColumnName("created_at");
+            entity.Property(e => e.IdAluno).HasColumnName("user_id");
+            entity.Property(e => e.IdSalaAula).HasColumnName("sala_aula_id");
             entity.Property(e => e.JoinedAt)
                 .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("joined_at");
             entity.Property(e => e.LeftAt)
                 .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("left_at");
-            entity.Property(e => e.IdSalaAula).HasColumnName("sala_aula_id");
+            entity.Property(e => e.CreatedAt)
+                .HasColumnType("timestamp(0) without time zone")
+                .HasColumnName("created_at");
             entity.Property(e => e.UpdatedAt)
                 .HasColumnType("timestamp(0) without time zone")
                 .HasColumnName("updated_at");
