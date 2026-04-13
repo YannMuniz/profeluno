@@ -1,4 +1,6 @@
-﻿namespace backend_dotnet.Models;
+﻿using System.Text.Json.Serialization;
+
+namespace backend_dotnet.Models;
 
 public partial class SalaAula
 {
@@ -19,6 +21,7 @@ public partial class SalaAula
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 
+    [JsonIgnore]
     public virtual ICollection<AlunoSala> AlunoSalas { get; set; } = new List<AlunoSala>();
     public virtual Conteudo? Conteudo { get; set; }
     public virtual Simulado? Simulados { get; set; }

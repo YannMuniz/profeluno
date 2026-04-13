@@ -1,5 +1,6 @@
 ﻿using backend_dotnet.Data;
 using backend_dotnet.Models;
+using backend_dotnet.Models.Requests;
 using backend_dotnet.Models.Responses;
 using backend_dotnet.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -41,6 +42,47 @@ namespace backend_dotnet.Services
                 DataHoraInicio = dadosSala.DataHoraInicio,
                 DataHoraFim = dadosSala.DataHoraFim,
             };
+        }
+
+        public async Task<int> CadastraAlunoSala(CadastraAlunoSalaRequest request)
+        {
+            AlunoSala newAlunoSala = new AlunoSala
+            {
+                IdAluno = request.IdAluno,
+                IdSalaAula = request.IdSalaAula,
+                JoinedAt = request.JoinedAt,
+                LeftAt = request.LeftAt,
+                CreatedAt = DateTime.Now
+            };
+
+            await _context.AlunoSalas.AddAsync(newAlunoSala);
+            await _context.SaveChangesAsync();
+
+            return newAlunoSala.IdAlunoSala;
+        }
+
+        public async Task<int> AtualizarAlunoSala(AtualizarAlunoSalaRequest request)
+        {
+            var response = await _context.AlunoSalas.FirstOrDefaultAsync(x => x.IdAlunoSala == request.IdAlunoSala);
+
+            response.IdAluno = request.IdAluno;
+            response.IdSalaAula = request.IdSalaAula;
+            response.JoinedAt = request.JoinedAt;
+            response.LeftAt = request.LeftAt;
+            response.UpdatedAt = DateTime.Now;
+            await _context.SaveChangesAsync();
+
+            return request.IdAlunoSala;
+        }
+
+        public async Task<bool> DeletarAlunoSala(int idAlunoSala)
+        {
+            var alunoSala = await _context.AlunoSalas.FirstOrDefaultAsync(x => x.IdAlunoSala == idAlunoSala);
+            if(alunoSala == null) return false;
+            _context.AlunoSalas.Remove(alunoSala);
+            await _context.SaveChangesAsync();
+
+            return true;
         }
     }
 }

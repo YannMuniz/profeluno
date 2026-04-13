@@ -1,4 +1,5 @@
 ﻿using backend_dotnet.Models;
+using backend_dotnet.Models.Requests;
 using backend_dotnet.Models.Responses;
 using backend_dotnet.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -48,6 +49,39 @@ namespace backend_dotnet.Controllers
             if(response == null) return NotFound();
 
             return Ok(response);
+        }
+
+        [HttpPost("CadastraAlunoSala")]
+        public async Task<IActionResult> CadastrarAlunoSala([FromBody] CadastraAlunoSalaRequest request)
+        {
+            var response = await _alunoSalaService.CadastraAlunoSala(request);
+            if(response == null) return BadRequest(false);
+
+            return Ok(true);
+        }
+
+        [HttpPut("AtualizarAlunoSala")]
+        public async Task<IActionResult> AtualizarAlunoSala([FromBody] AtualizarAlunoSalaRequest request)
+        {
+            var response = await _alunoSalaService.AtualizarAlunoSala(request);
+            if(response == null) return BadRequest();
+
+            return Ok(true);
+        }
+
+        [HttpDelete("DeletarAlunoSala/{idAlunoSala}")]
+        public async Task<IActionResult> DeletarAlunoSala(int idAlunoSala)
+        {
+            try
+            {
+                var response = await _alunoSalaService.DeletarAlunoSala(idAlunoSala);
+
+                return Ok(true);
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }
