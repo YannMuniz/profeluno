@@ -4,8 +4,6 @@
 
 @section('content')
     <div class="admin-dashboard">
-        <h1>Bem-vindo, {{ auth()->user()->nome_usuario ?? 'Administrador' }}</h1>
-
         <div class="admin-cards">
             <div class="stat-card">
                 <div class="stat-card-header">

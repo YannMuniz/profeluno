@@ -19,7 +19,8 @@ class DatabaseSeeder extends Seeder
             CargoSeeder::class,
             UsersSeeder::class,
             MateriasSeeder::class,
-            // SalaAulaSeeder::class,
+            EscolaridadeSeeder::class,
+            AreaSeeder::class,
         ]);
     }
 }
