@@ -10,10 +10,6 @@
 @section('content')
 
 <div class="page-header">
-    <div class="page-header-info">
-        <h2><i class="fas fa-school"></i> Escolaridades</h2>
-        <p>Gerencie as escolaridades disponíveis na plataforma</p>
-    </div>
     <a href="{{ route('admin.escolaridades.create') }}" class="btn-create">
         <i class="fas fa-plus"></i>
         Nova Escolaridade

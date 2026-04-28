@@ -34,9 +34,10 @@ class UserController extends Controller
         } catch (\Throwable $e) {
             Log::error('UserController::index erro', ['exception' => $e]);
         }
-
+        $title    = '<i class="fas fa-users"></i> Usuários';
+        $subtitle = 'Gerencie os usuários da plataforma';
         // Busca os cargos localmente para os badges (leve, sem depender da API aqui)
-        return view('admin.usuarios.index', compact('usuarios'));
+        return view('admin.usuarios.index', compact('usuarios', 'title', 'subtitle'));
     }
 
     public function create()
@@ -56,8 +57,9 @@ class UserController extends Controller
         } catch (\Throwable $e) {
             Log::error('UserController::create erro ao buscar cargos', ['exception' => $e]);
         }
-
-        return view('admin.usuarios.create', compact('cargos'));
+        $title    = '<i class="fas fa-plus"></i> Criar Usuário';
+        $subtitle = 'Preencha os detalhes para criar um novo usuário';
+        return view('admin.usuarios.create', compact('cargos', 'title', 'subtitle'));
     }
 
     public function store(Request $request)
@@ -146,8 +148,9 @@ class UserController extends Controller
                 ->route('admin.usuarios.index')
                 ->with('error', 'Erro ao buscar dados do usuário.');
         }
-
-        return view('admin.usuarios.edit', compact('usuario', 'cargos'));
+        $title    = '<i class="fas fa-edit"></i> Editar Usuário';
+        $subtitle = 'Atualize os detalhes do usuário';
+        return view('admin.usuarios.edit', compact('usuario', 'cargos', 'title', 'subtitle'));
     }
 
     public function update(Request $request, string $id)

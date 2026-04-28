@@ -15,31 +15,118 @@ class AreaController extends Controller
         $this->baseUrl = env('DOTNET_API_URL', 'http://profeluno_dotnet:9000');
     }
 
-    public function index()
+    private function authHeaders(): array
     {
-        $areas = collect();
+        $token = session('api_token');
 
+        return [
+            'Accept'        => 'application/json',
+            'Content-Type'  => 'application/json',
+            'Authorization' => "Bearer {$token}",
+        ];
+    }
+
+    private function apiGet(string $endpoint): ?array
+    {
         try {
-            $response = Http::get("{$this->baseUrl}/v1/Area/ListarAreas");
+            $response = Http::withHeaders($this->authHeaders())
+                ->timeout(15)
+                ->get("{$this->baseUrl}/v1/{$endpoint}");
 
             if ($response->successful()) {
-                $areas = collect($response->json());
-            } else {
-                Log::warning('AreaController::index falha na API', [
-                    'status' => $response->status(),
-                    'body'   => $response->body(),
-                ]);
+                return $response->json();
             }
-        } catch (\Throwable $e) {
-            Log::error('AreaController::index erro', ['exception' => $e]);
-        }
 
-        return view('admin.area.index', compact('areas'));
+            Log::warning("[AreaController] GET {$endpoint} retornou {$response->status()}", [
+                'body' => $response->body(),
+            ]);
+            return null;
+        } catch (\Exception $e) {
+            Log::error("[AreaController] GET {$endpoint} falhou: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    private function apiPost(string $endpoint, array $data): ?array
+    {
+        try {
+            $response = Http::withHeaders($this->authHeaders())
+                ->timeout(15)
+                ->post("{$this->baseUrl}/v1/{$endpoint}", $data);
+
+            if ($response->successful()) {
+                $json = $response->json();
+                return is_array($json) ? $json : [];
+            }
+
+            Log::warning("[AreaController] POST {$endpoint} retornou {$response->status()}", [
+                'body' => $response->body(),
+            ]);
+            return null;
+        } catch (\Exception $e) {
+            Log::error("[AreaController] POST {$endpoint} falhou: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    private function apiPut(string $endpoint, array $data): ?array
+    {
+        try {
+            $response = Http::withHeaders($this->authHeaders())
+                ->timeout(15)
+                ->put("{$this->baseUrl}/v1/{$endpoint}", $data);
+
+            if ($response->successful()) {
+                $json = $response->json();
+                return is_array($json) ? $json : [];
+            }
+
+            Log::warning("[AreaController] PUT {$endpoint} retornou {$response->status()}", [
+                'body' => $response->body(),
+            ]);
+            return null;
+        } catch (\Exception $e) {
+            Log::error("[AreaController] PUT {$endpoint} falhou: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    private function apiDelete(string $endpoint): bool
+    {
+        try {
+            $response = Http::withHeaders($this->authHeaders())
+                ->timeout(15)
+                ->delete("{$this->baseUrl}/v1/{$endpoint}");
+
+            if ($response->successful()) {
+                return true;
+            }
+
+            Log::warning("[AreaController] DELETE {$endpoint} retornou {$response->status()}", [
+                'body' => $response->body(),
+            ]);
+            return false;
+        } catch (\Exception $e) {
+            Log::error("[AreaController] DELETE {$endpoint} falhou: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function index()
+    {
+        $areas = collect($this->apiGet('Area/ListarAreas') ?? []);
+        $title    = '<i class="fas fa-layer-group"></i> Áreas';
+        $subtitle = 'Gerencie as áreas disponíveis no sistema';
+
+        return view('admin.area.index', compact('areas', 'title', 'subtitle'));
     }
 
     public function create()
     {
-        return view('admin.area.create');
+        $title    = '<i class="fas fa-plus"></i> Nova Área';
+        $subtitle = 'Cadastre uma nova área para uso no sistema';
+
+        return view('admin.area.create', compact('title', 'subtitle'));
     }
 
     public function store(Request $request)
@@ -51,17 +138,12 @@ class AreaController extends Controller
         $situacao = $request->input('situacao_area', 0);
         
         try {
-            $response = Http::post("{$this->baseUrl}/v1/Area/CadastrarArea", [
+            $response = $this->apiPost('Area/CadastrarArea', [
                 'nomeArea'    => $request->input('nome_area'),
                 'situacaoArea' => $situacao,
             ]);
 
-            Log::debug('AreaController::store dotnet response', [
-                'status' => $response->status(),
-                'body'   => $response->body(),
-            ]);
-
-            if ($response->successful()) {
+            if (! is_null($response)) {
                 return redirect()
                     ->route('admin.areas.index')
                     ->with('success', 'Área cadastrada com sucesso!');
@@ -85,14 +167,13 @@ class AreaController extends Controller
         $area = null;
 
         try {
-            $response = Http::get("{$this->baseUrl}/v1/Area/BuscarAreaPorId/{$id}");
+            $response = $this->apiGet("Area/BuscarAreaPorId/{$id}");
 
-            if ($response->successful()) {
-                $area = (object) $response->json();
+            if (! is_null($response)) {
+                $area = (object) $response;
             } else {
                 Log::warning('AreaController::edit área não encontrada', [
-                    'id'     => $id,
-                    'status' => $response->status(),
+                    'id' => $id,
                 ]);
 
                 return redirect()
@@ -107,7 +188,10 @@ class AreaController extends Controller
                 ->with('error', 'Erro ao buscar dados da área.');
         }
 
-        return view('admin.area.edit', compact('area'));
+        $title    = '<i class="fas fa-pen"></i> Editar Área';
+        $subtitle = 'Atualize os dados desta área';
+
+        return view('admin.area.edit', compact('area', 'title', 'subtitle'));
     }
 
     public function update(Request $request, string $id)
@@ -119,18 +203,13 @@ class AreaController extends Controller
         $situacao = $request->has('situacao_area') ? 1 : 0;
 
         try {
-            $response = Http::put("{$this->baseUrl}/v1/Area/AtualizarArea", [
+            $response = $this->apiPut('Area/AtualizarArea', [
                 'idArea'       => (int) $id,
                 'nomeArea'     => $request->input('nome_area'),
                 'situacaoArea' => $situacao,
             ]);
 
-            Log::debug('AreaController::update dotnet response', [
-                'status' => $response->status(),
-                'body'   => $response->body(),
-            ]);
-
-            if ($response->successful()) {
+            if (! is_null($response)) {
                 return redirect()
                     ->route('admin.areas.index')
                     ->with('success', 'Área atualizada com sucesso!');
@@ -152,14 +231,9 @@ class AreaController extends Controller
     public function destroy(string $id)
     {
         try {
-            $response = Http::delete("{$this->baseUrl}/v1/Area/DeletarArea/{$id}");
+            $ok = $this->apiDelete("Area/DeletarArea/{$id}");
 
-            Log::debug('AreaController::destroy dotnet response', [
-                'status' => $response->status(),
-                'body'   => $response->body(),
-            ]);
-
-            if ($response->successful()) {
+            if ($ok) {
                 return redirect()
                     ->route('admin.areas.index')
                     ->with('success', 'Área excluída com sucesso!');
@@ -180,25 +254,23 @@ class AreaController extends Controller
     public function toggle(string $id)
     {
         try {
-            // Primeiro busca o estado atual
-            $responseGet = Http::get("{$this->baseUrl}/v1/Area/BuscarAreaPorId/{$id}");
+            $area = $this->apiGet("Area/BuscarAreaPorId/{$id}");
 
-            if (!$responseGet->successful()) {
+            if (is_null($area)) {
                 return redirect()
                     ->route('admin.areas.index')
                     ->with('error', 'Área não encontrada.');
             }
 
-            $area      = $responseGet->json();
             $novaSituacao = isset($area['situacaoArea']) ? ($area['situacaoArea'] ? 0 : 1) : 0;
 
-            $responsePatch = Http::put("{$this->baseUrl}/v1/Area/AtualizarArea", [
+            $responsePatch = $this->apiPut('Area/AtualizarArea', [
                 'idArea'       => (int) $id,
                 'nomeArea'     => $area['nomeArea'] ?? $area['nome_area'],
                 'situacaoArea' => $novaSituacao,
             ]);
 
-            if ($responsePatch->successful()) {
+            if (! is_null($responsePatch)) {
                 $msg = $novaSituacao ? 'Área ativada com sucesso!' : 'Área desativada com sucesso!';
                 return redirect()->route('admin.areas.index')->with('success', $msg);
             }

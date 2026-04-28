@@ -10,10 +10,6 @@
 @section('content')
 
 <div class="page-header">
-    <div class="page-header-info">
-        <h2><i class="fas fa-layer-group"></i> Áreas</h2>
-        <p>Gerencie as áreas disponíveis na plataforma</p>
-    </div>
     <a href="{{ route('admin.areas.create') }}" class="btn-create">
         <i class="fas fa-plus"></i>
         Nova Área

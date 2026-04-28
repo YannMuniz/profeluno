@@ -15,31 +15,118 @@ class CargoController extends Controller
         $this->baseUrl = env('DOTNET_API_URL', 'http://profeluno_dotnet:9000');
     }
 
-    public function index()
+    private function authHeaders(): array
     {
-        $cargos = collect();
+        $token = session('api_token');
 
+        return [
+            'Accept'        => 'application/json',
+            'Content-Type'  => 'application/json',
+            'Authorization' => "Bearer {$token}",
+        ];
+    }
+
+    private function apiGet(string $endpoint): ?array
+    {
         try {
-            $response = Http::get("{$this->baseUrl}/v1/Cargo/ListarCargos");
+            $response = Http::withHeaders($this->authHeaders())
+                ->timeout(15)
+                ->get("{$this->baseUrl}/v1/{$endpoint}");
 
             if ($response->successful()) {
-                $cargos = collect($response->json());
-            } else {
-                Log::warning('CargoController::index falha na API', [
-                    'status' => $response->status(),
-                    'body'   => $response->body(),
-                ]);
+                return $response->json();
             }
-        } catch (\Throwable $e) {
-            Log::error('CargoController::index erro', ['exception' => $e]);
-        }
 
-        return view('admin.cargos.index', compact('cargos'));
+            Log::warning("[CargoController] GET {$endpoint} retornou {$response->status()}", [
+                'body' => $response->body(),
+            ]);
+            return null;
+        } catch (\Exception $e) {
+            Log::error("[CargoController] GET {$endpoint} falhou: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    private function apiPost(string $endpoint, array $data): ?array
+    {
+        try {
+            $response = Http::withHeaders($this->authHeaders())
+                ->timeout(15)
+                ->post("{$this->baseUrl}/v1/{$endpoint}", $data);
+
+            if ($response->successful()) {
+                $json = $response->json();
+                return is_array($json) ? $json : [];
+            }
+
+            Log::warning("[CargoController] POST {$endpoint} retornou {$response->status()}", [
+                'body' => $response->body(),
+            ]);
+            return null;
+        } catch (\Exception $e) {
+            Log::error("[CargoController] POST {$endpoint} falhou: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    private function apiPut(string $endpoint, array $data): ?array
+    {
+        try {
+            $response = Http::withHeaders($this->authHeaders())
+                ->timeout(15)
+                ->put("{$this->baseUrl}/v1/{$endpoint}", $data);
+
+            if ($response->successful()) {
+                $json = $response->json();
+                return is_array($json) ? $json : [];
+            }
+
+            Log::warning("[CargoController] PUT {$endpoint} retornou {$response->status()}", [
+                'body' => $response->body(),
+            ]);
+            return null;
+        } catch (\Exception $e) {
+            Log::error("[CargoController] PUT {$endpoint} falhou: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    private function apiDelete(string $endpoint): bool
+    {
+        try {
+            $response = Http::withHeaders($this->authHeaders())
+                ->timeout(15)
+                ->delete("{$this->baseUrl}/v1/{$endpoint}");
+
+            if ($response->successful()) {
+                return true;
+            }
+
+            Log::warning("[CargoController] DELETE {$endpoint} retornou {$response->status()}", [
+                'body' => $response->body(),
+            ]);
+            return false;
+        } catch (\Exception $e) {
+            Log::error("[CargoController] DELETE {$endpoint} falhou: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function index()
+    {
+        $cargos = collect($this->apiGet('Cargo/ListarCargos') ?? []);
+        $title    = '<i class="fas fa-briefcase"></i> Cargos';
+        $subtitle = 'Gerencie os cargos do sistema';
+
+        return view('admin.cargos.index', compact('cargos', 'title', 'subtitle'));
     }
 
     public function create()
     {
-        return view('admin.cargos.create');
+        $title    = '<i class="fas fa-plus"></i> Novo Cargo';
+        $subtitle = 'Cadastre um novo cargo para o sistema';
+
+        return view('admin.cargos.create', compact('title', 'subtitle'));
     }
 
     public function store(Request $request)
@@ -49,16 +136,11 @@ class CargoController extends Controller
         ]);
 
         try {
-            $response = Http::post("{$this->baseUrl}/v1/Cargo/CadastrarCargo", [
+            $response = $this->apiPost('Cargo/CadastrarCargo', [
                 'nome'    => $request->input('nome_cargo'),
             ]);
 
-            Log::debug('CargoController::store dotnet response', [
-                'status' => $response->status(),
-                'body'   => $response->body(),
-            ]);
-
-            if ($response->successful()) {
+            if (! is_null($response)) {
                 return redirect()
                     ->route('admin.cargos.index')
                     ->with('success', 'Cargo cadastrado com sucesso!');
@@ -79,19 +161,16 @@ class CargoController extends Controller
 
     public function edit(string $id)
     {
-        $cargo = null; // ← singular
+        $cargo = null;
 
         try {
-            $response = Http::get("{$this->baseUrl}/v1/Cargo/RetornaCargoPorId/{$id}");
+            $response = $this->apiGet("Cargo/RetornaCargoPorId/{$id}");
 
-            // dd($response->json()); ← remova isto
-
-            if ($response->successful()) {
-                $cargo = (object) $response->json(); // ← singular
+            if (! is_null($response)) {
+                $cargo = (object) $response;
             } else {
                 Log::warning('CargoController::edit cargo não encontrado', [
-                    'id'     => $id,
-                    'status' => $response->status(),
+                    'id' => $id,
                 ]);
 
                 return redirect()
@@ -106,7 +185,10 @@ class CargoController extends Controller
                 ->with('error', 'Erro ao buscar dados do cargo.');
         }
 
-        return view('admin.cargos.edit', compact('cargo')); // ← singular
+        $title    = '<i class="fas fa-pen"></i> Editar Cargo';
+        $subtitle = 'Atualize os dados deste cargo';
+
+        return view('admin.cargos.edit', compact('cargo', 'title', 'subtitle'));
     }
 
     public function update(Request $request, string $id)
@@ -118,18 +200,13 @@ class CargoController extends Controller
         $situacao = $request->has('situacao_cargo') ? 1 : 0;
 
         try {
-            $response = Http::put("{$this->baseUrl}/v1/Cargo/AtualizarCargo", [
+            $response = $this->apiPut('Cargo/AtualizarCargo', [
                 'idCargo'       => (int) $id,
                 'nomeCargo'     => $request->input('nome_cargo'),
                 'situacaoCargo' => $situacao,
             ]);
 
-            Log::debug('CargoController::update dotnet response', [
-                'status' => $response->status(),
-                'body'   => $response->body(),
-            ]);
-
-            if ($response->successful()) {
+            if (! is_null($response)) {
                 return redirect()
                     ->route('admin.cargos.index')
                     ->with('success', 'Cargo atualizado com sucesso!');
@@ -151,14 +228,9 @@ class CargoController extends Controller
     public function destroy(string $id)
     {
         try {
-            $response = Http::delete("{$this->baseUrl}/v1/Cargo/DeletarCargo/{$id}");
+            $ok = $this->apiDelete("Cargo/DeletarCargo/{$id}");
 
-            Log::debug('CargoController::destroy dotnet response', [
-                'status' => $response->status(),
-                'body'   => $response->body(),
-            ]);
-
-            if ($response->successful()) {
+            if ($ok) {
                 return redirect()
                     ->route('admin.cargos.index')
                     ->with('success', 'Cargo excluído com sucesso!');

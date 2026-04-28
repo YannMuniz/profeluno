@@ -9,17 +9,6 @@
 
 @section('content')
 
-<div class="page-header">
-    <div class="page-header-info">
-        <h2><i class="fas fa-plus-circle"></i> Nova Área</h2>
-        <p>Cadastre uma nova área na plataforma</p>
-    </div>
-    <a href="{{ route('admin.areas.index') }}" class="btn-cancel">
-        <i class="fas fa-arrow-left"></i>
-        Voltar
-    </a>
-</div>
-
 <div class="form-card">
     <div class="form-card-header">
         <div class="form-card-header-icon">

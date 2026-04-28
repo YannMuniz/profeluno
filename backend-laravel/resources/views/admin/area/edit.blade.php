@@ -9,17 +9,6 @@
 
 @section('content')
 
-<div class="page-header">
-    <div class="page-header-info">
-        <h2><i class="fas fa-layer-group"></i> Editar Área</h2>
-        <p>Atualize os dados de <strong>{{ $area->nomeArea }}</strong></p>
-    </div>
-    <a href="{{ route('admin.areas.index') }}" class="btn-cancel">
-        <i class="fas fa-arrow-left"></i>
-        Voltar
-    </a>
-</div>
-
 <div class="form-card">
     <div class="form-card-header">
         <div class="form-card-header-icon">

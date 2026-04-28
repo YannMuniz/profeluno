@@ -8,13 +8,6 @@
 
 @section('content')
 
-<div class="page-header">
-    <div class="page-header-info">
-        <h2><i class="fas fa-user-circle"></i> Meu Perfil</h2>
-        <p>Atualize seus dados pessoais</p>
-    </div>
-</div>
-
 <div class="form-card">
     <div class="form-card-header">
         <div class="form-card-header-icon">

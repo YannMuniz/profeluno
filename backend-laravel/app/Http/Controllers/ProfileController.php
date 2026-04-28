@@ -16,6 +16,107 @@ class ProfileController extends Controller
         $this->baseUrl = env('DOTNET_API_URL', 'http://profeluno_dotnet:9000');
     }
 
+    private function authHeaders(): array
+    {
+        $token = session('api_token');
+
+        return [
+            'Accept'        => 'application/json',
+            'Content-Type'  => 'application/json',
+            'Authorization' => "Bearer {$token}",
+        ];
+    }
+
+    private function apiGet(string $endpoint): ?array
+    {
+        try {
+            $response = Http::withHeaders($this->authHeaders())
+                ->timeout(15)
+                ->get("{$this->baseUrl}/v1/{$endpoint}");
+
+            if ($response->successful()) {
+                return $response->json();
+            }
+
+            Log::warning("[ProfileController] GET {$endpoint} retornou {$response->status()}", [
+                'body' => $response->body(),
+            ]);
+
+            return null;
+        } catch (\Exception $e) {
+            Log::error("[ProfileController] GET {$endpoint} falhou: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    private function apiPost(string $endpoint, array $data): ?array
+    {
+        try {
+            $response = Http::withHeaders($this->authHeaders())
+                ->timeout(15)
+                ->post("{$this->baseUrl}/v1/{$endpoint}", $data);
+
+            if ($response->successful()) {
+                $json = $response->json();
+                return is_array($json) ? $json : [];
+            }
+
+            Log::warning("[ProfileController] POST {$endpoint} retornou {$response->status()}", [
+                'body' => $response->body(),
+            ]);
+
+            return null;
+        } catch (\Exception $e) {
+            Log::error("[ProfileController] POST {$endpoint} falhou: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    private function apiPut(string $endpoint, array $data): ?array
+    {
+        try {
+            $response = Http::withHeaders($this->authHeaders())
+                ->timeout(15)
+                ->put("{$this->baseUrl}/v1/{$endpoint}", $data);
+
+            if ($response->successful()) {
+                $json = $response->json();
+                return is_array($json) ? $json : [];
+            }
+
+            Log::warning("[ProfileController] PUT {$endpoint} retornou {$response->status()}", [
+                'body' => $response->body(),
+            ]);
+
+            return null;
+        } catch (\Exception $e) {
+            Log::error("[ProfileController] PUT {$endpoint} falhou: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    private function apiDelete(string $endpoint): bool
+    {
+        try {
+            $response = Http::withHeaders($this->authHeaders())
+                ->timeout(15)
+                ->delete("{$this->baseUrl}/v1/{$endpoint}");
+
+            if ($response->successful()) {
+                return true;
+            }
+
+            Log::warning("[ProfileController] DELETE {$endpoint} retornou {$response->status()}", [
+                'body' => $response->body(),
+            ]);
+
+            return false;
+        } catch (\Exception $e) {
+            Log::error("[ProfileController] DELETE {$endpoint} falhou: " . $e->getMessage());
+            return false;
+        }
+    }
+
     public function edit()
     {
         $user      = Auth::user()->load('cargo');
@@ -25,19 +126,8 @@ class ProfileController extends Controller
         $areas         = collect();
 
         // Busca listas auxiliares
-        try {
-            $resEsc = Http::get("{$this->baseUrl}/v1/Escolaridade/ListarEscolaridades");
-            if ($resEsc->successful()) {
-                $escolaridades = collect($resEsc->json());
-            }
-
-            $resArea = Http::get("{$this->baseUrl}/v1/Area/ListarAreas");
-            if ($resArea->successful()) {
-                $areas = collect($resArea->json());
-            }
-        } catch (\Throwable $e) {
-            Log::error('ProfileController::edit erro ao buscar listas', ['exception' => $e]);
-        }
+        $escolaridades = collect($this->apiGet('Escolaridade/ListarEscolaridades') ?? []);
+        $areas         = collect($this->apiGet('Area/ListarAreas') ?? []);
 
         // Busca perfil específico do cargo
         if (in_array($cargoNome, ['aluno', 'professor'])) {
@@ -59,7 +149,10 @@ class ProfileController extends Controller
             }
         }
 
-        return view('profile.edit', compact('user', 'cargoNome', 'escolaridades', 'areas', 'perfil'));
+        $title    = '<i class="fas fa-user"></i> Meu Perfil';
+        $subtitle = 'Atualize seus dados e informações de perfil';
+
+        return view('profile.edit', compact('user', 'cargoNome', 'escolaridades', 'areas', 'perfil', 'title', 'subtitle'));
     }
 
     public function update(Request $request)
@@ -99,14 +192,9 @@ class ProfileController extends Controller
                                     : $user->password,
             ];
 
-            $response = Http::put("{$this->baseUrl}/v1/User/AtualizarUsuario", $payload);
+            $response = $this->apiPut('User/AtualizarUsuario', $payload);
 
-            Log::debug('ProfileController::update user dotnet', [
-                'status' => $response->status(),
-                'body'   => $response->body(),
-            ]);
-
-            if (! $response->successful()) {
+            if (is_null($response)) {
                 return back()
                     ->withErrors(['nome_usuario' => 'Erro ao atualizar dados na API.'])
                     ->withInput();

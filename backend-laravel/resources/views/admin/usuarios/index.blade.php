@@ -11,10 +11,6 @@
 
 {{-- Header --}}
 <div class="page-header">
-    <div class="page-header-info">
-        <h2><i class="fas fa-users"></i> Usuários</h2>
-        <p>Gerencie todos os usuários do sistema</p>
-    </div>
     <a href="{{ route('admin.usuarios.create') }}" class="btn-create">
         <i class="fas fa-user-plus"></i>
         Novo Usuário
