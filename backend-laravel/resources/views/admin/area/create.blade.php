@@ -1,7 +1,7 @@
 {{-- resources/views/admin/materias/create.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Nova Matéria')
+@section('title', 'Nova Área')
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/forms.css') }}">
@@ -12,16 +12,16 @@
 <div class="form-card">
     <div class="form-card-header">
         <div class="form-card-header-icon">
-            <i class="fas fa-book"></i>
+            <i class="fas fa-layer-group"></i>
         </div>
         <div>
-            <h3>Dados da Matéria</h3>
+            <h3>Dados da Área</h3>
             <p>Campos marcados com <span style="color:#ea5455;">*</span> são obrigatórios</p>
         </div>
     </div>
 
-    @include('admin.materias._form', [
-        'action' => route('admin.materias.store'),
+    @include('admin.area._form', [
+        'action' => route('admin.areas.store'),
         'method' => 'POST',
     ])
 </div>

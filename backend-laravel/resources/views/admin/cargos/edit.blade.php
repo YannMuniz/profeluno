@@ -9,17 +9,6 @@
 
 @section('content')
 
-<div class="page-header">
-    <div class="page-header-info">
-        <h2><i class="fas fa-book-open"></i> Editar Cargo</h2>
-        <p>Atualize os dados de <strong>{{ $cargo->nomeCargo }}</strong></p>
-    </div>
-    <a href="{{ route('admin.cargos.index') }}" class="btn-cancel">
-        <i class="fas fa-arrow-left"></i>
-        Voltar
-    </a>
-</div>
-
 <div class="form-card">
     <div class="form-card-header">
         <div class="form-card-header-icon">

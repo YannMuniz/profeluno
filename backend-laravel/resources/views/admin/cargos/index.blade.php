@@ -10,10 +10,6 @@
 @section('content')
 
 <div class="page-header">
-    <div class="page-header-info">
-        <h2><i class="fas fa-briefcase"></i> Cargos</h2>
-        <p>Gerencie os cargos disponíveis na plataforma</p>
-    </div>
     <a href="{{ route('admin.cargos.create') }}" class="btn-create">
         <i class="fas fa-plus"></i>
         Novo Cargo

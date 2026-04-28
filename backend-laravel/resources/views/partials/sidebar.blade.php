@@ -31,6 +31,13 @@
                 </a>
             </div>
             <div class="menu-item">
+                <a href="{{ route('admin.materias.index') }}"
+                   class="menu-link {{ request()->routeIs('admin.materias.*') ? 'active' : '' }}">
+                    <i class="fas fa-book"></i>
+                    <span>Gerenciar Matérias</span>
+                </a>
+            </div>
+            <div class="menu-item">
                 <a href="{{ route('admin.usuarios.index') }}"
                    class="menu-link {{ request()->routeIs('admin.usuarios.*') ? 'active' : '' }}">
                     <i class="fas fa-users"></i>
@@ -45,10 +52,17 @@
                 </a>
             </div>
             <div class="menu-item">
-                <a href="{{ route('admin.materias.index') }}"
-                   class="menu-link {{ request()->routeIs('admin.materias.*') ? 'active' : '' }}">
-                    <i class="fas fa-book"></i>
-                    <span>Gerenciar Matérias</span>
+                <a href="{{ route('admin.areas.index') }}"
+                   class="menu-link {{ request()->routeIs('admin.areas.*') ? 'active' : '' }}">
+                    <i class="fas fa-layer-group"></i>
+                    <span>Gerenciar Áreas</span>
+                </a>
+            </div>
+            <div class="menu-item">
+                <a href="{{ route('admin.escolaridades.index') }}"
+                   class="menu-link {{ request()->routeIs('admin.escolaridades.*') ? 'active' : '' }}">
+                    <i class="fas fa-school"></i>
+                    <span>Gerenciar Escolaridades</span>
                 </a>
             </div>
 

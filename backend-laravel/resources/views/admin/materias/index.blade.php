@@ -10,10 +10,6 @@
 @section('content')
 
 <div class="page-header">
-    <div class="page-header-info">
-        <h2><i class="fas fa-book"></i> Matérias</h2>
-        <p>Gerencie as matérias disponíveis na plataforma</p>
-    </div>
     <a href="{{ route('admin.materias.create') }}" class="btn-create">
         <i class="fas fa-plus"></i>
         Nova Matéria

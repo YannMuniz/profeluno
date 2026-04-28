@@ -1,7 +1,7 @@
-{{-- resources/views/admin/usuarios/index.blade.php --}}
+{{-- resources/views/admin/area/index.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Gerenciar Usuários')
+@section('title', 'Gerenciar Áreas')
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/forms.css') }}">
@@ -9,15 +9,13 @@
 
 @section('content')
 
-{{-- Header --}}
 <div class="page-header">
-    <a href="{{ route('admin.usuarios.create') }}" class="btn-create">
-        <i class="fas fa-user-plus"></i>
-        Novo Usuário
+    <a href="{{ route('admin.areas.create') }}" class="btn-create">
+        <i class="fas fa-plus"></i>
+        Nova Área
     </a>
 </div>
 
-{{-- Alertas flash --}}
 @if(session('success'))
 <div class="alert alert-success">
     <i class="fas fa-check-circle"></i>
@@ -32,61 +30,49 @@
 </div>
 @endif
 
-{{-- Tabela --}}
 <div class="table-wrapper">
     <div class="table-toolbar">
         <div class="table-search">
-            <input type="text" id="searchInput" placeholder="Buscar por nome ou e-mail...">
+            <input type="text" id="searchInput" placeholder="Buscar área...">
             <i class="fas fa-search"></i>
         </div>
         <span class="table-count">
-            {{ $usuarios->count() }} usuário(s) encontrado(s)
+            {{ $areas->count() }} área(s) encontrada(s)
         </span>
     </div>
 
-    <table class="data-table" id="usuariosTable">
+    <table class="data-table" id="areasTable">
         <thead>
             <tr>
                 <th>#</th>
-                <th>Usuário</th>
-                <th>E-mail</th>
-                <th>Cargo</th>
-                <th>Criado em</th>
+                <th>Nome da Área</th>
+                <th>Situação</th>
+                <th>Criada em</th>
                 <th>Ações</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($usuarios as $usuario)
+            @forelse($areas as $area)
             @php
-                $mapaCargos = [
-                    1 => 'aluno',
-                    2 => 'professor',
-                    3 => 'admin',
-                ];
-                $id       = $usuario['id']           ?? $usuario['idUser']        ?? '—';
-                $nome     = $usuario['nome_Usuario']  ?? $usuario['nome']      ?? $usuario['Nome'] ?? '—';
-                $email    = $usuario['email']         ?? $usuario['Email']     ?? '—';
-                $cargoId = $usuario['idCargo'] ?? null;
-                $cargo = $mapaCargos[$cargoId] ?? 'aluno';
-                $criadoEm = $usuario['createdAt']    ?? $usuario['criadoEm'] ?? null;
+                $id        = $area['id']               ?? $area['idArea']              ?? '—';
+                $nome      = $area['nome_area']      ?? $area['nomeArea']     ?? $area['Nome'] ?? '—';
+                $situacao  = $area['situacao_area']  ?? $area['situacaoArea'] ?? 1;
+                $criadoEm  = $area['createdAt']        ?? $area['criadoEm']        ?? null;
             @endphp
             <tr>
                 <td>{{ $id }}</td>
                 <td>
-                    <div class="td-user">
-                        <div class="avatar-initial">
-                            {{ strtoupper(substr($nome, 0, 1)) }}
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div class="avatar-initial" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                            <i class="fas fa-book" style="font-size:14px;"></i>
                         </div>
-                        <div class="td-user-info">
-                            {{ $nome }}
-                        </div>
+                        <strong>{{ $nome }}</strong>
                     </div>
                 </td>
-                <td>{{ $email }}</td>
                 <td>
-                    <span class="badge badge-{{ $cargo }}">
-                        <i class="fas fa-{{ $cargo === 'admin' ? 'shield-alt' : ($cargo === 'professor' ? 'chalkboard-teacher' : 'user-graduate') }}"></i>
-                        {{ ucfirst($cargo) }}
+                    <span class="badge {{ $situacao ? 'badge-ativo' : 'badge-inativo' }}">
+                        <i class="fas fa-{{ $situacao ? 'check-circle' : 'times-circle' }}"></i>
+                        {{ $situacao ? 'Ativa' : 'Inativa' }}
                     </span>
                 </td>
                 <td>
@@ -94,10 +80,26 @@
                 </td>
                 <td>
                     <div class="td-actions">
-                        <a href="{{ route('admin.usuarios.edit', $id) }}" class="btn-edit">
+                        {{-- Toggle rápido de situação --}}
+                        <form method="POST" action="{{ route('admin.areas.toggle', $id) }}" style="display:inline;">
+                            @csrf
+                            @method('PATCH')
+                            <button
+                                type="submit"
+                                class="btn-edit"
+                                title="{{ $situacao ? 'Desativar' : 'Ativar' }}"
+                                style="{{ $situacao ? '' : 'background:rgba(40,199,111,0.12);color:#28c76f;border-color:rgba(40,199,111,0.3);' }}"
+                            >
+                                <i class="fas fa-{{ $situacao ? 'toggle-on' : 'toggle-off' }}"></i>
+                                {{ $situacao ? 'Desativar' : 'Ativar' }}
+                            </button>
+                        </form>
+
+                        <a href="{{ route('admin.areas.edit', $id) }}" class="btn-edit">
                             <i class="fas fa-pen"></i>
                             Editar
                         </a>
+
                         <button class="btn-delete"
                             onclick="openDeleteModal('{{ $id }}', '{{ addslashes($nome) }}')"
                         >
@@ -109,10 +111,10 @@
             </tr>
             @empty
             <tr>
-                <td colspan="6">
+                <td colspan="5">
                     <div class="table-empty">
-                        <i class="fas fa-users-slash"></i>
-                        <p>Nenhum usuário encontrado.</p>
+                        <i class="fas fa-book-open"></i>
+                        <p>Nenhuma área cadastrada ainda.</p>
                     </div>
                 </td>
             </tr>
@@ -121,10 +123,9 @@
     </table>
 </div>
 
-{{-- Paginação --}}
-@if(isset($usuarios) && method_exists($usuarios, 'links'))
+@if(isset($areas) && method_exists($areas, 'links'))
 <div class="pagination-wrapper">
-    {{ $usuarios->links() }}
+    {{ $areas->links() }}
 </div>
 @endif
 
@@ -134,8 +135,8 @@
         <div class="modal-icon">
             <i class="fas fa-trash-alt"></i>
         </div>
-        <h4>Excluir Usuário</h4>
-        <p>Tem certeza que deseja excluir o usuário <strong id="deleteUserName"></strong>? Esta ação não pode ser desfeita.</p>
+        <h4>Excluir Área</h4>
+        <p>Tem certeza que deseja excluir a área <strong id="deleteAreaName"></strong>? Esta ação não pode ser desfeita.</p>
         <div class="modal-actions">
             <button class="btn-cancel" onclick="closeDeleteModal()">
                 <i class="fas fa-times"></i>
@@ -157,18 +158,16 @@
 
 @push('scripts')
 <script>
-// Busca na tabela
 document.getElementById('searchInput').addEventListener('input', function () {
     const q = this.value.toLowerCase();
-    document.querySelectorAll('#usuariosTable tbody tr').forEach(row => {
+    document.querySelectorAll('#areasTable tbody tr').forEach(row => {
         row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
     });
 });
 
-// Modal de exclusão
 function openDeleteModal(id, nome) {
-    document.getElementById('deleteUserName').textContent = nome;
-    document.getElementById('deleteForm').action = `/admin/usuarios/${id}`;
+    document.getElementById('deleteAreaName').textContent = nome;
+    document.getElementById('deleteForm').action = `/admin/areas/${id}`;
     document.getElementById('deleteModal').classList.add('active');
 }
 

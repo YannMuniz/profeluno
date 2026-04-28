@@ -1,7 +1,7 @@
-{{-- resources/views/admin/materias/edit.blade.php --}}
+{{-- resources/views/admin/area/edit.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Editar Matéria')
+@section('title', 'Editar Área')
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/forms.css') }}">
@@ -16,14 +16,14 @@
         </div>
         <div>
             <h3>Editar Dados</h3>
-            <p>Atualize o nome ou a situação da matéria</p>
+            <p>Atualize o nome ou a situação da área</p>
         </div>
     </div>
 
-    @include('admin.materias._form', [
-        'action' => route('admin.materias.update', $materia->idMateria),
+    @include('admin.area._form', [
+        'action' => route('admin.areas.update', $area->idArea),
         'method' => 'PUT',
-        'materia' => $materia,
+        'area' => $area,
     ])
 </div>
 

@@ -15,31 +15,118 @@ class MateriaController extends Controller
         $this->baseUrl = env('DOTNET_API_URL', 'http://profeluno_dotnet:9000');
     }
 
-    public function index()
+    private function authHeaders(): array
     {
-        $materias = collect();
+        $token = session('api_token');
 
+        return [
+            'Accept'        => 'application/json',
+            'Content-Type'  => 'application/json',
+            'Authorization' => "Bearer {$token}",
+        ];
+    }
+
+    private function apiGet(string $endpoint): ?array
+    {
         try {
-            $response = Http::get("{$this->baseUrl}/v1/Materia/ListarMaterias");
+            $response = Http::withHeaders($this->authHeaders())
+                ->timeout(15)
+                ->get("{$this->baseUrl}/v1/{$endpoint}");
 
             if ($response->successful()) {
-                $materias = collect($response->json());
-            } else {
-                Log::warning('MateriaController::index falha na API', [
-                    'status' => $response->status(),
-                    'body'   => $response->body(),
-                ]);
+                return $response->json();
             }
-        } catch (\Throwable $e) {
-            Log::error('MateriaController::index erro', ['exception' => $e]);
-        }
 
-        return view('admin.materias.index', compact('materias'));
+            Log::warning("[MateriaController] GET {$endpoint} retornou {$response->status()}", [
+                'body' => $response->body(),
+            ]);
+            return null;
+        } catch (\Exception $e) {
+            Log::error("[MateriaController] GET {$endpoint} falhou: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    private function apiPost(string $endpoint, array $data): ?array
+    {
+        try {
+            $response = Http::withHeaders($this->authHeaders())
+                ->timeout(15)
+                ->post("{$this->baseUrl}/v1/{$endpoint}", $data);
+
+            if ($response->successful()) {
+                $json = $response->json();
+                return is_array($json) ? $json : [];
+            }
+
+            Log::warning("[MateriaController] POST {$endpoint} retornou {$response->status()}", [
+                'body' => $response->body(),
+            ]);
+            return null;
+        } catch (\Exception $e) {
+            Log::error("[MateriaController] POST {$endpoint} falhou: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    private function apiPut(string $endpoint, array $data): ?array
+    {
+        try {
+            $response = Http::withHeaders($this->authHeaders())
+                ->timeout(15)
+                ->put("{$this->baseUrl}/v1/{$endpoint}", $data);
+
+            if ($response->successful()) {
+                $json = $response->json();
+                return is_array($json) ? $json : [];
+            }
+
+            Log::warning("[MateriaController] PUT {$endpoint} retornou {$response->status()}", [
+                'body' => $response->body(),
+            ]);
+            return null;
+        } catch (\Exception $e) {
+            Log::error("[MateriaController] PUT {$endpoint} falhou: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    private function apiDelete(string $endpoint): bool
+    {
+        try {
+            $response = Http::withHeaders($this->authHeaders())
+                ->timeout(15)
+                ->delete("{$this->baseUrl}/v1/{$endpoint}");
+
+            if ($response->successful()) {
+                return true;
+            }
+
+            Log::warning("[MateriaController] DELETE {$endpoint} retornou {$response->status()}", [
+                'body' => $response->body(),
+            ]);
+            return false;
+        } catch (\Exception $e) {
+            Log::error("[MateriaController] DELETE {$endpoint} falhou: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function index()
+    {
+        $materias = collect($this->apiGet('Materia/ListarMaterias') ?? []);
+        $title    = '<i class="fas fa-book"></i> Matérias';
+        $subtitle = 'Gerencie as disciplinas disponíveis';
+
+        return view('admin.materias.index', compact('materias', 'title', 'subtitle'));
     }
 
     public function create()
     {
-        return view('admin.materias.create');
+        $title    = '<i class="fas fa-plus"></i> Nova Matéria';
+        $subtitle = 'Cadastre uma nova matéria para o sistema';
+
+        return view('admin.materias.create', compact('title', 'subtitle'));
     }
 
     public function store(Request $request)
@@ -51,17 +138,12 @@ class MateriaController extends Controller
         $situacao = $request->input('situacao_materia', 0);
         
         try {
-            $response = Http::post("{$this->baseUrl}/v1/Materia/CadastrarMateria", [
+            $response = $this->apiPost('Materia/CadastrarMateria', [
                 'nomeMateria'    => $request->input('nome_materia'),
                 'situacaoMateria' => $situacao,
             ]);
 
-            Log::debug('MateriaController::store dotnet response', [
-                'status' => $response->status(),
-                'body'   => $response->body(),
-            ]);
-
-            if ($response->successful()) {
+            if (! is_null($response)) {
                 return redirect()
                     ->route('admin.materias.index')
                     ->with('success', 'Matéria cadastrada com sucesso!');
@@ -85,14 +167,13 @@ class MateriaController extends Controller
         $materia = null;
 
         try {
-            $response = Http::get("{$this->baseUrl}/v1/Materia/BuscarMateriaPorId/{$id}");
+            $response = $this->apiGet("Materia/BuscarMateriaPorId/{$id}");
 
-            if ($response->successful()) {
-                $materia = (object) $response->json();
+            if (! is_null($response)) {
+                $materia = (object) $response;
             } else {
                 Log::warning('MateriaController::edit matéria não encontrada', [
-                    'id'     => $id,
-                    'status' => $response->status(),
+                    'id' => $id,
                 ]);
 
                 return redirect()
@@ -107,7 +188,10 @@ class MateriaController extends Controller
                 ->with('error', 'Erro ao buscar dados da matéria.');
         }
 
-        return view('admin.materias.edit', compact('materia'));
+        $title    = '<i class="fas fa-pen"></i> Editar Matéria';
+        $subtitle = 'Atualize os dados desta matéria';
+
+        return view('admin.materias.edit', compact('materia', 'title', 'subtitle'));
     }
 
     public function update(Request $request, string $id)
@@ -119,18 +203,13 @@ class MateriaController extends Controller
         $situacao = $request->has('situacao_materia') ? 1 : 0;
 
         try {
-            $response = Http::put("{$this->baseUrl}/v1/Materia/AtualizarMateria", [
+            $response = $this->apiPut('Materia/AtualizarMateria', [
                 'idMateria'       => (int) $id,
                 'nomeMateria'     => $request->input('nome_materia'),
                 'situacaoMateria' => $situacao,
             ]);
 
-            Log::debug('MateriaController::update dotnet response', [
-                'status' => $response->status(),
-                'body'   => $response->body(),
-            ]);
-
-            if ($response->successful()) {
+            if (! is_null($response)) {
                 return redirect()
                     ->route('admin.materias.index')
                     ->with('success', 'Matéria atualizada com sucesso!');
@@ -152,14 +231,9 @@ class MateriaController extends Controller
     public function destroy(string $id)
     {
         try {
-            $response = Http::delete("{$this->baseUrl}/v1/Materia/DeletarMateria/{$id}");
+            $ok = $this->apiDelete("Materia/DeletarMateria/{$id}");
 
-            Log::debug('MateriaController::destroy dotnet response', [
-                'status' => $response->status(),
-                'body'   => $response->body(),
-            ]);
-
-            if ($response->successful()) {
+            if ($ok) {
                 return redirect()
                     ->route('admin.materias.index')
                     ->with('success', 'Matéria excluída com sucesso!');
@@ -181,25 +255,23 @@ class MateriaController extends Controller
     public function toggle(string $id)
     {
         try {
-            // Primeiro busca o estado atual
-            $responseGet = Http::get("{$this->baseUrl}/v1/Materia/BuscarMateriaPorId/{$id}");
+            $materia = $this->apiGet("Materia/BuscarMateriaPorId/{$id}");
 
-            if (!$responseGet->successful()) {
+            if (is_null($materia)) {
                 return redirect()
                     ->route('admin.materias.index')
                     ->with('error', 'Matéria não encontrada.');
             }
 
-            $materia      = $responseGet->json();
             $novaSituacao = isset($materia['situacaoMateria']) ? ($materia['situacaoMateria'] ? 0 : 1) : 0;
 
-            $responsePatch = Http::put("{$this->baseUrl}/v1/Materia/AtualizarMateria", [
+            $responsePatch = $this->apiPut('Materia/AtualizarMateria', [
                 'idMateria'       => (int) $id,
                 'nomeMateria'     => $materia['nomeMateria'] ?? $materia['nome_materia'],
                 'situacaoMateria' => $novaSituacao,
             ]);
 
-            if ($responsePatch->successful()) {
+            if (! is_null($responsePatch)) {
                 $msg = $novaSituacao ? 'Matéria ativada com sucesso!' : 'Matéria desativada com sucesso!';
                 return redirect()->route('admin.materias.index')->with('success', $msg);
             }

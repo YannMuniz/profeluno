@@ -9,8 +9,11 @@ use App\Http\Controllers\SalaAulaProfessorController;
 use App\Http\Controllers\ConteudoController;
 use App\Http\Controllers\SimuladoController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\MateriaController;
+use App\Http\Controllers\AreaController;
+use App\Http\Controllers\EscolaridadeController;
 use App\Http\Controllers\CargoController;
+use App\Http\Controllers\MateriaController;
+use App\Http\Controllers\ProfileController;
 
 // ─── Raiz ────────────────────────────────────────────────────────────────────
 Route::get('/', function () {
@@ -36,6 +39,12 @@ Route::middleware('guest')->group(function () {
 Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])
     ->middleware('auth')
     ->name('logout');
+
+// ─── Perfil (todos os usuários autenticados) ──────────────────────────────────
+Route::middleware('auth')->group(function () {
+    Route::get('/perfil', [ProfileController::class, 'edit'])->name('perfil.edit');
+    Route::put('/perfil', [ProfileController::class, 'update'])->name('perfil.update');
+});
 
 // ─── Aluno ────────────────────────────────────────────────────────────────────
 Route::middleware(['auth', 'role:aluno'])->prefix('aluno')->name('aluno.')->group(function () {
@@ -104,8 +113,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/dashboard', [DashboardController::class, 'DashboardAdmin'])->name('dashboard');
 
     Route::resource('usuarios', UserController::class);
-
-    Route::resource('cargos', CargoController::class);
     Route::resource('materias', MateriaController::class);
     Route::patch('materias/{materia}/toggle', [MateriaController::class, 'toggle'])->name('materias.toggle');
+
+    Route::resource('cargos', CargoController::class);
+    Route::resource('areas', AreaController::class);
+    Route::patch('areas/{area}/toggle', [AreaController::class, 'toggle'])->name('areas.toggle');
+    Route::resource('escolaridades', EscolaridadeController::class);
+    Route::patch('escolaridades/{escolaridade}/toggle', [EscolaridadeController::class, 'toggle'])->name('escolaridades.toggle');
 });

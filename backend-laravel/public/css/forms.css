@@ -410,6 +410,15 @@ table.data-table tbody td {
     box-shadow: 0 0 0 3px rgba(234, 84, 85, 0.12);
 }
 
+.form-control-readonly,
+.form-control[disabled] {
+    background: rgba(115, 103, 240, 0.04) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-secondary) !important;
+    cursor: not-allowed !important;
+    opacity: 0.75;
+}
+
 select.form-control {
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b8fa8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
