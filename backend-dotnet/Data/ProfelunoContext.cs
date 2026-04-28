@@ -26,9 +26,22 @@ public partial class ProfelunoContext : DbContext
     public virtual DbSet<Cargo> Cargos { get; set; }
     public virtual DbSet<Materia> Materias { get; set; }
     public virtual DbSet<SimuladoQuestao> SimuladoQuestoes { get; set; }
+    public virtual DbSet<Area> Area { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Area>(entity =>
+        {
+           entity.ToTable("area");
+           entity.HasKey(e => e.IdArea);
+           entity.Property(e => e.IdArea).HasColumnName("id");
+           entity.Property(e => e.NomeArea).HasColumnName("nome_area");
+           entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+           entity.Property(e => e.UpdateAt).HasColumnName("updated_at");
+        });
+
+        
+
         modelBuilder.Entity<AlunoSala>(entity =>
         {
             entity.ToTable("aluno_sala");
