@@ -31,6 +31,13 @@
                 </a>
             </div>
             <div class="menu-item">
+                <a href="{{ route('admin.materias.index') }}"
+                   class="menu-link {{ request()->routeIs('admin.materias.*') ? 'active' : '' }}">
+                    <i class="fas fa-book"></i>
+                    <span>Gerenciar Matérias</span>
+                </a>
+            </div>
+            <div class="menu-item">
                 <a href="{{ route('admin.usuarios.index') }}"
                    class="menu-link {{ request()->routeIs('admin.usuarios.*') ? 'active' : '' }}">
                     <i class="fas fa-users"></i>

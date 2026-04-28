@@ -12,6 +12,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\AreaController;
 use App\Http\Controllers\EscolaridadeController;
 use App\Http\Controllers\CargoController;
+use App\Http\Controllers\MateriaController;
 use App\Http\Controllers\ProfileController;
 
 // ─── Raiz ────────────────────────────────────────────────────────────────────
@@ -112,6 +113,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/dashboard', [DashboardController::class, 'DashboardAdmin'])->name('dashboard');
 
     Route::resource('usuarios', UserController::class);
+    Route::resource('materias', MateriaController::class);
+    Route::patch('materias/{materia}/toggle', [MateriaController::class, 'toggle'])->name('materias.toggle');
 
     Route::resource('cargos', CargoController::class);
     Route::resource('areas', AreaController::class);
