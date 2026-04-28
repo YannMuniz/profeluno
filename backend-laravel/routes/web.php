@@ -9,7 +9,8 @@ use App\Http\Controllers\SalaAulaProfessorController;
 use App\Http\Controllers\ConteudoController;
 use App\Http\Controllers\SimuladoController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\MateriaController;
+use App\Http\Controllers\AreaController;
+use App\Http\Controllers\EscolaridadeController;
 use App\Http\Controllers\CargoController;
 
 // ─── Raiz ────────────────────────────────────────────────────────────────────
@@ -106,6 +107,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('usuarios', UserController::class);
 
     Route::resource('cargos', CargoController::class);
-    Route::resource('materias', MateriaController::class);
-    Route::patch('materias/{materia}/toggle', [MateriaController::class, 'toggle'])->name('materias.toggle');
+    Route::resource('areas', AreaController::class);
+    Route::patch('areas/{area}/toggle', [AreaController::class, 'toggle'])->name('areas.toggle');
+    Route::resource('escolaridades', EscolaridadeController::class);
+    Route::patch('escolaridades/{escolaridade}/toggle', [EscolaridadeController::class, 'toggle'])->name('escolaridades.toggle');
 });
