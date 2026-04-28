@@ -94,64 +94,118 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
-    public function showRegister() {
-        $cargos = Cargo::all();
-        return view('auth.register', compact('cargos'));
-    }
+    public function showRegister()
+    {
+        $cargos        = Cargo::all();
+        $escolaridades = collect();
+        $areas         = collect();
 
-    public function registrar(Request $request) {
-        $request->validate([
-            'name' => 'required|string',
-            'email' => 'required|email',
-            'cargo_id' => 'required|exists:cargos,id',
-            'password' => 'required|string',
-            'password_confirmation' => 'required|string|same:password',
-        ]);
-
-        $password = md5($request->input('password'));
-
-        $dotnetBaseUrl = env('DOTNET_API_URL', 'http://profeluno_dotnet:9000');
-        $url = "{$dotnetBaseUrl}/v1/User/CadastrarUsuario"; 
         try {
-            if ($request->input('password') !== $request->input('password_confirmation')) {
-                return redirect()
-                    ->route('register')
-                    ->withErrors(['password_confirmation' => 'As senhas não coincidem.'])
-                    ->withInput($request->only('name', 'email', 'cargo_id'));
+            $resEsc = Http::get("{$this->baseUrl}/v1/Escolaridade/ListarEscolaridades");
+            if ($resEsc->successful()) {
+                $escolaridades = collect($resEsc->json());
             }
 
+            $resArea = Http::get("{$this->baseUrl}/v1/Area/ListarAreas");
+            if ($resArea->successful()) {
+                $areas = collect($resArea->json());
+            }
+        } catch (\Throwable $e) {
+            Log::error('AuthController::showRegister erro ao buscar listas', ['exception' => $e]);
+        }
+
+        return view('auth.register', compact('cargos', 'escolaridades', 'areas'));
+    }
+
+    public function registrar(Request $request)
+    {
+        $cargo     = Cargo::find($request->input('cargo_id'));
+        $cargoNome = strtolower($cargo?->nome_cargo ?? '');
+
+        $rules = [
+            'name'                  => 'required|string',
+            'email'                 => 'required|email',
+            'cargo_id'              => 'required|exists:cargos,id',
+            'password'              => 'required|string',
+            'password_confirmation' => 'required|string|same:password',
+        ];
+
+        if (in_array($cargoNome, ['aluno', 'professor'])) {
+            $rules['escolaridade_id'] = 'required';
+            $rules['area_id']         = 'required';
+        }
+
+        $request->validate($rules);
+
+        $url = "{$this->baseUrl}/v1/User/CadastrarUsuario";
+
+        try {
             Log::debug('AuthController::registrar dotnet request', [
-                'url' => $url,
+                'url'     => $url,
                 'payload' => [
-                    'nome' => $request->input('name'),
-                    'email' => $request->input('email'),
-                    'senha' => md5($request->input('password')),
+                    'nome'    => $request->input('name'),
+                    'email'   => $request->input('email'),
                     'idCargo' => $request->input('cargo_id'),
                 ],
             ]);
 
             $response = Http::post($url, [
-                'nome' => $request->input('name'),
-                'email' => $request->input('email'),
-                'senha' => $password,
+                'nome'    => $request->input('name'),
+                'email'   => $request->input('email'),
+                'senha'   => md5($request->input('password')),
                 'idCargo' => $request->input('cargo_id'),
             ]);
 
             Log::debug('AuthController::registrar dotnet response', [
                 'status' => $response->status(),
-                'body' => $response->body(),
+                'body'   => $response->body(),
             ]);
 
             if ($response->successful()) {
-                // Cria/atualiza o usuário localmente para manter o cargo e permitir redirecionamento
-                \App\Models\User::updateOrCreate(
+                $user = \App\Models\User::updateOrCreate(
                     ['email' => $request->input('email')],
                     [
                         'nome_usuario' => $request->input('name'),
-                        'password' => md5($request->password),
-                        'cargo_id' => $request->input('cargo_id'),
+                        'password'     => md5($request->input('password')),
+                        'cargo_id'     => $request->input('cargo_id'),
                     ]
                 );
+
+                if (in_array($cargoNome, ['aluno', 'professor'])) {
+                    $modulo = $cargoNome === 'aluno' ? 'AlunoPerfil' : 'ProfessorPerfil';
+
+                    $perfilPayload = $cargoNome === 'aluno'
+                        ? [
+                            'idUser'         => $user->id,
+                            'periodo'        => $request->input('periodo'),
+                            'idEscolaridade' => $request->input('escolaridade_id'),
+                            'idArea'         => $request->input('area_id'),
+                        ]
+                        : [
+                            'idUser'         => $user->id,
+                            'formacao'       => $request->input('formacao'),
+                            'idEscolaridade' => $request->input('escolaridade_id'),
+                            'idArea'         => $request->input('area_id'),
+                        ];
+
+                    try {
+                        $resPerfil = Http::post("{$this->baseUrl}/v1/{$modulo}/SalvarPerfil", $perfilPayload);
+
+                        Log::debug("AuthController::registrar {$modulo} dotnet", [
+                            'status' => $resPerfil->status(),
+                            'body'   => $resPerfil->body(),
+                        ]);
+
+                        // Não bloqueia o registro se o perfil falhar — endpoint ainda não existe
+                        if (! $resPerfil->successful()) {
+                            Log::warning("AuthController::registrar {$modulo} falhou", [
+                                'status' => $resPerfil->status(),
+                            ]);
+                        }
+                    } catch (\Throwable $e) {
+                        Log::error("AuthController::registrar {$modulo} erro", ['exception' => $e]);
+                    }
+                }
 
                 return redirect()->route('login')->with('success', 'Registro bem-sucedido. Faça login para continuar.');
             }
@@ -160,7 +214,10 @@ class AuthController extends Controller
                 ->route('register')
                 ->withErrors(['email' => 'Ocorreu um erro ao tentar registrar.'])
                 ->withInput($request->only('name', 'email', 'cargo_id'));
+
         } catch (\Throwable $e) {
+            Log::error('AuthController::registrar error', ['exception' => $e]);
+
             return redirect()
                 ->route('register')
                 ->withErrors(['email' => 'Ocorreu um erro ao tentar registrar.'])

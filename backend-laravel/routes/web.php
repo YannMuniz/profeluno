@@ -12,6 +12,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\AreaController;
 use App\Http\Controllers\EscolaridadeController;
 use App\Http\Controllers\CargoController;
+use App\Http\Controllers\ProfileController;
 
 // ─── Raiz ────────────────────────────────────────────────────────────────────
 Route::get('/', function () {
@@ -37,6 +38,12 @@ Route::middleware('guest')->group(function () {
 Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])
     ->middleware('auth')
     ->name('logout');
+
+// ─── Perfil (todos os usuários autenticados) ──────────────────────────────────
+Route::middleware('auth')->group(function () {
+    Route::get('/perfil', [ProfileController::class, 'edit'])->name('perfil.edit');
+    Route::put('/perfil', [ProfileController::class, 'update'])->name('perfil.update');
+});
 
 // ─── Aluno ────────────────────────────────────────────────────────────────────
 Route::middleware(['auth', 'role:aluno'])->prefix('aluno')->name('aluno.')->group(function () {
