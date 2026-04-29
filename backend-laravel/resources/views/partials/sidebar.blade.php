@@ -114,23 +114,23 @@
                 </a>
             </div>
             <div class="menu-item">
-                <a href="{{ route('aluno.buscar-sala') }}"
-                   class="menu-link {{ request()->routeIs('aluno.buscar-sala') ? 'active' : '' }}">
+                <a href="{{ route('aluno.salas.index') }}"
+                   class="menu-link {{ request()->routeIs('aluno.salas.*') ? 'active' : '' }}">
                     <i class="fas fa-search"></i>
                     <span>Buscar Salas</span>
                 </a>
             </div>
             <div class="menu-item">
-                <a href="{{ route('aluno.minhas-aulas') }}"
-                   class="menu-link {{ request()->routeIs('aluno.minhas-aulas') ? 'active' : '' }}">
+                <a href="{{ route('aluno.historico') }}"
+                   class="menu-link {{ request()->routeIs('aluno.historico*') ? 'active' : '' }}">
                     <i class="fas fa-book"></i>
                     <span>Minhas Aulas</span>
                 </a>
             </div>
             <div class="menu-item">
                 <a href="{{ route('aluno.simulados') }}"
-                   class="menu-link {{ request()->routeIs('aluno.simulados') ? 'active' : '' }}">
-                    <i class="fas fa-history"></i>
+                   class="menu-link {{ request()->routeIs('aluno.simulados*') ? 'active' : '' }}">
+                    <i class="fas fa-file-alt"></i>
                     <span>Simulados</span>
                 </a>
             </div>

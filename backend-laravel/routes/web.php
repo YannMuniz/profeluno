@@ -48,12 +48,22 @@ Route::middleware('auth')->group(function () {
 
 // ─── Aluno ────────────────────────────────────────────────────────────────────
 Route::middleware(['auth', 'role:aluno'])->prefix('aluno')->name('aluno.')->group(function () {
-    Route::get('/dashboard',         [DashboardController::class, 'DashboardAluno'])->name('dashboard');
-    Route::get('/buscar-sala',       [SalaAulaAlunoController::class, 'BuscarSalaAluno'])->name('buscar-sala');
-    Route::get('/historico-aulas',   [SalaAulaAlunoController::class, 'HistoricoAulasAluno'])->name('minhas-aulas');
-    Route::get('/simulados',         [SalaAulaAlunoController::class, 'SimuladosAluno'])->name('simulados');
-    Route::get('/sala/{id}',         [SalaAulaAlunoController::class, 'showClassroom'])->name('show');
-    Route::post('/sala/{id}/entrar', [SalaAulaAlunoController::class, 'join'])->name('join');
+    Route::get('/dashboard', [DashboardController::class, 'DashboardAluno'])->name('dashboard');
+
+    // Salas de Aula
+    Route::resource('salas', SalaAulaAlunoController::class, ['only' => ['index', 'show']]);
+    Route::post('salas/{id}/join', [SalaAulaAlunoController::class, 'join'])->name('salas.join');
+    Route::get('salas/{id}/video', [SalaAulaAlunoController::class, 'video'])->name('salas.video');
+    Route::post('salas/{id}/leave', [SalaAulaAlunoController::class, 'leave'])->name('salas.leave');
+    Route::post('salas/{id}/rating', [SalaAulaAlunoController::class, 'rating'])->name('salas.rating');
+
+    // Histórico de Aulas
+    Route::get('historico', [SalaAulaAlunoController::class, 'historico'])->name('historico');
+    Route::get('historico/{id}', [SalaAulaAlunoController::class, 'historicoShow'])->name('historico.show');
+
+    // Simulados
+    Route::get('simulados', [SalaAulaAlunoController::class, 'simulados'])->name('simulados');
+    Route::get('simulados/{id}', [SalaAulaAlunoController::class, 'simuladoShow'])->name('simulados.show');
 });
 
 // ─── Professor ────────────────────────────────────────────────────────────────
