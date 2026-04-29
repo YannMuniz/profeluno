@@ -16,6 +16,7 @@ public static class DependencyInjectionConfig
         services.AddScoped<ISalaAulaService, SalaAulaService>();
         services.AddScoped<IJitsiService, JitsiService>();
         services.AddScoped<IAlunoSalaService, AlunoSalaService>();
+        services.AddScoped<IAreaService, AreaService>();
 
         return services;
     }
