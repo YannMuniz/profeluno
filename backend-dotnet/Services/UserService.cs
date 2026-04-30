@@ -18,7 +18,9 @@ namespace backend_dotnet.Services
 
         public async Task<IEnumerable<User>> RetornaTodosUsuariosAsync()
         {
-            return await _context.Users.AsNoTracking().ToListAsync();
+            var users = await _context.Users.AsNoTracking().ToListAsync();
+
+            return users;
         }
 
         public async Task<User> RetornaUsuarioPorIdAsync(int idUsuario)

@@ -5,7 +5,11 @@ namespace backend_dotnet.Models
         public int IdArea { get; set; }
         public string NomeArea { get; set;}
         public int SituacaoArea { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdateAt { get; set; }
+        public DateTime? CreatedAt { get; set; }
+        public DateTime? UpdateAt { get; set; }
+
+        public virtual ICollection<AreaMateria> AreaMateria { get; set; }
+        public virtual ICollection<AlunoPerfil> AlunosPerfis { get; set; }
+        public virtual ICollection<ProfessorPerfil> ProfessorPerfis { get; set; }
     }
 }

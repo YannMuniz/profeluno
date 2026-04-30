@@ -17,7 +17,7 @@ namespace backend_dotnet.Controllers
         }
 
 
-        [HttpGet("RetornaTodasAreasAsync")]
+        [HttpGet("RetornaTodasAreas")]
         public async Task<IActionResult> RetornaTodasAreasAsync()
         {
             var conteudos = await _service.RetornaTodasAreas();
