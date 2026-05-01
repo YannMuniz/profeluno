@@ -21,7 +21,7 @@ namespace backend_dotnet.Services
                     .ThenInclude(d => d.Area)
                         .ThenInclude(d => d.AreaMateria)
                         .ThenInclude(d => d.Materias)
-                .Where(u => u.ProfessorPerfil.Area.AreaMateria.Any(am => am.IdArea == idArea && am.IdMateria == idMateria))
+                .Where(u => u.ProfessorPerfil.Area.AreaMateria.Any(am => am.IdArea == idArea || am.IdMateria == idMateria))
                 .ToListAsync();
 
             if(!professoresCandidatos.Any()) return null;
@@ -29,7 +29,7 @@ namespace backend_dotnet.Services
             var listaRanqueada = professoresCandidatos.Select(p => new
             {
                 Professor = p,
-                Score = CalcularScore(p)
+                Score = CalcularScore(p, idMateria)
             })
             .OrderByDescending(x => x.Score)
             .ToList();
@@ -41,7 +41,7 @@ namespace backend_dotnet.Services
             return melhorAula;
         }
 
-        private double CalcularScore(User professor)
+        private double CalcularScore(User professor, int idMateria)
         {
             double score = 0;
 
@@ -50,6 +50,9 @@ namespace backend_dotnet.Services
 
             // Exemplo 2: Experiência - Professores com mais tempo de casa ganham bônus
             if(professor.CreatedAt < DateTime.Now.AddYears(-1)) score += 10;
+
+            if(professor.ProfessorPerfil.Area.AreaMateria.Any(x => x.IdMateria == idMateria)) score += 20;
+
             score += new Random().NextDouble() * 3;
 
             return score;

@@ -286,7 +286,7 @@ public partial class ProfelunoContext : DbContext
             entity.ToTable("aluno_perfil");
             entity.HasKey(e => e.IdAlunoPerfil);
             entity.Property(e => e.IdAlunoPerfil).HasColumnName("id");
-            entity.Property(e => e.IdUser).HasColumnName("user_id");
+            entity.Property(e => e.IdUsuario).HasColumnName("user_id");
             entity.Property(e => e.Periodo).HasColumnName("periodo");
             entity.Property(e => e.IdEscolaridade).HasColumnName("escolaridade_id");
             entity.Property(e => e.IdArea).HasColumnName("area_id");
@@ -295,7 +295,7 @@ public partial class ProfelunoContext : DbContext
 
             entity.HasOne(ap => ap.Users)
                 .WithOne(u => u.AlunoPerfil)
-                .HasForeignKey<AlunoPerfil>(ap => ap.IdUser)
+                .HasForeignKey<AlunoPerfil>(ap => ap.IdUsuario)
                 .HasConstraintName("aluno_perfil_user_id_foreign");
 
             entity.HasOne(x => x.Area)

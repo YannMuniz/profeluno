@@ -17,7 +17,7 @@ namespace backend_dotnet.Services
 
         public async Task<IEnumerable<Cargo>> RetornaTodosCargosAsync()
         {
-            return await _context.Cargos.AsNoTracking().ToListAsync();
+            return await _context.Cargos.AsNoTracking().Where(x => x.IdCargo != 3).ToListAsync();
         }
 
         public async Task<Cargo> RetornaCargoPorIdAsync(int idCargo)

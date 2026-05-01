@@ -88,7 +88,6 @@ namespace backend_dotnet.Services
             if(cadastro == null) return false;
 
             var emailExistente = await _context.Users.AnyAsync(x => x.Email == cadastro.Email);
-
             if(emailExistente) return false;
 
             User user = new User
@@ -97,8 +96,27 @@ namespace backend_dotnet.Services
                 Email = cadastro.Email,
                 IdCargo = cadastro.IdCargo,
                 Password = cadastro.Senha,
-                CreatedAt = DateTime.Now,
+                CreatedAt = DateTime.Now
             };
+
+            if(user.IdCargo == 1)
+            {
+                user.AlunoPerfil = new AlunoPerfil
+                {
+                    Periodo = cadastro.PeriodoAluno,
+                    IdEscolaridade = (int)cadastro.IdEscolaridadeAluno,
+                    IdArea = (int)cadastro.IdAreaAluno
+                };
+            }
+            else if(user.IdCargo == 2)
+            {
+                user.ProfessorPerfil = new ProfessorPerfil
+                {
+                    Formacao = cadastro.FormacaoProfessor,
+                    IdEscolaridade = (int)cadastro.IdEscolaridadeProfessor,
+                    IdArea = (int)cadastro.IdAreaProfessor
+                };
+            }
 
             await _context.Users.AddAsync(user);
             await _context.SaveChangesAsync();
