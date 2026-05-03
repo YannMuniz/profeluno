@@ -11,12 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('area_materia', function (Blueprint $table) {
+        Schema::create('professor_materia', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('area_id')->nullable()->constrained('area');
+            $table->foreignId('user_id')->nullable()->constrained('users');
             $table->foreignId('materia_id')->nullable()->constrained('materias');
-            $table->integer('situacao_area_materia')->default(1); // 1 para ativa, 0 para inativa
-            $table->primary(['area_id', 'materia_id']);
+            $table->integer('situacao_professor_materia')->default(1); // 1 para ativa, 0 para inativa
             $table->timestamps();
         });
     }
@@ -26,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('area_materia');
+        Schema::dropIfExists('professor_materia');
     }
 };

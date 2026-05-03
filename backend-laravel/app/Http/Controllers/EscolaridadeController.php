@@ -114,7 +114,7 @@ class EscolaridadeController extends Controller
 
     public function index()
     {
-        $escolaridades = collect($this->apiGet('Escolaridade/ListarEscolaridades') ?? []);
+        $escolaridades = collect($this->apiGet('Escolaridade/RetornaTodasEscolaridades') ?? []);
         $title    = '<i class="fas fa-graduation-cap"></i> Escolaridades';
         $subtitle = 'Gerencie os níveis de escolaridade';
 
