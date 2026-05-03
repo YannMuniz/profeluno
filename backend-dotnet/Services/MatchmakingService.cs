@@ -14,17 +14,17 @@ namespace backend_dotnet.Services
             _context = context;
         }
 
-        public async Task<SalaAula> AcharMelhorProfessor(int idAluno, int idMateria, int idArea)
+        public async Task<List<SalaAula>> AcharMelhorProfessor(int idMateria, int idArea)
         {
             var professoresCandidatos = await _context.Users
                 .Include(d => d.ProfessorPerfil)
                     .ThenInclude(d => d.Area)
                         .ThenInclude(d => d.AreaMateria)
-                        .ThenInclude(d => d.Materias)
+                            .ThenInclude(d => d.Materias)
                 .Where(u => u.ProfessorPerfil.Area.AreaMateria.Any(am => am.IdArea == idArea || am.IdMateria == idMateria))
                 .ToListAsync();
 
-            if(!professoresCandidatos.Any()) return null;
+            if(!professoresCandidatos.Any()) return new List<SalaAula>();
 
             var listaRanqueada = professoresCandidatos.Select(p => new
             {
@@ -34,21 +34,26 @@ namespace backend_dotnet.Services
             .OrderByDescending(x => x.Score)
             .ToList();
 
-            var melhorMatch = listaRanqueada.First();
+            var idsProfessoresRanqueados = listaRanqueada.Select(x => x.Professor.IdUser).ToList();
 
-            var melhorAula = await _context.SalaAulas.FirstOrDefaultAsync(x => x.IdMateria == idMateria && x.IdProfessor == melhorMatch.Professor.IdUser);
+            var salasDisponiveis = await _context.SalaAulas
+                .Where(x => idsProfessoresRanqueados.Contains((int)x.IdProfessor) && x.IdMateria == idMateria)
+                .ToListAsync();
 
-            return melhorAula;
+            var salasOrdenadas = salasDisponiveis
+                .OrderBy(sala => idsProfessoresRanqueados.IndexOf((int)sala.IdProfessor))
+                .ToList();
+
+            return salasOrdenadas;
         }
 
         private double CalcularScore(User professor, int idMateria)
         {
             double score = 0;
 
-            // Exemplo 1: Rating (Avaliação) - Se o prof tem nota 4.5 de 5.0, ganha 27 pontos (4.5 * 6)
             score += (professor.ProfessorPerfil.Avalicao * 6);
 
-            // Exemplo 2: Experiência - Professores com mais tempo de casa ganham bônus
+            // Professores com mais tempo de casa ganham bônus
             if(professor.CreatedAt < DateTime.Now.AddYears(-1)) score += 10;
 
             if(professor.ProfessorPerfil.Area.AreaMateria.Any(x => x.IdMateria == idMateria)) score += 20;

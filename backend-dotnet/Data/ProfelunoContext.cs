@@ -55,7 +55,7 @@ public partial class ProfelunoContext : DbContext
             entity.Property(e => e.IdArea).HasColumnName("area_id");
             entity.Property(e => e.SituacaoAreaMateria).HasColumnName("situacao_area_materia");
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
-            entity.Property(e => e.UpdateAt).HasColumnName("updated_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
 
             entity.HasOne(am => am.Areas)
                   .WithMany(a => a.AreaMateria)
@@ -302,6 +302,11 @@ public partial class ProfelunoContext : DbContext
                 .WithMany(x => x.AlunosPerfis)
                 .HasForeignKey(e => e.IdArea)
                 .HasConstraintName("aluno_perfil_area_id_foreign");
+
+            entity.HasOne(a => a.Escolaridade)
+                .WithMany()
+                .HasForeignKey(a => a.IdEscolaridade)
+                .HasConstraintName("aluno_perfil_escolaridade_id_foreign");
         });
 
         modelBuilder.Entity<ProfessorPerfil>(entity =>
@@ -329,27 +334,22 @@ public partial class ProfelunoContext : DbContext
                     .WithMany(x => x.ProfessorPerfis)
                     .HasForeignKey(e => e.IdArea)
                     .HasConstraintName("professor_perfil_area_id_foreign");
+
+            entity.HasOne(p => p.Escolaridade)
+                    .WithMany()
+                    .HasForeignKey(p => p.IdEscolaridade)
+                    .HasConstraintName("professor_perfil_escolaridade_id_foreign");
         });
 
         modelBuilder.Entity<Escolaridade>(entity =>
         {
             entity.ToTable("escolaridade");
             entity.HasKey(e => e.IdEscolaridade);
-            entity.Property(e => e.IdEscolaridade).HasColumnName("id");
+            entity.Property(e => e.IdEscolaridade).HasColumnName("id").ValueGeneratedOnAdd();
             entity.Property(e => e.NomeEscolaridade).HasColumnName("nome_escolaridade");
             entity.Property(e => e.SituacaoEscolaridade).HasColumnName("situacao_escolaridade");
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
-            entity.Property(e => e.UpdateAt).HasColumnName("updated_at");
-
-            entity.HasOne<AlunoPerfil>()
-                  .WithMany()
-                  .HasForeignKey(e => e.IdEscolaridade)
-                  .HasConstraintName("Aluno_perfil_area_id_foreign");
-
-            entity.HasOne<ProfessorPerfil>()
-                  .WithMany()
-                  .HasForeignKey(e => e.IdEscolaridade)
-                  .HasConstraintName("professor_perfil_area_id_foreign");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
         });
 
         modelBuilder.Entity<Cargo>(entity => 

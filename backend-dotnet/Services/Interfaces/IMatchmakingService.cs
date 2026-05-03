@@ -4,6 +4,6 @@ namespace backend_dotnet.Services.Interfaces
 {
     public interface IMatchmakingService
     {
-        public Task<SalaAula> AcharMelhorProfessor(int idAluno, int idMateria, int idArea);
+        public Task<List<SalaAula>> AcharMelhorProfessor(int idMateria, int idArea);
     }
 }

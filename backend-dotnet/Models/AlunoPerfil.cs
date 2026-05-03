@@ -12,5 +12,6 @@ namespace backend_dotnet.Models
 
         public virtual Area Area { get; set; }
         public virtual User Users { get; set; }
+        public virtual Escolaridade Escolaridade { get; set; }
     }
 }
