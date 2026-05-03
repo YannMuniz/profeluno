@@ -114,7 +114,7 @@ class AreaController extends Controller
 
     public function index()
     {
-        $areas = collect($this->apiGet('Area/ListarAreas') ?? []);
+        $areas = collect($this->apiGet('Area/RetornaTodasAreas') ?? []);
         $title    = '<i class="fas fa-layer-group"></i> Áreas';
         $subtitle = 'Gerencie as áreas disponíveis no sistema';
 
