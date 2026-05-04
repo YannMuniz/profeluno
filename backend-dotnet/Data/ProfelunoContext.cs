@@ -27,7 +27,7 @@ public partial class ProfelunoContext : DbContext
     public virtual DbSet<Materia> Materias { get; set; }
     public virtual DbSet<SimuladoQuestao> SimuladoQuestoes { get; set; }
     public virtual DbSet<Area> Area { get; set; }
-    public virtual DbSet<AreaMateria> AreaMateria { get; set; }
+    public virtual DbSet<ProfessorMateria> ProfessorMateria { get; set; }
     public virtual DbSet<Materia> Materia { get; set; }
     public virtual DbSet<AlunoPerfil> AlunoPerfil { get; set; }
     public virtual DbSet<ProfessorPerfil> ProfessorPerfil { get; set; }
@@ -46,26 +46,22 @@ public partial class ProfelunoContext : DbContext
             entity.Property(e => e.UpdateAt).HasColumnName("updated_at");
         });
 
-        modelBuilder.Entity<AreaMateria>(entity =>
+        modelBuilder.Entity<ProfessorMateria>(entity =>
         {
-            entity.ToTable("area_materia");
-            entity.HasKey(e => e.IdAreaMateria);
-            entity.Property(e => e.IdAreaMateria).HasColumnName("id");
+            entity.ToTable("professor_materia");
+            entity.HasKey(e => e.IdProfessorMateria);
+            entity.Property(e => e.IdProfessorMateria).HasColumnName("id");
+            entity.Property(e => e.IdProfessor).HasColumnName("user_id");
             entity.Property(e => e.IdMateria).HasColumnName("materia_id");
-            entity.Property(e => e.IdArea).HasColumnName("area_id");
-            entity.Property(e => e.SituacaoAreaMateria).HasColumnName("situacao_area_materia");
+            entity.Property(e => e.SituacaoProfessorMateria).HasColumnName("situacao_professor_materia");
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
 
-            entity.HasOne(am => am.Areas)
-                  .WithMany(a => a.AreaMateria)
-                  .HasForeignKey(am => am.IdArea)
-                  .HasConstraintName("fk_areamateria_area");
-
             entity.HasOne(am => am.Materias)
-                  .WithMany(m => m.AreaMateria)
+                  .WithMany(m => m.ProfessorMateria)
                   .HasForeignKey(am => am.IdMateria)
-                  .HasConstraintName("fk_areamateria_materia");
+                  .HasConstraintName("fk_professormateria_materia");
+                  // Removendo qualquer referência incorreta a Area
         });
 
         modelBuilder.Entity<AlunoSala>(entity =>

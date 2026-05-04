@@ -25,7 +25,7 @@ namespace backend_dotnet.Services
             return await _context.Area.FirstOrDefaultAsync(x => x.IdArea == idArea);
         }
 
-        public async Task<int> CadastraArea(CadastraAreaRequest request)
+        public async Task<int> CadastraArea(CadastrarAreaRequest request)
         {
             Area newArea = new Area
             {

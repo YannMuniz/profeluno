@@ -32,7 +32,7 @@ namespace backend_dotnet.Controllers
         }
 
         [HttpPost("CadastrarArea")]
-        public async Task<IActionResult> CadastrarArea(CadastraAreaRequest area)
+        public async Task<IActionResult> CadastrarArea(CadastrarAreaRequest area)
         {
             var conteudo = await _service.CadastraArea(area);
             return Ok(conteudo);

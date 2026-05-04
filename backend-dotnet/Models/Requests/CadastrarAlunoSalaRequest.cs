@@ -1,6 +1,6 @@
 ﻿namespace backend_dotnet.Models.Requests
 {
-    public class CadastraAlunoSalaRequest
+    public class CadastrarAlunoSalaRequest
     {
         public int IdAluno { get; set; }
         public int IdSalaAula { get; set; }

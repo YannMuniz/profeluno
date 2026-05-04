@@ -79,7 +79,7 @@ namespace backend_dotnet.Controllers
         /// <param name="user"></param>
         /// <returns></returns>
         [HttpPut("AtualizarUsuario")]
-        public async Task<IActionResult> AtualizaUsuarioAsync([FromBody] AtualizaUsuarioRequest user)
+        public async Task<IActionResult> AtualizaUsuarioAsync([FromBody] AtualizarUsuarioRequest user)
         {
             var userAtualizado = await _userService.AtualizaUsuarioAsync(user);
             return Ok(userAtualizado);

@@ -8,7 +8,7 @@ namespace backend_dotnet.Models
         public DateTime? CreatedAt { get; set; }
         public DateTime? UpdateAt { get; set; }
 
-        public virtual ICollection<AreaMateria> AreaMateria { get; set; }
+        public virtual ICollection<ProfessorMateria> ProfessorMateria { get; set; }
         public virtual ICollection<AlunoPerfil> AlunosPerfis { get; set; }
         public virtual ICollection<ProfessorPerfil> ProfessorPerfis { get; set; }
     }

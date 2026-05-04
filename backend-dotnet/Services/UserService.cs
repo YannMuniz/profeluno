@@ -43,7 +43,7 @@ namespace backend_dotnet.Services
             return await _context.Users.AsNoTracking().FirstOrDefaultAsync((x => x.Nome_Usuario == nomeUsuario && x.IdCargo == idCargo));
         }
 
-        public async Task<AtualizaUsuarioRequest> AtualizaUsuarioAsync(AtualizaUsuarioRequest user)
+        public async Task<AtualizarUsuarioRequest> AtualizaUsuarioAsync(AtualizarUsuarioRequest user)
         {
             var newUser = await _context.Users.FirstOrDefaultAsync(x => x.IdUser == user.IdUser);
 

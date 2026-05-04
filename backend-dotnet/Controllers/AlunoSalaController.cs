@@ -52,7 +52,7 @@ namespace backend_dotnet.Controllers
         }
 
         [HttpPost("CadastraAlunoSala")]
-        public async Task<IActionResult> CadastrarAlunoSala([FromBody] CadastraAlunoSalaRequest request)
+        public async Task<IActionResult> CadastrarAlunoSala([FromBody] CadastrarAlunoSalaRequest request)
         {
             var response = await _alunoSalaService.CadastraAlunoSala(request);
             if(response == null) return BadRequest(false);

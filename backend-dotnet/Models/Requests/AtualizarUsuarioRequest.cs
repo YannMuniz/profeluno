@@ -1,6 +1,6 @@
 ﻿namespace backend_dotnet.Models.Requests
 {
-    public class AtualizaUsuarioRequest
+    public class AtualizarUsuarioRequest
     {
         public long IdUser { get; set; }
         public string Email { get; set; }

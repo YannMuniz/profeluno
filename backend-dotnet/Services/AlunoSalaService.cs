@@ -44,7 +44,7 @@ namespace backend_dotnet.Services
             };
         }
 
-        public async Task<int> CadastraAlunoSala(CadastraAlunoSalaRequest request)
+        public async Task<int> CadastraAlunoSala(CadastrarAlunoSalaRequest request)
         {
             AlunoSala newAlunoSala = new AlunoSala
             {

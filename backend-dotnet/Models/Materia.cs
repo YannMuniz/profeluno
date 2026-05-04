@@ -17,6 +17,6 @@ namespace backend_dotnet.Models
         [JsonIgnore]
         public virtual ICollection<SalaAula> SalaAulas { get; set; } = new List<SalaAula>();
         [JsonIgnore]
-        public virtual ICollection<AreaMateria> AreaMateria { get; set; }
+        public virtual ICollection<ProfessorMateria> ProfessorMateria { get; set; }
     }
 }

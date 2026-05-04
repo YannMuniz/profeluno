@@ -14,14 +14,14 @@ namespace backend_dotnet.Services
             _context = context;
         }
 
-        public async Task<List<SalaAula>> AcharMelhorProfessor(int idMateria, int idArea)
+        public async Task<List<SalaAula>> AcharMelhorProfessor(int idMateria, int idProfessor)
         {
             var professoresCandidatos = await _context.Users
                 .Include(d => d.ProfessorPerfil)
                     .ThenInclude(d => d.Area)
-                        .ThenInclude(d => d.AreaMateria)
+                        .ThenInclude(d => d.ProfessorMateria)
                             .ThenInclude(d => d.Materias)
-                .Where(u => u.ProfessorPerfil.Area.AreaMateria.Any(am => am.IdArea == idArea || am.IdMateria == idMateria))
+                .Where(u => u.ProfessorPerfil.Area.ProfessorMateria.Any(am => am.IdProfessor == idProfessor || am.IdMateria == idMateria))
                 .ToListAsync();
 
             if(!professoresCandidatos.Any()) return new List<SalaAula>();
@@ -56,7 +56,7 @@ namespace backend_dotnet.Services
             // Professores com mais tempo de casa ganham bônus
             if(professor.CreatedAt < DateTime.Now.AddYears(-1)) score += 10;
 
-            if(professor.ProfessorPerfil.Area.AreaMateria.Any(x => x.IdMateria == idMateria)) score += 20;
+            if(professor.ProfessorPerfil.Area.ProfessorMateria.Any(x => x.IdMateria == idMateria)) score += 20;
 
             score += new Random().NextDouble() * 3;
 
