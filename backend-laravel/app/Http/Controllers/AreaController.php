@@ -167,7 +167,7 @@ class AreaController extends Controller
         $area = null;
 
         try {
-            $response = $this->apiGet("Area/BuscarAreaPorId/{$id}");
+            $response = $this->apiGet("Area/RetornaAreaPorId/{$id}");
 
             if (! is_null($response)) {
                 $area = (object) $response;
