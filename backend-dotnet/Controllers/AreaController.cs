@@ -45,7 +45,7 @@ namespace backend_dotnet.Controllers
             return Ok(conteudo);
         }
 
-        [HttpDelete("DeletarArea")]
+        [HttpDelete("DeletarArea/{idArea}")]
         public async Task<IActionResult> DeletarArea(int idArea)
         {
             var conteudo = await _service.DeletarArea(idArea);
