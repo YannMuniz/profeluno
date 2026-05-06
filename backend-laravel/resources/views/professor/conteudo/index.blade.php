@@ -69,14 +69,12 @@
                 $id          = $conteudo['idConteudo']             ?? '—';
                 $titulo      = $conteudo['titulo']                 ?? '—';
                 $nomeMateria = $conteudo['materia']['nomeMateria'] ?? '—';
-                // API sempre retorna tipo em minúsculo — normalizar aqui para garantir
                 $tipo        = strtolower($conteudo['tipo']        ?? 'other');
                 $situacao    = $conteudo['situacao']               ?? true;
-                $criadoEm   = $conteudo['createdAt']              ?? null;
+                $criadoEm    = $conteudo['createdAt']              ?? null;
                 $fileUrl     = $conteudo['url']                    ?? null;
                 $nomeArquivo = $conteudo['nomeArquivo']            ?? null;
 
-                // Mapeamento com chaves TODAS em minúsculo para evitar mismatch
                 $tipoIcones = [
                     'pdf'      => ['icon' => 'fa-file-pdf',  'cor' => '#ea5455', 'bg' => 'rgba(234,84,85,0.12)',    'label' => 'PDF'],
                     'slide'    => ['icon' => 'fa-desktop',   'cor' => '#ff9f43', 'bg' => 'rgba(255,159,67,0.12)',   'label' => 'Slide'],
@@ -85,12 +83,12 @@
                     'other'    => ['icon' => 'fa-file',      'cor' => '#82868b', 'bg' => 'rgba(130,134,139,0.12)', 'label' => 'Outro'],
                 ];
 
-                $info = $tipoIcones[$tipo] ?? $tipoIcones['other'];
-
-                // Link  → botão "Abrir"  — tipo minúsculo agora bate corretamente
-                // Arquivo → botão "Baixar"
+                $info    = $tipoIcones[$tipo] ?? $tipoIcones['other'];
                 $hasLink = !empty($fileUrl)     && $tipo === 'link';
                 $hasFile = !empty($nomeArquivo) && in_array($tipo, ['pdf', 'slide', 'document', 'other']);
+
+                // Rota de exclusão gerada pelo Laravel (evita hardcode)
+                $destroyUrl = route('professor.conteudo.destroy', $id);
             @endphp
             <tr data-tipo="{{ $tipo }}">
                 <td>{{ $id }}</td>
@@ -103,7 +101,6 @@
                         </div>
                         <div>
                             @if($hasLink)
-                                {{-- Título clicável para links --}}
                                 <strong>
                                     <a href="#"
                                        onclick="openLinkModal({{ json_encode($titulo) }}, {{ json_encode($fileUrl) }}); return false;"
@@ -185,9 +182,10 @@
                             Editar
                         </a>
 
+                        {{-- Passa a URL gerada pelo Laravel, sem hardcode --}}
                         <button
                             class="btn-delete"
-                            onclick="openDeleteModal('{{ $id }}', '{{ addslashes($titulo) }}')"
+                            onclick="openDeleteModal('{{ $destroyUrl }}', '{{ addslashes($titulo) }}')"
                         >
                             <i class="fas fa-trash-alt"></i>
                             Excluir
@@ -229,7 +227,6 @@
                 onclick="closeLinkModal()"
             ><i class="fas fa-times"></i></button>
         </div>
-        {{-- Aumentado: altura fixa grande para o iframe --}}
         <div class="modal-view-body" id="linkViewBody"
              style="min-height: 520px; height: 60vh;"></div>
     </div>
@@ -286,9 +283,10 @@ function applyFilters() {
 }
 
 // ── Modal: Excluir ────────────────────────────────────────────────
-function openDeleteModal(id, nome) {
+// Recebe a URL completa já gerada pelo Laravel via route() no Blade
+function openDeleteModal(url, nome) {
     document.getElementById('deleteConteudoName').textContent = nome;
-    document.getElementById('deleteForm').action = `/professor/conteudos/${id}`;
+    document.getElementById('deleteForm').action = url;
     document.getElementById('deleteModal').classList.add('active');
 }
 function closeDeleteModal() {
