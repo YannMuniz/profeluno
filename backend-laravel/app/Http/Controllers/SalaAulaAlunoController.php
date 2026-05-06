@@ -74,6 +74,28 @@ class SalaAulaAlunoController extends Controller
         }
     }
 
+    private function apiDelete(string $endpoint): bool
+    {
+        try {
+            $response = Http::withHeaders($this->authHeaders())
+                ->timeout(15)
+                ->delete("{$this->baseUrl}/v1/{$endpoint}");
+
+            if ($response->successful()) {
+                return true;
+            }
+
+            Log::warning("[SalaAulaAlunoController] DELETE {$endpoint} retornou {$response->status()}", [
+                'body' => $response->body(),
+            ]);
+
+            return false;
+        } catch (\Exception $e) {
+            Log::error("[SalaAulaAlunoController] DELETE {$endpoint} falhou: " . $e->getMessage());
+            return false;
+        }
+    }
+
     // NORMALIZE
     private function normalizeSala(array $item): object
     {
@@ -101,15 +123,15 @@ class SalaAulaAlunoController extends Controller
     // INDEX - BUSCAR SALAS DISPONÍVEIS
     public function index(Request $request)
     {
-        $materias    = $this->apiGet('Materia/ListarMaterias') ?? [];
-        $queryParams = array_filter([
-            'q'         => $request->q,
+        $materias = $this->apiGet('Materia/ListarMaterias') ?? [];
+        $filters  = [
+            'q'         => trim($request->q ?? ''),
             'idMateria' => $request->materia,
             'filtro'    => $request->filtro,
             'ordenar'   => $request->ordenar,
-        ]);
+        ];
 
-        $data  = $this->apiGet('SalaAula/ListarSalas?' . http_build_query($queryParams));
+        $data  = $this->apiGet('SalaAula/RetornaTodasSalasAula');
         $salas = [];
 
         if (!is_null($data)) {
@@ -120,7 +142,34 @@ class SalaAulaAlunoController extends Controller
                     $sala->materia = $materiasMap->get($sala->idMateria)['nomeMateria'] ?? '—';
                 }
                 return $sala;
-            })->values()->all();
+            });
+
+            if ($filters['idMateria']) {
+                $salas = $salas->where('idMateria', $filters['idMateria']);
+            }
+
+            if ($filters['q']) {
+                $salas = $salas->filter(function ($sala) use ($filters) {
+                    $texto = mb_strtolower(($sala->titulo ?? '') . ' ' . ($sala->materia ?? ''));
+                    return str_contains($texto, mb_strtolower($filters['q']));
+                });
+            }
+
+            if ($filters['filtro'] === 'ao-vivo') {
+                $salas = $salas->where('status', 'active');
+            } elseif ($filters['filtro'] === 'agendadas') {
+                $salas = $salas->where('status', 'pending');
+            }
+
+            if ($filters['ordenar'] === 'ao-vivo') {
+                $salas = $salas->sortByDesc(fn($s) => $s->status === 'active');
+            } elseif ($filters['ordenar'] === 'alunos') {
+                $salas = $salas->sortByDesc('qtd_alunos');
+            } else {
+                $salas = $salas->sortByDesc('data_hora_inicio');
+            }
+
+            $salas = $salas->values()->all();
         } else {
             session()->flash('error', 'Não foi possível carregar as salas. Tente novamente.');
         }
@@ -157,8 +206,11 @@ class SalaAulaAlunoController extends Controller
     // JOIN - ENTRAR NA SALA
     public function join(Request $request, int $id)
     {
-        $idAluno   = Auth::id();
-        $resultado = $this->apiPost("SalaAula/EntrarSala?idSala={$id}&idAluno={$idAluno}", []);
+        $idAluno = Auth::id();
+        $resultado = $this->apiPost('AlunoSala/CadastraAlunoSala', [
+            'idAluno'    => $idAluno,
+            'idSalaAula' => $id,
+        ]);
 
         if (is_null($resultado)) {
             return back()->with('error', 'Não foi possível entrar na sala. Tente novamente.');
@@ -198,7 +250,21 @@ class SalaAulaAlunoController extends Controller
     public function leave(int $id)
     {
         $idAluno = Auth::id();
-        $this->apiPost("SalaAula/SairSala?idSala={$id}&idAluno={$idAluno}", []);
+
+        $enrollments = $this->apiGet("AlunoSala/RetornarAlunoSalaPorIdAluno/{$idAluno}");
+        $alunoSala = collect($enrollments)->firstWhere('idSalaAula', $id);
+
+        if (empty($alunoSala['idAlunoSala'])) {
+            return redirect()->route('aluno.dashboard')
+                ->with('error', 'Não foi possível sair da sala. Matrícula não encontrada.');
+        }
+
+        $ok = $this->apiDelete("AlunoSala/DeletarAlunoSala/{$alunoSala['idAlunoSala']}");
+
+        if (!$ok) {
+            return redirect()->route('aluno.dashboard')
+                ->with('error', 'Não foi possível sair da sala. Tente novamente.');
+        }
 
         return redirect()->route('aluno.dashboard')
             ->with('success', 'Você saiu da aula.');
@@ -240,7 +306,7 @@ class SalaAulaAlunoController extends Controller
         $page    = (int) $request->get('page', 1);
         $perPage = 10;
 
-        $data     = $this->apiGet("SalaAula/RetornaSalasAlunoHistorico/{$idAluno}");
+        $data     = $this->apiGet("AlunoSala/RetornarAlunoSalaPorIdAluno/{$idAluno}");
         $materias = $this->apiGet('Materia/ListarMaterias') ?? [];
 
         if (is_null($data)) {

@@ -6,6 +6,28 @@
 @section('styles')
 <link rel="stylesheet" href="{{ asset('css/sala-professor.css') }}">
 <link rel="stylesheet" href="{{ asset('css/steps-conteudo-simulado.css') }}">
+<style>
+    /* Tabs do conteúdo — classes próprias para não conflitar com steps-conteudo-simulado.js */
+    .conteudo-tab-btn {
+        flex: 1;
+        padding: 12px 16px;
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid transparent;
+        color: var(--text-secondary, #6e6b7b);
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: color .2s, border-color .2s;
+    }
+    .conteudo-tab-btn:hover       { color: var(--primary-color, #7367f0); }
+    .conteudo-tab-btn.active      { color: var(--primary-color, #7367f0); border-bottom-color: var(--primary-color, #7367f0); }
+    .conteudo-tab-panel           { display: none; }
+    .conteudo-tab-panel.active    { display: block; }
+</style>
 @endsection
 
 @section('content')
@@ -31,7 +53,6 @@
     </div>
 </div>
 
-{{-- Erros globais da API --}}
 @if($errors->has('api'))
     <div class="alert alert-danger">
         <i class="fas fa-exclamation-circle"></i>
@@ -46,18 +67,15 @@
     </div>
 @endif
 
-<form
-    action="{{ route('professor.salas.store') }}"
-    method="POST"
-    id="formCriarSala"
->
+<form action="{{ route('professor.salas.store') }}" method="POST" id="formCriarSala">
     @csrf
 
-    {{-- STEP 1 — Informações da Sala --}}
+    {{-- ══════════════════════════════════════
+         STEP 1 — Informações da Sala
+    ══════════════════════════════════════ --}}
     <div class="form-step active" id="step-1">
         <div class="form-grid-two">
 
-            {{-- Coluna principal --}}
             <div class="form-col-main">
                 <div class="form-card">
                     <div class="form-card-header">
@@ -156,7 +174,7 @@
 
                         {{-- Data/hora início + fim --}}
                         <div class="form-row-two">
-                            <div class="form-group">
+                            <div class="form-group" id="grupo-data-inicio">
                                 <label for="data_hora_inicio" class="form-label">
                                     Data e Hora de Início
                                 </label>
@@ -215,7 +233,7 @@
                 </div>
             </div>
 
-            {{-- Coluna lateral — Prévia --}}
+            {{-- Prévia --}}
             <div class="form-col-side">
                 <div class="preview-card">
                     <div class="preview-card-header">
@@ -273,7 +291,9 @@
         </div>
     </div>
 
-    {{-- STEP 2 — Conteúdo (opcional) --}}
+    {{-- ══════════════════════════════════════
+         STEP 2 — Conteúdo (opcional)
+    ══════════════════════════════════════ --}}
     <div class="form-step" id="step-2">
         <div class="form-card">
             <div class="form-card-header">
@@ -285,112 +305,107 @@
             </div>
             <div class="form-card-body">
 
-                @if(count($conteudos))
-                    <p class="section-hint">
-                        <i class="fas fa-info-circle"></i>
-                        Selecione um conteúdo já cadastrado para vincular a esta sala.
-                        Para cadastrar um novo, acesse a área de <strong>Conteúdos</strong>.
-                    </p>
+                {{-- Tabs — classes próprias (.conteudo-tab-btn / .conteudo-tab-panel) --}}
+                <div class="simulado-tabs">
+                    <button type="button" class="conteudo-tab-btn active" data-conteudo-tab="existente">
+                        <i class="fas fa-link"></i>
+                        Vincular Conteúdo
+                    </button>
+                    <button type="button" class="conteudo-tab-btn" data-conteudo-tab="nenhum">
+                        <i class="fas fa-ban"></i>
+                        Sem Conteúdo
+                    </button>
+                </div>
 
-                    {{-- Grid de cards de conteúdo --}}
-                    <div class="conteudo-grid" id="conteudoGrid">
-                        @foreach($conteudos as $conteudo)
-                        <label
-                            class="conteudo-card"
-                            for="conteudo_{{ $conteudo['idConteudo'] }}"
-                            data-url="{{ $conteudo['url'] ?? '' }}"
-                            data-tipo="{{ $conteudo['tipo'] ?? 'other' }}"
-                        >
-                            <input
-                                type="radio"
-                                id="conteudo_{{ $conteudo['idConteudo'] }}"
-                                name="conteudo_id"
-                                value="{{ $conteudo['idConteudo'] }}"
-                                {{ old('conteudo_id') == $conteudo['idConteudo'] ? 'checked' : '' }}
-                                class="conteudo-radio"
+                {{-- TAB: Vincular existente --}}
+                <div class="conteudo-tab-panel active" id="conteudoTab-existente">
+                    @if(count($conteudos))
+                        <p class="section-hint">
+                            <i class="fas fa-info-circle"></i>
+                            Selecione um conteúdo já cadastrado. Para cadastrar um novo, acesse
+                            <a href="{{ route('professor.conteudo.create') }}" target="_blank"><strong>Conteúdos</strong></a>.
+                        </p>
+                        <div class="conteudo-grid" id="conteudoGrid">
+                            @foreach($conteudos as $conteudo)
+                            <label
+                                class="conteudo-card"
+                                for="conteudo_{{ $conteudo['idConteudo'] }}"
+                                data-url="{{ $conteudo['url'] ?? '' }}"
+                                data-tipo="{{ $conteudo['tipo'] ?? 'other' }}"
                             >
-                            <div class="conteudo-card-inner">
-                                <div class="conteudo-tipo-badge {{ $conteudo['tipo'] ?? 'other' }}">
-                                    @switch($conteudo['tipo'] ?? '')
-                                        @case('pdf')  <i class="fas fa-file-pdf"></i> PDF @break
-                                        @case('pptx') <i class="fas fa-file-powerpoint"></i> PPTX @break
-                                        @case('docx') <i class="fas fa-file-word"></i> DOCX @break
-                                        @case('mp4')  <i class="fas fa-file-video"></i> MP4 @break
-                                        @case('link') <i class="fas fa-link"></i> Link @break
-                                        @default       <i class="fas fa-file"></i> Arquivo
-                                    @endswitch
+                                <input
+                                    type="radio"
+                                    id="conteudo_{{ $conteudo['idConteudo'] }}"
+                                    name="conteudo_id"
+                                    value="{{ $conteudo['idConteudo'] }}"
+                                    {{ old('conteudo_id') == $conteudo['idConteudo'] ? 'checked' : '' }}
+                                    class="conteudo-radio"
+                                >
+                                <div class="conteudo-card-inner">
+                                    <div class="conteudo-tipo-badge {{ $conteudo['tipo'] ?? 'other' }}">
+                                        @switch($conteudo['tipo'] ?? '')
+                                            @case('pdf')  <i class="fas fa-file-pdf"></i> PDF @break
+                                            @case('pptx') <i class="fas fa-file-powerpoint"></i> PPTX @break
+                                            @case('docx') <i class="fas fa-file-word"></i> DOCX @break
+                                            @case('mp4')  <i class="fas fa-file-video"></i> MP4 @break
+                                            @case('link') <i class="fas fa-link"></i> Link @break
+                                            @default       <i class="fas fa-file"></i> Arquivo
+                                        @endswitch
+                                    </div>
+                                    <div class="conteudo-info">
+                                        <strong>{{ $conteudo['titulo'] }}</strong>
+                                        @if(!empty($conteudo['descricao']))
+                                            <span>{{ Str::limit($conteudo['descricao'], 60) }}</span>
+                                        @endif
+                                    </div>
+                                    <div class="conteudo-check">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
                                 </div>
-                                <div class="conteudo-info">
-                                    <strong>{{ $conteudo['titulo'] }}</strong>
-                                    @if(!empty($conteudo['descricao']))
-                                        <span>{{ Str::limit($conteudo['descricao'], 60) }}</span>
-                                    @endif
-                                </div>
-                                <div class="conteudo-check">
-                                    <i class="fas fa-check-circle"></i>
-                                </div>
-                            </div>
-                        </label>
-                        @endforeach
-                    </div>
+                            </label>
+                            @endforeach
+                        </div>
 
-                    {{-- Preview do conteúdo selecionado --}}
-                    <div class="conteudo-preview-wrapper" id="conteudoPreviewWrapper">
-                        <div class="conteudo-preview-header">
-                            <span>
-                                <i class="fas fa-eye"></i>
-                                <span id="conteudoPreviewTitle">Prévia</span>
-                            </span>
-                            <a href="#" target="_blank" id="btnAbrirNovaAba" class="btn-abrir-nova-aba">
-                                <i class="fas fa-external-link-alt"></i> Abrir em nova aba
+                        {{-- Preview do conteúdo selecionado --}}
+                        <div class="conteudo-preview-wrapper" id="conteudoPreviewWrapper">
+                            <div class="conteudo-preview-header">
+                                <span>
+                                    <i class="fas fa-eye"></i>
+                                    <span id="conteudoPreviewTitle">Prévia</span>
+                                </span>
+                                <a href="#" target="_blank" id="btnAbrirNovaAba" class="btn-abrir-nova-aba">
+                                    <i class="fas fa-external-link-alt"></i> Abrir em nova aba
+                                </a>
+                            </div>
+                            <iframe
+                                id="conteudoIframe"
+                                class="conteudo-iframe"
+                                src=""
+                                allowfullscreen
+                                style="display:none;"
+                            ></iframe>
+                            <div id="conteudoFallback" class="conteudo-preview-fallback" style="display:none;"></div>
+                        </div>
+                    @else
+                        <div class="empty-state-inline">
+                            <i class="fas fa-folder-open"></i>
+                            <p>Você ainda não tem conteúdos cadastrados.</p>
+                            <a href="{{ route('professor.conteudo.create') }}" class="btn-form-next" target="_blank">
+                                <i class="fas fa-plus"></i> Cadastrar Conteúdo
                             </a>
                         </div>
-                        {{-- Iframe para links e vídeos --}}
-                        <iframe
-                            id="conteudoIframe"
-                            class="conteudo-iframe"
-                            src=""
-                            allowfullscreen
-                            style="display:none;"
-                        ></iframe>
-                        {{-- Fallback para PDFs, PPTX, DOCX --}}
-                        <div id="conteudoFallback" class="conteudo-preview-fallback" style="display:none;"></div>
-                    </div>
+                    @endif
+                    {{-- Hidden que carrega o valor selecionado --}}
+                    <input type="hidden" id="conteudo_id_hidden" name="conteudo_id" value="{{ old('conteudo_id', '') }}">
+                </div>
 
-                    {{-- Opção de nenhum conteúdo --}}
-                    <label class="conteudo-card conteudo-none" for="conteudo_none">
-                        <input
-                            type="radio"
-                            id="conteudo_none"
-                            name="conteudo_id"
-                            value=""
-                            {{ old('conteudo_id', '') === '' ? 'checked' : '' }}
-                            class="conteudo-radio"
-                        >
-                        <div class="conteudo-card-inner">
-                            <div class="conteudo-tipo-badge none">
-                                <i class="fas fa-ban"></i>
-                            </div>
-                            <div class="conteudo-info">
-                                <strong>Sem conteúdo</strong>
-                                <span>Criar sala sem vincular conteúdo agora</span>
-                            </div>
-                            <div class="conteudo-check">
-                                <i class="fas fa-check-circle"></i>
-                            </div>
-                        </div>
-                    </label>
-
-                @else
-                    <div class="empty-state-inline">
-                        <i class="fas fa-folder-open"></i>
-                        <p>Você ainda não tem conteúdos cadastrados.</p>
-                        <a href="{{ route('professor.conteudo.create') }}" class="btn-form-next" target="_blank">
-                            <i class="fas fa-plus"></i> Cadastrar Conteúdo
-                        </a>
+                {{-- TAB: Sem conteúdo --}}
+                <div class="conteudo-tab-panel" id="conteudoTab-nenhum">
+                    <div class="empty-state-inline muted">
+                        <i class="fas fa-ban"></i>
+                        <p>Esta sala será criada sem conteúdo vinculado.<br>Você poderá adicionar um depois.</p>
                     </div>
-                    <input type="hidden" name="conteudo_id" value="">
-                @endif
+                </div>
 
             </div>
         </div>
@@ -406,7 +421,9 @@
         </div>
     </div>
 
-    {{-- STEP 3 — Simulado (opcional) --}}
+    {{-- ══════════════════════════════════════
+         STEP 3 — Simulado (opcional)
+    ══════════════════════════════════════ --}}
     <div class="form-step" id="step-3">
         <div class="form-card">
             <div class="form-card-header">
@@ -418,7 +435,6 @@
             </div>
             <div class="form-card-body">
 
-                {{-- Tabs: vincular existente ou criar novo --}}
                 <div class="simulado-tabs">
                     <button type="button" class="simulado-tab active" data-simulado-tab="existente">
                         <i class="fas fa-link"></i>
@@ -471,7 +487,6 @@
                             @endforeach
                         </div>
 
-                        {{-- Preview das questões do simulado selecionado --}}
                         <div class="simulado-questoes-preview" id="simuladoQuestoesPreview">
                             <div class="simulado-preview-header">
                                 <span>
@@ -482,7 +497,6 @@
                             </div>
                             <div class="simulado-questoes-list" id="simuladoQuestoesList"></div>
                         </div>
-
                     @else
                         <div class="empty-state-inline">
                             <i class="fas fa-clipboard-list"></i>
@@ -491,41 +505,17 @@
                     @endif
                 </div>
 
-                {{-- TAB: Criar novo --}}
+                {{-- TAB: Criar novo — redireciona para a página de criação --}}
                 <div class="simulado-tab-content" id="simuladoTab-novo">
-                    <input type="hidden" name="simulado_id" value="" id="simuladoIdHidden">
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Título do Simulado <span class="required">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            name="simulado_titulo"
-                            class="form-control"
-                            placeholder="Ex: Simulado — Equações do 2º Grau"
-                            value="{{ old('simulado_titulo') }}"
-                        >
+                    <div class="empty-state-inline">
+                        <i class="fas fa-clipboard-list"></i>
+                        <p>Crie um simulado na área de Simulados e depois vincule-o aqui.</p>
+                        <a href="{{ route('professor.simulados.create') }}" target="_blank" class="btn-form-next">
+                            <i class="fas fa-external-link-alt"></i>
+                            Ir para Criar Simulado
+                        </a>
                     </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Descrição do Simulado</label>
-                        <textarea
-                            name="simulado_descricao"
-                            class="form-control"
-                            rows="2"
-                            placeholder="Descreva o objetivo do simulado..."
-                        >{{ old('simulado_descricao') }}</textarea>
-                    </div>
-
-                    <div id="questoesContainer">
-                        {{-- Questões adicionadas pelo JS --}}
-                    </div>
-
-                    <button type="button" class="btn-add-questao" id="addQuestao">
-                        <i class="fas fa-plus"></i>
-                        Adicionar Questão
-                    </button>
+                    <input type="hidden" name="simulado_id" value="">
                 </div>
 
                 {{-- TAB: Sem simulado --}}
@@ -540,7 +530,7 @@
             </div>
         </div>
 
-        {{-- Resumo antes de submeter --}}
+        {{-- Resumo --}}
         <div class="form-card resumo-card" id="resumoFinal">
             <div class="form-card-header">
                 <i class="fas fa-list-check"></i>
@@ -587,69 +577,11 @@
 
 </form>
 
-{{-- Template de questão (clonado pelo JS) --}}
-<template id="questaoTemplate">
-    <div class="questao-block" data-index="__INDEX__">
-        <div class="questao-header">
-            <span class="questao-num">Questão <strong>__NUM__</strong></span>
-            <button type="button" class="btn-remove-questao" title="Remover questão">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="form-group" style="padding: 0 20px;">
-            <label class="form-label">
-                Enunciado <span class="required">*</span>
-            </label>
-            <textarea
-                name="questoes[__INDEX__][enunciado]"
-                class="form-control"
-                rows="2"
-                placeholder="Digite o enunciado da questão..."
-            ></textarea>
-        </div>
-        <div class="alternativas-grid" style="padding: 0 20px;">
-            <div class="alternativa-item">
-                <span class="alt-label">A</span>
-                <input type="text" name="questoes[__INDEX__][questao_a]" class="form-control" placeholder="Alternativa A">
-            </div>
-            <div class="alternativa-item">
-                <span class="alt-label">B</span>
-                <input type="text" name="questoes[__INDEX__][questao_b]" class="form-control" placeholder="Alternativa B">
-            </div>
-            <div class="alternativa-item">
-                <span class="alt-label">C</span>
-                <input type="text" name="questoes[__INDEX__][questao_c]" class="form-control" placeholder="Alternativa C">
-            </div>
-            <div class="alternativa-item">
-                <span class="alt-label">D</span>
-                <input type="text" name="questoes[__INDEX__][questao_d]" class="form-control" placeholder="Alternativa D">
-            </div>
-            <div class="alternativa-item">
-                <span class="alt-label">E</span>
-                <input type="text" name="questoes[__INDEX__][questao_e]" class="form-control" placeholder="Alternativa E (opcional)">
-            </div>
-        </div>
-        <div class="form-group" style="padding: 0 20px 20px;">
-            <label class="form-label">
-                Alternativa Correta <span class="required">*</span>
-            </label>
-            <select name="questoes[__INDEX__][questao_correta]" class="form-control filter-select">
-                <option value="1">A</option>
-                <option value="2">B</option>
-                <option value="3">C</option>
-                <option value="4">D</option>
-                <option value="5">E</option>
-            </select>
-        </div>
-    </div>
-</template>
-
 @endsection
 
 @section('scripts')
 <script src="{{ asset('js/sala-professor.js') }}"></script>
 
-{{-- Dados dos simulados expostos para o JS (questões para preview) --}}
 <script>
 window.simuladosData = {
     @foreach($simulados as $simulado)
@@ -659,12 +591,12 @@ window.simuladosData = {
             @if(!empty($simulado['questoes']))
                 @foreach($simulado['questoes'] as $q)
                 {
-                    enunciado:       @json($q['enunciado'] ?? ''),
-                    questao_a:       @json($q['questao_a'] ?? ''),
-                    questao_b:       @json($q['questao_b'] ?? ''),
-                    questao_c:       @json($q['questao_c'] ?? ''),
-                    questao_d:       @json($q['questao_d'] ?? ''),
-                    questao_e:       @json($q['questao_e'] ?? ''),
+                    enunciado:       @json($q['enunciado']       ?? ''),
+                    questao_a:       @json($q['questao_a']       ?? ''),
+                    questao_b:       @json($q['questao_b']       ?? ''),
+                    questao_c:       @json($q['questao_c']       ?? ''),
+                    questao_d:       @json($q['questao_d']       ?? ''),
+                    questao_e:       @json($q['questao_e']       ?? ''),
                     questao_correta: @json($q['questao_correta'] ?? ''),
                 },
                 @endforeach
@@ -678,55 +610,108 @@ window.simuladosData = {
 <script src="{{ asset('js/steps-conteudo-simulado.js') }}"></script>
 
 <script>
-// Prévia do card
-const materiaSelect = document.getElementById('materia_id');
-const materiaNames  = {
+/* ══════════════════════════════════════════
+   MAPA DE MATÉRIAS
+══════════════════════════════════════════ */
+const materiaNames = {
     @foreach($materias as $m)
         "{{ $m['idMateria'] }}": "{{ $m['nomeMateria'] }}",
     @endforeach
 };
 
-function updatePreview() {
-    const titulo  = document.getElementById('titulo').value || 'Título da Sala';
-    const matId   = materiaSelect.value;
-    const alunos  = document.getElementById('max_alunos').value || '30';
-    const inicio  = document.getElementById('data_hora_inicio').value;
-    const status  = document.getElementById('status').value;
+/* ══════════════════════════════════════════
+   REFERÊNCIAS
+══════════════════════════════════════════ */
+const inicioInput  = document.getElementById('data_hora_inicio');
+const statusSelect = document.getElementById('status');
+const grupoInicio  = document.getElementById('grupo-data-inicio');
 
-    document.getElementById('previewTitulo').textContent  = titulo;
+/* ══════════════════════════════════════════
+   DATA MÍNIMA — impede datas passadas
+══════════════════════════════════════════ */
+function nowIso() {
+    const d = new Date();
+    d.setSeconds(0, 0);
+    return d.toISOString().slice(0, 16);
+}
+
+if (inicioInput) {
+    inicioInput.min = nowIso();
+    setInterval(() => { inicioInput.min = nowIso(); }, 60000);
+
+    inicioInput.addEventListener('change', function () {
+        if (!this.value) return;
+        const selected = new Date(this.value);
+        if (selected <= new Date()) {
+            statusSelect.value = 'active';
+            this.value = '';
+        } else {
+            statusSelect.value = 'pending';
+        }
+        toggleDateFields();
+        updatePreview();
+    });
+}
+
+/* ══════════════════════════════════════════
+   TOGGLE: esconde só o campo de início
+   quando status = active; fim fica visível
+══════════════════════════════════════════ */
+function toggleDateFields() {
+    if (!statusSelect || !grupoInicio) return;
+    const isActive = statusSelect.value === 'active';
+    grupoInicio.style.display = isActive ? 'none' : '';
+    if (isActive && inicioInput) inicioInput.value = '';
+}
+
+statusSelect?.addEventListener('change', () => { toggleDateFields(); updatePreview(); });
+toggleDateFields();
+
+/* ══════════════════════════════════════════
+   PRÉVIA DO CARD
+══════════════════════════════════════════ */
+function updatePreview() {
+    const titulo = document.getElementById('titulo')?.value           || '';
+    const matId  = document.getElementById('materia_id')?.value       || '';
+    const alunos = document.getElementById('max_alunos')?.value       || '30';
+    const inicio = inicioInput?.value                                  || '';
+    const status = statusSelect?.value                                 || 'pending';
+
+    document.getElementById('previewTitulo').textContent  = titulo || 'Título da Sala';
     document.getElementById('previewMateria').textContent = materiaNames[matId] || 'Matéria';
     document.getElementById('previewAlunos').textContent  = alunos;
-    document.getElementById('previewData').textContent    = inicio
-        ? new Date(inicio).toLocaleDateString('pt-BR')
-        : 'Sem data';
+    document.getElementById('previewData').textContent    =
+        status === 'active' ? 'Agora' : (inicio ? new Date(inicio).toLocaleDateString('pt-BR') : 'Sem data');
 
     const ribbon = document.getElementById('previewRibbon');
-    ribbon.className = `mini-ribbon ${status}`;
-    ribbon.innerHTML = status === 'active'
-        ? '<i class="fas fa-circle"></i> Ao Vivo'
-        : '<i class="fas fa-clock"></i> Agendada';
+    if (ribbon) {
+        ribbon.className = `mini-ribbon ${status}`;
+        ribbon.innerHTML = status === 'active'
+            ? '<i class="fas fa-circle"></i> Ao Vivo'
+            : '<i class="fas fa-clock"></i> Agendada';
+    }
 }
 
 ['titulo','materia_id','max_alunos','data_hora_inicio','status'].forEach(id => {
-    document.getElementById(id)?.addEventListener('input', updatePreview);
+    document.getElementById(id)?.addEventListener('input',  updatePreview);
     document.getElementById(id)?.addEventListener('change', updatePreview);
 });
 
-document.getElementById('titulo').addEventListener('input', function () {
+document.getElementById('titulo')?.addEventListener('input', function () {
     document.getElementById('tituloCount').textContent = this.value.length;
 });
 
-// Navegação entre steps 
+/* ══════════════════════════════════════════
+   NAVEGAÇÃO ENTRE STEPS
+══════════════════════════════════════════ */
 function goToStep(n) {
     document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
-    document.getElementById(`step-${n}`).classList.add('active');
-
+    document.getElementById(`step-${n}`)?.classList.add('active');
     document.querySelectorAll('.step').forEach(s => {
         const num = parseInt(s.dataset.step);
         s.classList.toggle('active',    num === n);
         s.classList.toggle('completed', num < n);
     });
-
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -734,100 +719,83 @@ document.getElementById('nextToStep2')?.addEventListener('click', () => {
     const titulo    = document.getElementById('titulo');
     const materiaId = document.getElementById('materia_id');
     const maxAlunos = document.getElementById('max_alunos');
-
-    if (!titulo.value.trim() || !materiaId.value || !maxAlunos.value) {
-        titulo.reportValidity();
-        materiaId.reportValidity();
-        maxAlunos.reportValidity();
+    if (!titulo?.value.trim() || !materiaId?.value || !maxAlunos?.value) {
+        titulo?.reportValidity();
+        materiaId?.reportValidity();
+        maxAlunos?.reportValidity();
         return;
     }
     goToStep(2);
 });
 
 document.getElementById('backToStep1')?.addEventListener('click', () => goToStep(1));
-document.getElementById('nextToStep3')?.addEventListener('click', () => {
-    updateResumo();
-    goToStep(3);
-});
+document.getElementById('nextToStep3')?.addEventListener('click', () => { updateResumo(); goToStep(3); });
 document.getElementById('backToStep2')?.addEventListener('click', () => goToStep(2));
 
-// Tabs do simulado 
-document.querySelectorAll('.simulado-tab').forEach(tab => {
-    tab.addEventListener('click', function () {
-        document.querySelectorAll('.simulado-tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.simulado-tab-content').forEach(c => c.classList.remove('active'));
-        this.classList.add('active');
-        document.getElementById(`simuladoTab-${this.dataset.simuladoTab}`).classList.add('active');
+/* ══════════════════════════════════════════
+   TABS DO CONTEÚDO
+   Usa .conteudo-tab-btn / .conteudo-tab-panel
+   — sem conflito com steps-conteudo-simulado.js
+══════════════════════════════════════════ */
+const conteudoIdHidden = document.getElementById('conteudo_id_hidden');
 
-        if (this.dataset.simuladoTab !== 'novo') {
-            document.getElementById('questoesContainer').innerHTML = '';
-            questaoIndex = 0;
+document.querySelectorAll('.conteudo-tab-btn').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+        document.querySelectorAll('.conteudo-tab-btn').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.conteudo-tab-panel').forEach(p => p.classList.remove('active'));
+
+        this.classList.add('active');
+        document.getElementById('conteudoTab-' + this.dataset.conteudoTab)?.classList.add('active');
+
+        if (this.dataset.conteudoTab === 'nenhum') {
+            document.querySelectorAll('.conteudo-radio').forEach(r => { r.checked = false; });
+            if (conteudoIdHidden) conteudoIdHidden.value = '';
         }
     });
 });
 
-// Questões inline 
-let questaoIndex = 0;
-const template   = document.getElementById('questaoTemplate');
-
-function addQuestao() {
-    questaoIndex++;
-    const html = template.innerHTML
-        .replaceAll('__INDEX__', questaoIndex)
-        .replaceAll('__NUM__', questaoIndex);
-    const wrapper = document.createElement('div');
-    wrapper.innerHTML = html;
-    const block = wrapper.firstElementChild;
-
-    block.querySelector('.btn-remove-questao').addEventListener('click', () => {
-        block.remove();
-        renumberQuestoes();
+document.querySelectorAll('.conteudo-radio').forEach(function (radio) {
+    radio.addEventListener('change', function () {
+        if (conteudoIdHidden) conteudoIdHidden.value = this.value;
     });
+});
 
-    document.getElementById('questoesContainer').appendChild(block);
-}
-
-function renumberQuestoes() {
-    document.querySelectorAll('.questao-block').forEach((b, i) => {
-        b.querySelector('.questao-num strong').textContent = i + 1;
-    });
-}
-
-document.getElementById('addQuestao')?.addEventListener('click', addQuestao);
-
-// Resumo final 
+/* ══════════════════════════════════════════
+   RESUMO FINAL
+══════════════════════════════════════════ */
 function updateResumo() {
-    const matId      = materiaSelect.value;
-    const inicio     = document.getElementById('data_hora_inicio').value;
-    const conteudoEl = document.querySelector('.conteudo-radio:checked');
-    const simuladoEl = document.querySelector('.simulado-radio:checked');
+    const matId  = document.getElementById('materia_id')?.value || '';
+    const inicio = inicioInput?.value || '';
+    const status = statusSelect?.value || 'pending';
 
-    document.getElementById('resumoTitulo').textContent  =
-        document.getElementById('titulo').value || '—';
-    document.getElementById('resumoMateria').textContent =
-        materiaNames[matId] || '—';
-    document.getElementById('resumoAlunos').textContent  =
-        document.getElementById('max_alunos').value || '—';
-    document.getElementById('resumoInicio').textContent  =
-        inicio ? new Date(inicio).toLocaleString('pt-BR') : 'Sem data';
-
-    const conteudoLabel = conteudoEl
-        ? conteudoEl.closest('.conteudo-card').querySelector('strong')?.textContent
-        : null;
-    document.getElementById('resumoConteudo').textContent =
-        (conteudoLabel && conteudoLabel !== 'Sem conteúdo') ? conteudoLabel : 'Sem conteúdo';
-
-    const activeSimTab = document.querySelector('.simulado-tab.active')?.dataset.simuladoTab;
-    if (activeSimTab === 'existente' && simuladoEl) {
-        const simLabel = simuladoEl.closest('.conteudo-card').querySelector('strong')?.textContent;
-        document.getElementById('resumoSimulado').textContent = simLabel || 'Sem simulado';
-    } else if (activeSimTab === 'novo') {
-        const novoTitulo = document.querySelector('[name="simulado_titulo"]')?.value;
-        document.getElementById('resumoSimulado').textContent =
-            novoTitulo ? `Novo: ${novoTitulo}` : 'Novo simulado (sem título)';
-    } else {
-        document.getElementById('resumoSimulado').textContent = 'Sem simulado';
+    // Conteúdo
+    const activeConteudoTab = document.querySelector('.conteudo-tab-btn.active')?.dataset.conteudoTab;
+    const conteudoRadio     = document.querySelector('.conteudo-radio:checked');
+    let conteudoLabel = 'Sem conteúdo';
+    if (activeConteudoTab === 'existente' && conteudoRadio) {
+        conteudoLabel = conteudoRadio.closest('.conteudo-card')
+            ?.querySelector('strong')?.textContent?.trim() || 'Sem conteúdo';
     }
+
+    // Simulado
+    const activeSimTab  = document.querySelector('#step-3 .simulado-tab.active')?.dataset.simuladoTab;
+    const simuladoRadio = document.querySelector('.simulado-radio:checked');
+    let simuladoLabel = 'Sem simulado';
+    if (activeSimTab === 'existente' && simuladoRadio) {
+        simuladoLabel = simuladoRadio.closest('.conteudo-card')
+            ?.querySelector('strong')?.textContent?.trim() || 'Sem simulado';
+    } else if (activeSimTab === 'novo') {
+        simuladoLabel = 'Novo simulado (página externa)';
+    }
+
+    document.getElementById('resumoTitulo').textContent   = document.getElementById('titulo')?.value || '—';
+    document.getElementById('resumoMateria').textContent  = materiaNames[matId] || '—';
+    document.getElementById('resumoAlunos').textContent   = document.getElementById('max_alunos')?.value || '—';
+    document.getElementById('resumoInicio').textContent   = status === 'active'
+        ? 'Agora (ao vivo)'
+        : (inicio ? new Date(inicio).toLocaleString('pt-BR') : 'Sem data');
+    document.getElementById('resumoConteudo').textContent = conteudoLabel;
+    document.getElementById('resumoSimulado').textContent = simuladoLabel;
 }
 </script>
 @endsection

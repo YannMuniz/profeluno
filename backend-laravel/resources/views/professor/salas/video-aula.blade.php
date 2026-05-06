@@ -678,140 +678,193 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-/* ── TIMER ── */
-(function () {
-    const el    = document.getElementById('live-timer');
-    const start = new Date(HORA_INICIO_ISO);
+    /* ── TIMER ── */
+    (function () {
+        const el    = document.getElementById('live-timer');
+        const start = new Date(HORA_INICIO_ISO);
+        function pad(n) { return String(n).padStart(2, '0'); }
+        function tick() {
+            const diff = Math.max(0, Math.floor((Date.now() - start.getTime()) / 1000));
+            const h = Math.floor(diff / 3600);
+            const m = Math.floor((diff % 3600) / 60);
+            const s = diff % 60;
+            el.textContent = h > 0
+                ? `${pad(h)}:${pad(m)}:${pad(s)}`
+                : `${pad(m)}:${pad(s)}`;
+        }
+        tick();
+        setInterval(tick, 1000);
+    })();
 
-    function pad(n) { return String(n).padStart(2, '0'); }
-
-    function tick() {
-        const diff = Math.max(0, Math.floor((Date.now() - start.getTime()) / 1000));
-        const h    = Math.floor(diff / 3600);
-        const m    = Math.floor((diff % 3600) / 60);
-        const s    = diff % 60;
-        el.textContent = h > 0
-            ? `${pad(h)}:${pad(m)}:${pad(s)}`
-            : `${pad(m)}:${pad(s)}`;
+    /* ── TABS ── */
+    function showTab(name) {
+        document.querySelectorAll('.s-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.s-tab').forEach(el => el.classList.remove('active'));
+        document.getElementById('tab-' + name)?.classList.add('active');
+        const tabs = document.querySelectorAll('.s-tab');
+        const map  = { chat: 0, participants: 1, materials: 2, polls: 3 };
+        if (map[name] !== undefined) tabs[map[name]]?.classList.add('active');
     }
 
-    tick();
-    setInterval(tick, 1000);
-})();
+    /* ── ENCERRAR MODAL ── */
+    document.getElementById('btnEncerrar').addEventListener('click', () => {
+        document.getElementById('encerrarModal').classList.add('open');
+    });
+    document.getElementById('cancelEncerrar').addEventListener('click', () => {
+        document.getElementById('encerrarModal').classList.remove('open');
+    });
 
-/* ── TABS ── */
-function showTab(name) {
-    document.querySelectorAll('.s-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.s-tab').forEach(el => el.classList.remove('active'));
-    document.getElementById('tab-' + name)?.classList.add('active');
-    const tabs = document.querySelectorAll('.s-tab');
-    const map  = { chat: 0, participants: 1, materials: 2, polls: 3 };
-    if (map[name] !== undefined) tabs[map[name]]?.classList.add('active');
-}
+    // Antes de encerrar via form, manda endConference para o Jitsi
+    document.querySelector('#encerrarModal form')?.addEventListener('submit', function () {
+        if (window.jitsiApi) {
+            try { window.jitsiApi.executeCommand('endConference'); } catch (e) {}
+        }
+    });
 
-/* ── ENCERRAR MODAL ── */
-document.getElementById('btnEncerrar').addEventListener('click', () => {
-    document.getElementById('encerrarModal').classList.add('open');
-});
-document.getElementById('cancelEncerrar').addEventListener('click', () => {
-    document.getElementById('encerrarModal').classList.remove('open');
-});
+    /* ── CHAT ── */
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput    = document.getElementById('chatInput');
+    const btnSend      = document.getElementById('btnSend');
 
-/* ── CONTROLES (mic/cam toggle) ── */
-document.getElementById('btnMic').addEventListener('click', function () {
-    this.classList.toggle('on-air');
-    this.classList.toggle('active');
-    const icon = this.querySelector('i');
-    icon.classList.toggle('fa-microphone');
-    icon.classList.toggle('fa-microphone-slash');
-});
+    appendMessage('Sistema', null, 'Aula iniciada. Boas-vindas, professor!', 'system');
 
-document.getElementById('btnCam').addEventListener('click', function () {
-    this.classList.toggle('on-air');
-    this.classList.toggle('active');
-    const icon = this.querySelector('i');
-    icon.classList.toggle('fa-video');
-    icon.classList.toggle('fa-video-slash');
-});
+    function appendMessage(name, initials, text, type) {
+        const now     = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const isProf  = type === 'professor';
+        const avatarBg = isProf
+            ? 'background:linear-gradient(135deg,var(--primary),#9f8cfe)'
+            : 'background:linear-gradient(135deg,var(--success),#3ce094)';
+        const div = document.createElement('div');
+        div.className = 'chat-msg';
+        div.innerHTML = `
+            <div class="msg-head">
+                <div class="msg-avatar" style="${avatarBg}">${initials || '<i class="fas fa-info-circle"></i>'}</div>
+                <span class="msg-name">${name}</span>
+                <span class="msg-time">${now}</span>
+            </div>
+            <div class="msg-body ${isProf ? 'professor' : ''}">${text}</div>
+        `;
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
 
-document.getElementById('btnScreen').addEventListener('click', function () {
-    this.classList.toggle('active');
-});
+    function sendMsg() {
+        const text = chatInput.value.trim();
+        if (!text) return;
+        const initials = USER_NAME.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+        appendMessage(USER_NAME, initials, text, 'professor');
+        chatInput.value = '';
+    }
 
-document.getElementById('btnRecord').addEventListener('click', function () {
-    this.classList.toggle('active');
-    this.classList.toggle('on-air');
-    const icon = this.querySelector('i');
-    const isRecording = this.classList.contains('on-air');
-    this.title = isRecording ? 'Parar gravação' : 'Gravar aula';
-});
+    btnSend.addEventListener('click', sendMsg);
+    chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendMsg(); });
 
-/* ── CHAT ── */
-const chatMessages = document.getElementById('chatMessages');
-const chatInput    = document.getElementById('chatInput');
-const btnSend      = document.getElementById('btnSend');
-
-// Mensagem de boas-vindas
-appendMessage('Sistema', null, 'Aula iniciada. Boas-vindas, professor!', 'system');
-
-function appendMessage(name, initials, text, type) {
-    const now = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-    const isProf    = type === 'professor';
-    const isSystem  = type === 'system';
-    const avatarColor = isProf
-        ? 'background:linear-gradient(135deg,var(--primary),#9f8cfe)'
-        : isSystem
-        ? 'background:linear-gradient(135deg,var(--success),#3ce094)'
-        : 'background:linear-gradient(135deg,var(--warning),#ffb976)';
-
-    const div = document.createElement('div');
-    div.className = 'chat-msg';
-    div.innerHTML = `
-        <div class="msg-head">
-            <div class="msg-avatar" style="${avatarColor}">${initials || '<i class="fas fa-info-circle"></i>'}</div>
-            <span class="msg-name">${name}</span>
-            <span class="msg-time">${now}</span>
-        </div>
-        <div class="msg-body ${isProf ? 'professor' : ''}">${text}</div>
-    `;
-    chatMessages.appendChild(div);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-function sendMsg() {
-    const text = chatInput.value.trim();
-    if (!text) return;
-    const initials = USER_NAME.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
-    appendMessage(USER_NAME + ' (Prof.)', initials, text, 'professor');
-    chatInput.value = '';
-}
-
-btnSend.addEventListener('click', sendMsg);
-chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendMsg(); });
-
-/* ── JITSI ── */
-if (SALA_URL && SALA_NOME) {
-    const domain = 'meet.jit.si';
-    const script = document.createElement('script');
-    script.src = 'https://meet.jit.si/external_api.js';
-    script.onload = () => {
-        new JitsiMeetExternalAPI(domain, {
-            roomName:   SALA_NOME,
-            parentNode: document.getElementById('jitsi-container'),
-            userInfo:   { displayName: USER_NAME + ' (Professor)' },
-            configOverwrite: {
-                startWithAudioMuted: false,
-                startWithVideoMuted: false,
-                toolbarButtons: [],
-            },
-            interfaceConfigOverwrite: {
-                TOOLBAR_BUTTONS: [],
-                SHOW_JITSI_WATERMARK: false,
+    /* ── CONTROLES SEM JITSI (fallback visual) ── */
+    function setupToggleBtn(id, onClass, icons) {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.addEventListener('click', function () {
+            const isOn = this.classList.contains('on-air') || this.classList.contains('active');
+            this.classList.toggle('on-air',  !isOn);
+            this.classList.toggle('active',   isOn);
+            const icon = this.querySelector('i');
+            if (icon && icons) {
+                icon.className = isOn ? icons.off : icons.on;
             }
         });
-    };
-    document.head.appendChild(script);
-}
+    }
+
+    // Serão substituídos se Jitsi carregar
+    setupToggleBtn('btnScreen', 'active', null);
+    setupToggleBtn('btnRecord', 'active', null);
+
+    /* ── JITSI ── */
+    if (SALA_URL && SALA_NOME) {
+        const script = document.createElement('script');
+        script.src   = 'https://meet.jit.si/external_api.js';
+        script.onload = () => {
+            const api = new JitsiMeetExternalAPI('meet.jit.si', {
+                roomName:   SALA_NOME,
+                parentNode: document.getElementById('jitsi-container'),
+                userInfo:   { displayName: USER_NAME },        // nome limpo, sem sufixo
+                configOverwrite: {
+                    prejoinPageEnabled:     false,             // entra direto, sem tela de confirmação
+                    startWithAudioMuted:    false,
+                    startWithVideoMuted:    false,
+                    toolbarButtons:         [],                // esconde toolbar nativa
+                    disableDeepLinking:     true,
+                },
+                interfaceConfigOverwrite: {
+                    TOOLBAR_BUTTONS:           [],
+                    SHOW_JITSI_WATERMARK:      false,
+                    SHOW_WATERMARK_FOR_GUESTS: false,
+                },
+            });
+
+            window.jitsiApi = api;
+
+            /* Microfone */
+            const btnMic = document.getElementById('btnMic');
+            let micOn = true;
+            btnMic?.addEventListener('click', function () {
+                api.executeCommand('toggleAudio');
+                micOn = !micOn;
+                this.classList.toggle('on-air',  micOn);
+                this.classList.toggle('active',  !micOn);
+                const icon = this.querySelector('i');
+                icon.className = micOn ? 'fas fa-microphone' : 'fas fa-microphone-slash';
+            });
+
+            /* Câmera */
+            const btnCam = document.getElementById('btnCam');
+            let camOn = true;
+            btnCam?.addEventListener('click', function () {
+                api.executeCommand('toggleVideo');
+                camOn = !camOn;
+                this.classList.toggle('on-air', camOn);
+                this.classList.toggle('active', !camOn);
+                const icon = this.querySelector('i');
+                icon.className = camOn ? 'fas fa-video' : 'fas fa-video-slash';
+            });
+
+            /* Compartilhar tela */
+            const btnScreen = document.getElementById('btnScreen');
+            btnScreen?.removeEventListener('click', setupToggleBtn); // remove fallback
+            btnScreen?.addEventListener('click', function () {
+                api.executeCommand('toggleShareScreen');
+                this.classList.toggle('active');
+            });
+
+            /* Gravação — não disponível no meet.jit.si público sem Dropbox */
+            document.getElementById('btnRecord')?.addEventListener('click', function () {
+                alert('Gravação requer configuração de Dropbox no Jitsi público.\nConsidere usar gravação da tela do sistema operacional.');
+            });
+
+            /* Sync de estado real do Jitsi → nossos botões */
+            api.on('audioMuteStatusChanged', ({ muted }) => {
+                micOn = !muted;
+                if (btnMic) {
+                    btnMic.classList.toggle('on-air', micOn);
+                    btnMic.classList.toggle('active', !micOn);
+                    btnMic.querySelector('i').className = micOn
+                        ? 'fas fa-microphone'
+                        : 'fas fa-microphone-slash';
+                }
+            });
+
+            api.on('videoMuteStatusChanged', ({ muted }) => {
+                camOn = !muted;
+                if (btnCam) {
+                    btnCam.classList.toggle('on-air', camOn);
+                    btnCam.classList.toggle('active', !camOn);
+                    btnCam.querySelector('i').className = camOn
+                        ? 'fas fa-video'
+                        : 'fas fa-video-slash';
+                }
+            });
+        };
+        document.head.appendChild(script);
+    }
 </script>
 </body>
 </html>

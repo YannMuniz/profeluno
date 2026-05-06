@@ -13,7 +13,7 @@
         </div>
         <div class="stat-value">
             <h3>{{ $totalClasses }}</h3>
-            <p class="stat-label">Total de Aulas</p>
+            <p class="stat-label">Aulas Disponíveis</p>
         </div>
     </div>
 
