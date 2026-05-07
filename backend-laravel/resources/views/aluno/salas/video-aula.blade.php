@@ -10,6 +10,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/video-aula-aluno.css') }}">
 
     <style>
         :root {
@@ -302,7 +303,7 @@
         .mat-list { display: flex; flex-direction: column; gap: 12px; }
         .mat-item {
             padding: 14px; background: var(--card-bg);
-            border: 1px solid var(--border); border-radius: 10px; transition: .3s; cursor: pointer;
+            border: 1px solid var(--border); border-radius: 10px; transition: .3s;
         }
         .mat-item:hover { border-color: var(--primary); transform: translateY(-2px); }
         .mat-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
@@ -314,6 +315,8 @@
         .mat-icon.pdf   { background: rgba(234,84,85,.15);   color: var(--danger); }
         .mat-icon.slide { background: rgba(255,159,67,.15);  color: var(--warning); }
         .mat-icon.video { background: rgba(115,103,240,.15); color: var(--primary); }
+        .mat-icon.link  { background: rgba(0,207,232,.15);   color: var(--info); }
+        .mat-icon.other { background: rgba(115,103,240,.15); color: var(--primary); }
         .mat-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
         .mat-desc  { font-size: 12px; color: var(--text-muted); margin: 0; }
         .mat-actions { display: flex; gap: 8px; }
@@ -321,9 +324,55 @@
             flex: 1; padding: 7px;
             background: rgba(115,103,240,.1); border: 1px solid var(--primary);
             border-radius: 6px; color: var(--primary); font-size: 12px; font-weight: 600;
-            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: .3s;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            gap: 5px; transition: .3s; text-decoration: none;
         }
         .btn-mat:hover { background: var(--primary); color: #fff; }
+
+        .mat-empty {
+            text-align: center;
+            padding: 30px 0;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+        .mat-empty i { font-size: 32px; opacity: .3; display: block; margin-bottom: 10px; }
+
+        /* ── MODAL ── */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,.7);
+            display: none; align-items: center; justify-content: center;
+            z-index: 2000;
+        }
+        .modal-overlay.open { display: flex; }
+
+        .modal-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px; padding: 30px;
+            max-width: 420px; width: 90%;
+            text-align: center;
+        }
+        .modal-icon {
+            width: 60px; height: 60px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px;
+            margin: 0 auto 16px;
+        }
+        .modal-icon.danger  { background: rgba(234,84,85,.15);  color: var(--danger); }
+        .modal-icon.warning { background: rgba(255,159,67,.15); color: var(--warning); }
+        .modal-box h3 { font-size: 18px; margin-bottom: 8px; }
+        .modal-box p  { font-size: 14px; color: var(--text-muted); margin-bottom: 20px; }
+
+        .modal-actions { display: flex; gap: 12px; justify-content: center; }
+        .modal-btn {
+            padding: 10px 28px; border-radius: 8px; font-weight: 600;
+            font-size: 14px; cursor: pointer; border: none; transition: .3s;
+        }
+        .modal-btn.cancel  { background: var(--dark-bg); color: var(--text-muted); border: 1px solid var(--border); }
+        .modal-btn.danger  { background: var(--danger);  color: #fff; }
+        .modal-btn.cancel:hover  { background: var(--border); }
+        .modal-btn.danger:hover  { background: #d84545; }
 
         /* ── RESPONSIVE ── */
         @media (max-width: 1024px) {
@@ -378,15 +427,14 @@
 
             <div class="viewer-count">
                 <i class="fas fa-eye"></i>
-                <span id="viewer-count">{{ count((array)($sala->alunoSalas ?? [])) }}</span>
+                <span id="viewer-count">{{ $qtdAlunos ?? 0 }}</span>
                 assistindo
             </div>
         </div>
 
         {{-- PARTICIPANTS STRIP --}}
         <div class="participants-strip" id="participantsStrip">
-            {{-- Aluno (você) --}}
-            <div class="participant-thumb">
+            <div class="participant-thumb speaking">
                 <div class="thumb-avatar" style="background:linear-gradient(135deg,var(--success),#3ce094)">
                     <i class="fas fa-user"></i>
                 </div>
@@ -397,10 +445,10 @@
 
         {{-- CONTROL BAR --}}
         <div class="control-bar">
-            <button class="ctrl-btn muted" id="btnMic" title="Microfone (mudo)">
+            <button class="ctrl-btn muted" id="btnMic" title="Microfone">
                 <i class="fas fa-microphone-slash"></i>
             </button>
-            <button class="ctrl-btn muted" id="btnCam" title="Câmera (desligada)">
+            <button class="ctrl-btn muted" id="btnCam" title="Câmera">
                 <i class="fas fa-video-slash"></i>
             </button>
             <div class="ctrl-sep"></div>
@@ -445,7 +493,6 @@
         {{-- PARTICIPANTS --}}
         <div class="s-content" id="tab-participants">
             <div class="participant-list" id="participantList">
-                {{-- Professor --}}
                 <div class="p-item">
                     <div class="p-avatar" style="background:linear-gradient(135deg,var(--primary),#9f8cfe)">
                         <i class="fas fa-user-tie"></i>
@@ -455,7 +502,6 @@
                         <div class="p-role teacher">Professor</div>
                     </div>
                 </div>
-                {{-- Você --}}
                 <div class="p-item">
                     <div class="p-avatar" style="background:linear-gradient(135deg,var(--success),#3ce094)">
                         <i class="fas fa-user"></i>
@@ -471,37 +517,79 @@
         {{-- MATERIALS --}}
         <div class="s-content" id="tab-materials">
             <div class="mat-list">
-                @if(!empty($sala->conteudo))
-                <div class="mat-item">
-                    <div class="mat-head">
-                        <div class="mat-icon pdf"><i class="fas fa-file-pdf"></i></div>
-                        <div>
-                            <div class="mat-title">{{ $sala->conteudo['titulo'] ?? 'Conteúdo da Aula' }}</div>
-                            <p class="mat-desc">Disponibilizado pelo professor</p>
+                @if($conteudo)
+                    @php
+                        $tipo = $conteudo['tipo'] ?? 'other';
+                        $iconMap = [
+                            'pdf'   => ['icon' => 'fa-file-pdf',         'class' => 'pdf'],
+                            'slide' => ['icon' => 'fa-file-powerpoint',  'class' => 'slide'],
+                            'video' => ['icon' => 'fa-file-video',        'class' => 'video'],
+                            'link'  => ['icon' => 'fa-link',              'class' => 'link'],
+                        ];
+                        $iconData = $iconMap[$tipo] ?? ['icon' => 'fa-file-alt', 'class' => 'other'];
+                    @endphp
+                    <div class="mat-item">
+                        <div class="mat-head">
+                            <div class="mat-icon {{ $iconData['class'] }}">
+                                <i class="fas {{ $iconData['icon'] }}"></i>
+                            </div>
+                            <div>
+                                <div class="mat-title">{{ $conteudo['titulo'] ?? 'Material da Aula' }}</div>
+                                <p class="mat-desc">{{ $conteudo['descricao'] ?? 'Disponibilizado pelo professor' }}</p>
+                            </div>
                         </div>
+                        @if(!empty($conteudo['url']))
+                        <div class="mat-actions">
+                            <a href="{{ $conteudo['url'] }}" target="_blank" class="btn-mat">
+                                <i class="fas fa-external-link-alt"></i>
+                                {{ $tipo === 'link' ? 'Abrir Link' : 'Visualizar' }}
+                            </a>
+                            @if($tipo !== 'link')
+                            <a href="{{ $conteudo['url'] }}" download class="btn-mat">
+                                <i class="fas fa-download"></i> Baixar
+                            </a>
+                            @endif
+                        </div>
+                        @endif
                     </div>
-                    <div class="mat-actions">
-                        <button class="btn-mat"><i class="fas fa-download"></i> Baixar</button>
-                        <button class="btn-mat"><i class="fas fa-eye"></i> Visualizar</button>
-                    </div>
-                </div>
                 @else
-                <p style="font-size:13px;color:var(--text-muted);text-align:center;padding:20px 0">
-                    Nenhum material disponível ainda.
-                </p>
+                    <div class="mat-empty">
+                        <i class="fas fa-folder-open"></i>
+                        Nenhum material disponível para esta aula.
+                    </div>
                 @endif
             </div>
         </div>
     </div>
 </div>
 
+{{-- ── MODAL SAIR ── --}}
+<div class="modal-overlay" id="sairModal">
+    <div class="modal-box">
+        <div class="modal-icon warning">
+            <i class="fas fa-sign-out-alt"></i>
+        </div>
+        <h3>Sair da Aula</h3>
+        <p>Deseja sair da aula agora? Você poderá entrar novamente enquanto a sala estiver ativa.</p>
+        <div class="modal-actions">
+            <button class="modal-btn cancel" id="cancelSair">Continuar</button>
+            <form method="POST" action="{{ route('aluno.salas.leave', $sala->id) }}" style="display:inline">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="modal-btn danger">Sair</button>
+            </form>
+        </div>
+    </div>
+</div>
+
 {{-- Dados para JS --}}
 <script>
-    const SALA_NOME       = @json($sala->nomeSala ?? '');
-    const SALA_URL        = @json($sala->url ?? '');
-    const USER_NAME       = @json(Auth::user()->name ?? 'Aluno');
-    const IS_PROFESSOR    = false;
-    const ROUTE_VOLTAR    = @json(route('aluno.salas.index') ?? '/');
+    const SALA_NOME    = @json($sala->nomeSala ?? '');
+    const SALA_URL     = @json($sala->url ?? '');
+    const SALA_ID      = {{ $sala->id ?? 'null' }};
+    const USER_NAME    = @json(session('user_nome') ?? (Auth::user()->name ?? 'Aluno'));
+    const IS_PROFESSOR = false;
+    const ROUTE_VOLTAR = @json(route('aluno.salas.index'));
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -516,36 +604,64 @@ function showTab(name) {
     if (map[name] !== undefined) tabs[map[name]]?.classList.add('active');
 }
 
-/* ── SAIR ── */
+/* ── MODAL SAIR ── */
+const sairModal   = document.getElementById('sairModal');
+const cancelSair  = document.getElementById('cancelSair');
+
 document.getElementById('btnSair').addEventListener('click', () => {
-    if (confirm('Deseja sair da aula?')) {
-        window.location.href = ROUTE_VOLTAR;
-    }
+    sairModal.classList.add('open');
+});
+
+cancelSair.addEventListener('click', () => {
+    sairModal.classList.remove('open');
+});
+
+sairModal.addEventListener('click', (e) => {
+    if (e.target === sairModal) sairModal.classList.remove('open');
 });
 
 /* ── MIC TOGGLE ── */
 document.getElementById('btnMic').addEventListener('click', function () {
-    this.classList.toggle('muted');
-    this.classList.toggle('active');
+    const isMuted = this.classList.contains('muted');
+    this.classList.toggle('muted',  !isMuted);
+    this.classList.toggle('active',  isMuted);
     const icon = this.querySelector('i');
-    icon.classList.toggle('fa-microphone');
-    icon.classList.toggle('fa-microphone-slash');
+    icon.className = isMuted ? 'fas fa-microphone' : 'fas fa-microphone-slash';
+    this.title = isMuted ? 'Microfone (ligado)' : 'Microfone (mudo)';
+
+    const thumbBadge = document.querySelector('.participant-thumb .thumb-badge');
+    if (thumbBadge) {
+        thumbBadge.innerHTML = isMuted
+            ? '<i class="fas fa-microphone"></i>'
+            : '<i class="fas fa-microphone-slash"></i>';
+        thumbBadge.className = 'thumb-badge' + (isMuted ? '' : ' muted');
+    }
 });
 
 /* ── CAM TOGGLE ── */
 document.getElementById('btnCam').addEventListener('click', function () {
-    this.classList.toggle('muted');
-    this.classList.toggle('active');
+    const isOff = this.classList.contains('muted');
+    this.classList.toggle('muted',  !isOff);
+    this.classList.toggle('active',  isOff);
     const icon = this.querySelector('i');
-    icon.classList.toggle('fa-video');
-    icon.classList.toggle('fa-video-slash');
+    icon.className = isOff ? 'fas fa-video' : 'fas fa-video-slash';
+    this.title = isOff ? 'Câmera (ligada)' : 'Câmera (desligada)';
 });
 
 /* ── LEVANTAR A MÃO ── */
 document.getElementById('btnHand').addEventListener('click', function () {
     const raised = this.classList.toggle('warn');
-    this.title = raised ? 'Baixar a mão' : 'Levantar a mão';
+    const icon   = this.querySelector('i');
+    icon.className = raised ? 'fas fa-hand-paper' : 'fas fa-hand-paper';
+    this.title     = raised ? 'Baixar a mão' : 'Levantar a mão';
     appendSystemMessage(raised ? '✋ Você levantou a mão.' : 'Você baixou a mão.');
+});
+
+/* ── REAÇÕES ── */
+document.getElementById('btnReact').addEventListener('click', function () {
+    const reactions = ['👍', '❤️', '👏', '😮', '😂'];
+    const r = reactions[Math.floor(Math.random() * reactions.length)];
+    appendSystemMessage('Você reagiu com ' + r);
 });
 
 /* ── CHAT ── */
@@ -598,7 +714,7 @@ if (SALA_URL && SALA_NOME) {
     const script = document.createElement('script');
     script.src   = 'https://meet.jit.si/external_api.js';
     script.onload = () => {
-        new JitsiMeetExternalAPI('meet.jit.si', {
+        const api = new JitsiMeetExternalAPI('meet.jit.si', {
             roomName:   SALA_NOME,
             parentNode: document.getElementById('jitsi-container'),
             userInfo:   { displayName: USER_NAME },
@@ -606,11 +722,31 @@ if (SALA_URL && SALA_NOME) {
                 startWithAudioMuted: true,
                 startWithVideoMuted: true,
                 toolbarButtons: [],
+                disableDeepLinking: true,
             },
             interfaceConfigOverwrite: {
                 TOOLBAR_BUTTONS: [],
                 SHOW_JITSI_WATERMARK: false,
             }
+        });
+
+        window.jitsiApi = api;
+
+        /* Sync estado real do Jitsi → botões */
+        api.on('audioMuteStatusChanged', ({ muted }) => {
+            const btn  = document.getElementById('btnMic');
+            const icon = btn?.querySelector('i');
+            btn?.classList.toggle('muted',  muted);
+            btn?.classList.toggle('active', !muted);
+            if (icon) icon.className = muted ? 'fas fa-microphone-slash' : 'fas fa-microphone';
+        });
+
+        api.on('videoMuteStatusChanged', ({ muted }) => {
+            const btn  = document.getElementById('btnCam');
+            const icon = btn?.querySelector('i');
+            btn?.classList.toggle('muted',  muted);
+            btn?.classList.toggle('active', !muted);
+            if (icon) icon.className = muted ? 'fas fa-video-slash' : 'fas fa-video';
         });
     };
     document.head.appendChild(script);

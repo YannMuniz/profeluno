@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class SalaAulaProfessorController extends Controller
 {
@@ -543,37 +544,87 @@ class SalaAulaProfessorController extends Controller
             ->with('success', 'Aula encerrada com sucesso!');
     }
 
-    // VIDEO AULA (professor)
+     // VIDEO AULA (professor)
     public function videoAula(int $id)
     {
         $data = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$id}");
-
+ 
         if (is_null($data)) {
             return redirect()->route('professor.salas.index')
                 ->with('error', 'Sala não encontrada.');
         }
-
+ 
         $sala = $this->normalizeSala($data);
-
+ 
         // Só professor dono pode entrar
         if (($data['idProfessor'] ?? null) != Auth::id()) {
             return redirect()->route('professor.salas.index')
                 ->with('error', 'Acesso não autorizado.');
         }
-
+ 
         // Sala precisa estar ativa
         if ($sala->status !== 'active') {
             return redirect()->route('professor.salas.index')
                 ->with('error', 'Esta sala não está ao vivo.');
         }
-
+ 
         // Resolve nome da matéria
         if (isset($sala->idMateria)) {
             $materias      = $this->apiGet('Materia/ListarMaterias') ?? [];
             $materia       = collect($materias)->firstWhere('idMateria', $sala->idMateria);
             $sala->materia = $materia['nomeMateria'] ?? '—';
         }
+ 
+        // Busca conteúdo vinculado
+        $conteudo = null;
+        if (!empty($data['idConteudo'])) {
+            $conteudo = $this->apiGet("Conteudo/RetornaConteudoPorId/{$data['idConteudo']}");
+            if (is_null($conteudo)) {
+                Log::warning("[SalaAulaProfessorController] Conteúdo {$data['idConteudo']} não encontrado para sala {$id}");
+            }
+        }
+ 
+        // Verifica se o professor já liberou os alunos
+        $liberada = Cache::get("sala_{$id}_liberada", false);
+ 
+        return view('professor.salas.video-aula', compact('sala', 'conteudo', 'liberada'));
+    }
 
-        return view('professor.salas.video-aula', compact('sala'));
+    // LIBERAR ALUNOS - armazena flag no cache (validade: 6h)
+    public function liberarAlunos(int $id)
+    {
+        $data = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$id}");
+ 
+        if (is_null($data)) {
+            return redirect()->route('professor.salas.index')
+                ->with('error', 'Sala não encontrada.');
+        }
+ 
+        if (($data['idProfessor'] ?? null) != Auth::id()) {
+            return redirect()->route('professor.salas.index')
+                ->with('error', 'Acesso não autorizado.');
+        }
+ 
+        Cache::put("sala_{$id}_liberada", true, now()->addHours(6));
+ 
+        return redirect()->route('professor.salas.video-aula', $id)
+            ->with('success', 'Alunos liberados para entrar na sala!');
+    }
+    
+    // CONTAGEM DE ALUNOS NA SALA - endpoint AJAX
+    public function contagemAlunos(int $id): \Illuminate\Http\JsonResponse
+    {
+        $data = $this->apiGet("AlunoSala/RetornaQtdAlunosSala/{$id}");
+ 
+        if (is_null($data)) {
+            return response()->json(['count' => 0]);
+        }
+ 
+        // A API pode retornar o número diretamente ou num campo
+        $count = is_array($data)
+            ? ($data['quantidade'] ?? $data['count'] ?? $data['total'] ?? 0)
+            : (int) $data;
+ 
+        return response()->json(['count' => $count]);
     }
 }

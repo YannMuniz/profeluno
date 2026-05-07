@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Carbon\Carbon;
 
@@ -18,7 +19,8 @@ class SalaAulaAlunoController extends Controller
         $this->baseUrl = env('DOTNET_API_URL', 'http://profeluno_dotnet:9000');
     }
 
-    // HELPERS DE API
+    // ─── HELPERS ────────────────────────────────────────────────────────────
+
     private function authHeaders(): array
     {
         $token = session('api_token');
@@ -96,7 +98,8 @@ class SalaAulaAlunoController extends Controller
         }
     }
 
-    // NORMALIZE
+    // ─── NORMALIZE ──────────────────────────────────────────────────────────
+
     private function normalizeSala(array $item): object
     {
         $sala = (object) $item;
@@ -120,7 +123,8 @@ class SalaAulaAlunoController extends Controller
         return $sala;
     }
 
-    // INDEX - BUSCAR SALAS DISPONÍVEIS
+    // ─── INDEX - BUSCAR SALAS DISPONÍVEIS ───────────────────────────────────
+
     public function index(Request $request)
     {
         $materias = $this->apiGet('Materia/ListarMaterias') ?? [];
@@ -177,7 +181,8 @@ class SalaAulaAlunoController extends Controller
         return view('aluno.salas.index', compact('salas', 'materias'));
     }
 
-    // SHOW - DETALHES DE UMA SALA
+    // ─── SHOW - DETALHES DE UMA SALA ────────────────────────────────────────
+
     public function show(int $id)
     {
         $data = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$id}");
@@ -200,27 +205,97 @@ class SalaAulaAlunoController extends Controller
             $sala->materia = $materia['nomeMateria'] ?? '—';
         }
 
+        // Quantidade atual de alunos na sala
+        $qtdAlunos = 0;
+        $qtdData   = $this->apiGet("AlunoSala/RetornaQtdAlunosSala/{$id}");
+        if (!is_null($qtdData)) {
+            if (is_array($qtdData)) {
+                $qtdAlunos = (int) ($qtdData['quantidade'] ?? $qtdData['count'] ?? 0);
+            } else {
+                $qtdAlunos = (int) $qtdData;
+            }
+        }
+        $sala->qtd_alunos_atual = $qtdAlunos;
+
         return view('aluno.salas.show', compact('sala', 'professor'));
     }
 
-    // JOIN - ENTRAR NA SALA
+    // ─── AGUARDANDO - SALA DE ESPERA ────────────────────────────────────────
+
+    public function aguardando(int $id)
+    {
+        $data = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$id}");
+
+        if (is_null($data)) {
+            return redirect()->route('aluno.salas.index')
+                ->with('error', 'Sala não encontrada.');
+        }
+
+        $sala = $this->normalizeSala($data);
+
+        if ($sala->status !== 'active') {
+            return redirect()->route('aluno.salas.index')
+                ->with('error', 'Esta sala não está ao vivo no momento.');
+        }
+
+        $nomeProfessor = null;
+        if (!empty($data['idProfessor'])) {
+            $professor     = $this->apiGet("Usuario/RetornaUsuarioPorId/{$data['idProfessor']}");
+            $nomeProfessor = $professor['nome'] ?? $professor['name'] ?? 'Professor';
+        }
+
+        if (!empty($data['idMateria'])) {
+            $materias      = $this->apiGet('Materia/ListarMaterias') ?? [];
+            $materia       = collect($materias)->firstWhere('idMateria', $data['idMateria']);
+            $sala->materia = $materia['nomeMateria'] ?? '—';
+        }
+
+        return view('aluno.salas.aguardando', compact('sala', 'nomeProfessor'));
+    }
+
+    // ─── CHECK LIBERADA - AJAX (polling da sala de espera) ──────────────────
+
+    public function checkLiberada(int $id): \Illuminate\Http\JsonResponse
+    {
+        $liberada = Cache::get("sala_{$id}_liberada", false);
+        return response()->json(['liberada' => (bool) $liberada]);
+    }
+
+    // ─── JOIN - CRIAR REGISTRO E ENTRAR NA SALA ─────────────────────────────
+
     public function join(Request $request, int $id)
     {
+        // Verifica se a sala está liberada pelo professor
+        if (!Cache::get("sala_{$id}_liberada", false)) {
+            return redirect()->route('aluno.salas.aguardando', $id)
+                ->with('error', 'O professor ainda não liberou a entrada.');
+        }
+
         $idAluno = Auth::id();
+        $enrollments = $this->apiGet("AlunoSala/RetornarAlunoSalaPorIdAluno/{$idAluno}");
+        $existing = collect($enrollments)->firstWhere('idSalaAula', $id);
+
+        if (!empty($existing['idAlunoSala'])) {
+            return redirect()->route('aluno.salas.video', $id)
+                ->with('success', 'Você já está nessa aula.');
+        }
+
         $resultado = $this->apiPost('AlunoSala/CadastraAlunoSala', [
             'idAluno'    => $idAluno,
             'idSalaAula' => $id,
         ]);
 
         if (is_null($resultado)) {
-            return back()->with('error', 'Não foi possível entrar na sala. Tente novamente.');
+            return redirect()->route('aluno.salas.aguardando', $id)
+                ->with('error', 'Não foi possível entrar na sala. Tente novamente.');
         }
 
         return redirect()->route('aluno.salas.video', $id)
             ->with('success', 'Você entrou na aula!');
     }
 
-    // VIDEO AULA - ASSISTIR AULA AO VIVO
+    // ─── VIDEO AULA - ASSISTIR AULA AO VIVO ─────────────────────────────────
+
     public function video(int $id)
     {
         $data = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$id}");
@@ -243,16 +318,43 @@ class SalaAulaAlunoController extends Controller
             $nomeProfessor = $professor['nome'] ?? $professor['name'] ?? 'Professor';
         }
 
-        return view('aluno.salas.video', compact('sala', 'nomeProfessor'));
+        if (!empty($data['idMateria'])) {
+            $materias      = $this->apiGet('Materia/ListarMaterias') ?? [];
+            $materia       = collect($materias)->firstWhere('idMateria', $data['idMateria']);
+            $sala->materia = $materia['nomeMateria'] ?? '—';
+        }
+
+        // Busca conteúdo vinculado à sala
+        $conteudo = null;
+        if (!empty($data['idConteudo'])) {
+            $conteudo = $this->apiGet("Conteudo/RetornaConteudoPorId/{$data['idConteudo']}");
+            if (is_null($conteudo)) {
+                Log::warning("[SalaAulaAlunoController] Conteúdo {$data['idConteudo']} não encontrado para sala {$id}");
+            }
+        }
+
+        // Quantidade de alunos na sala
+        $qtdAlunos = 0;
+        $qtdData   = $this->apiGet("AlunoSala/RetornaQtdAlunosSala/{$id}");
+        if (!is_null($qtdData)) {
+            if (is_array($qtdData)) {
+                $qtdAlunos = (int) ($qtdData['quantidade'] ?? $qtdData['count'] ?? 0);
+            } else {
+                $qtdAlunos = (int) $qtdData;
+            }
+        }
+
+        return view('aluno.salas.video-aula', compact('sala', 'nomeProfessor', 'conteudo', 'qtdAlunos'));
     }
 
-    // LEAVE - SAIR DA SALA
+    // ─── LEAVE - SAIR DA SALA ───────────────────────────────────────────────
+
     public function leave(int $id)
     {
         $idAluno = Auth::id();
 
         $enrollments = $this->apiGet("AlunoSala/RetornarAlunoSalaPorIdAluno/{$idAluno}");
-        $alunoSala = collect($enrollments)->firstWhere('idSalaAula', $id);
+        $alunoSala   = collect($enrollments)->firstWhere('idSalaAula', $id);
 
         if (empty($alunoSala['idAlunoSala'])) {
             return redirect()->route('aluno.dashboard')
@@ -270,7 +372,8 @@ class SalaAulaAlunoController extends Controller
             ->with('success', 'Você saiu da aula.');
     }
 
-    // RATING - AVALIAR PROFESSOR
+    // ─── RATING - AVALIAR PROFESSOR ─────────────────────────────────────────
+
     public function rating(Request $request, int $id)
     {
         $request->validate([
@@ -299,7 +402,8 @@ class SalaAulaAlunoController extends Controller
         return back()->with('success', 'Avaliação enviada com sucesso!');
     }
 
-    // HISTÓRICO DE AULAS
+    // ─── HISTÓRICO ──────────────────────────────────────────────────────────
+
     public function historico(Request $request)
     {
         $idAluno = Auth::id();
@@ -341,7 +445,8 @@ class SalaAulaAlunoController extends Controller
         return view('aluno.historico.index', compact('aulas'));
     }
 
-    // DETALHES DO HISTÓRICO
+    // ─── HISTÓRICO SHOW ─────────────────────────────────────────────────────
+
     public function historicoShow(int $id)
     {
         $data = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$id}");
@@ -362,7 +467,8 @@ class SalaAulaAlunoController extends Controller
         return view('aluno.historico.show', compact('sala'));
     }
 
-    // SIMULADOS DO ALUNO
+    // ─── SIMULADOS ──────────────────────────────────────────────────────────
+
     public function simulados(Request $request)
     {
         $idAluno = Auth::id();
@@ -393,7 +499,8 @@ class SalaAulaAlunoController extends Controller
         return view('aluno.simulados.index', compact('simulados'));
     }
 
-    // DETALHES DO SIMULADO
+    // ─── SIMULADO SHOW ──────────────────────────────────────────────────────
+
     public function simuladoShow(int $id)
     {
         $data = $this->apiGet("Simulado/RetornaSimuladoPorId/{$id}");
@@ -406,8 +513,8 @@ class SalaAulaAlunoController extends Controller
         $simulado = (object) $data;
 
         if (!empty($data['idMateria'])) {
-            $materias      = $this->apiGet('Materia/ListarMaterias') ?? [];
-            $materia       = collect($materias)->firstWhere('idMateria', $data['idMateria']);
+            $materias          = $this->apiGet('Materia/ListarMaterias') ?? [];
+            $materia           = collect($materias)->firstWhere('idMateria', $data['idMateria']);
             $simulado->materia = $materia['nomeMateria'] ?? '—';
         }
 

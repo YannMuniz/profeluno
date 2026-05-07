@@ -3,6 +3,10 @@
 
 @section('title', $sala->titulo)
 
+@section('styles')
+<link rel="stylesheet" href="{{ asset('css/sala-aluno-show.css') }}">
+@endsection
+
 @section('content')
 
 @if(session('error'))
@@ -51,6 +55,13 @@
                     <div>
                         <span class="detail-label">Capacidade</span>
                         <span class="detail-value">{{ $sala->qtd_alunos }} alunos</span>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <i class="fas fa-user-check"></i>
+                    <div>
+                        <span class="detail-label">Inscritos</span>
+                        <span class="detail-value">{{ $sala->qtd_alunos_atual ?? 0 }} alunos</span>
                     </div>
                 </div>
                 <div class="detail-item">
@@ -111,12 +122,9 @@
                 <p class="text-success fw-bold mb-3">
                     <i class="fas fa-circle"></i> Esta sala está ao vivo agora!
                 </p>
-                <form action="{{ route('aluno.salas.join', $sala->id) }}" method="POST">
-                    @csrf
-                    <button type="submit" class="btn-primary w-100">
-                        <i class="fas fa-sign-in-alt"></i> Entrar na Aula Agora
-                    </button>
-                </form>
+                <a href="{{ route('aluno.salas.aguardando', $sala->id) }}" class="btn-primary w-100 text-center">
+                    <i class="fas fa-sign-in-alt"></i> Entrar na Aula Agora
+                </a>
             @elseif($sala->status === 'pending')
                 <p class="text-muted mb-3">
                     <i class="fas fa-calendar"></i>
@@ -147,7 +155,7 @@
                 <div class="star-rating mb-3" id="starRating">
                     @for($i = 1; $i <= 5; $i++)
                     <i class="fas fa-star star-btn" data-value="{{ $i }}"
-                       style="font-size:24px;cursor:pointer;color:var(--border-color);transition:.2s"></i>
+                       style="font-size:24px;cursor:pointer;color:var(--border-color,#3b3b52);transition:.2s"></i>
                     @endfor
                 </div>
                 <input type="hidden" name="nota" id="notaInput" value="">
@@ -175,14 +183,14 @@ document.querySelectorAll('.star-btn').forEach(star => {
         document.getElementById('btnAvaliar').disabled = false;
 
         document.querySelectorAll('.star-btn').forEach((s, i) => {
-            s.style.color = i < value ? '#ff9f43' : 'var(--border-color)';
+            s.style.color = i < value ? '#ff9f43' : 'var(--border-color,#3b3b52)';
         });
     });
 
     star.addEventListener('mouseenter', function () {
         const value = this.dataset.value;
         document.querySelectorAll('.star-btn').forEach((s, i) => {
-            s.style.color = i < value ? '#ff9f43' : 'var(--border-color)';
+            s.style.color = i < value ? '#ff9f43' : 'var(--border-color,#3b3b52)';
         });
     });
 });
@@ -190,7 +198,7 @@ document.querySelectorAll('.star-btn').forEach(star => {
 document.getElementById('starRating')?.addEventListener('mouseleave', function () {
     const selected = document.getElementById('notaInput').value;
     document.querySelectorAll('.star-btn').forEach((s, i) => {
-        s.style.color = selected && i < selected ? '#ff9f43' : 'var(--border-color)';
+        s.style.color = selected && i < selected ? '#ff9f43' : 'var(--border-color,#3b3b52)';
     });
 });
 </script>

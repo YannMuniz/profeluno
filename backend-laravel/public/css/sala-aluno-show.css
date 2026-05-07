@@ -1,0 +1,243 @@
+/* Sala - Aluno Show */
+
+/* ── CARD SECTION ── */
+.card-section {
+    background: var(--card-bg, #2b2b40);
+    border: 1px solid var(--border-color, #3b3b52);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--text-primary, #e0e0e0);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.section-title i {
+    color: var(--primary-color, #7367f0);
+}
+
+/* ── TEACHER MINI CARD ── */
+.teacher-mini-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--dark-bg, #1e1e2d);
+    border-radius: 8px;
+}
+
+.teacher-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color, #7367f0), #9f8cfe);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 16px;
+}
+
+/* ── DETAIL GRID ── */
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+    background: var(--dark-bg, #1e1e2d);
+    border-radius: 8px;
+}
+
+.detail-item i {
+    color: var(--primary-color, #7367f0);
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.detail-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary, #b4b4c6);
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    margin-bottom: 2px;
+}
+
+.detail-value {
+    font-size: 14px;
+    color: var(--text-primary, #e0e0e0);
+}
+
+/* ── LIVE BADGE ── */
+.live-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(40,199,111,.12);
+    border: 1px solid rgba(40,199,111,.3);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--success-color, #28c76f);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+
+.live-badge i {
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+    0%,100% { opacity: 1; }
+    50% { opacity: .5; }
+}
+
+/* ── BUTTONS ── */
+.btn-primary, .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: .2s;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: var(--primary-color, #7367f0);
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background: #6258d3;
+}
+
+.btn-primary:disabled {
+    background: var(--border-color, #3b3b52);
+    color: var(--text-secondary, #b4b4c6);
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: var(--dark-bg, #1e1e2d);
+    color: var(--text-primary, #e0e0e0);
+    border: 1px solid var(--border-color, #3b3b52);
+}
+
+.btn-secondary:hover {
+    background: var(--border-color, #3b3b52);
+}
+
+/* ── PAGE HEADER ── */
+.page-header {
+    margin-bottom: 24px;
+}
+
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--primary-color, #7367f0);
+    text-decoration: none;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.btn-back:hover {
+    text-decoration: underline;
+}
+
+.page-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-primary, #e0e0e0);
+}
+
+.page-header .text-muted {
+    color: var(--text-secondary, #b4b4c6);
+    font-size: 16px;
+}
+
+/* ── STAR RATING ── */
+.star-rating {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+}
+
+.star-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    transition: color .2s;
+    color: var(--border-color, #3b3b52);
+}
+
+.star-btn:hover, .star-btn.active {
+    color: var(--warning-color, #ff9f43);
+}
+.alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.alert-danger {
+    background: rgba(234,84,85,.12);
+    color: var(--danger-color, #ea5455);
+    border: 1px solid rgba(234,84,85,.3);
+}
+
+.alert-success {
+    background: rgba(40,199,111,.12);
+    color: var(--success-color, #28c76f);
+    border: 1px solid rgba(40,199,111,.3);
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    font-size: 20px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .page-header h1 {
+        font-size: 24px;
+    }
+
+    .card-section {
+        padding: 16px;
+    }
+}
