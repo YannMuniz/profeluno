@@ -132,5 +132,10 @@ namespace backend_dotnet.Services
             await _context.SaveChangesAsync();
             return true;
         }
+
+        public async Task<int> RetornaQuantidadeUsuarios()
+        {
+            return await _context.Users.CountAsync();
+        }
     }
 }

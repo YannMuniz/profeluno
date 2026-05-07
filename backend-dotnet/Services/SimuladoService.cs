@@ -202,5 +202,10 @@ namespace backend_dotnet.Services
                 return false;
             }
         }
+
+        public async Task<int> RetornaQuantidadeSimuladosIdUsuario(int idUsuario)
+        {
+            return await _context.Simulados.Where(x => x.IdUser == idUsuario).CountAsync();
+        }
     }
 }

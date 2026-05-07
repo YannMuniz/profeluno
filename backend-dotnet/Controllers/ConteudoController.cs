@@ -23,10 +23,10 @@ namespace backend_dotnet.Controllers
             try
             {
                 var result = await _conteudoService.CadastrarConteudo(conteudo);
-                if (result) return Ok("Conteúdo cadastrado com sucesso!");
+                if(result) return Ok("Conteúdo cadastrado com sucesso!");
                 return BadRequest("Erro ao cadastrar conteúdo.");
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
                 return BadRequest($"Erro: {ex.Message}");
             }
@@ -61,6 +61,14 @@ namespace backend_dotnet.Controllers
             var arquivo = await _conteudoService.RetornaDadosArquivo(idConteudo);
             if(arquivo == null) return NotFound("Arquivo não encontrado.");
             return Ok(arquivo);
+        }
+
+        [HttpGet("RetornaConteudosPorIdMateria/{idMateria}")]
+        public async Task<IActionResult> ListarConteudosPorIdMateria(int idMateria)
+        {
+            var conteudos = await _conteudoService.RetornaConteudoPorIdMateria(idMateria);
+            if(conteudos == null) return NotFound("Não foram encontrados conteudos dessa matéria");
+            return Ok(conteudos);
         }
 
         [HttpGet("DownloadArquivoConteudo/{idConteudo}")]
@@ -104,6 +112,13 @@ namespace backend_dotnet.Controllers
             {
                 return BadRequest($"Erro: {ex.Message}");
             }
+        }
+
+        [HttpGet("RetornaQuantidadeConteudosPorMateria/{idMateria}")]
+        public async Task<IActionResult> RetornaQuantidadeConteudosPorMateria(int idMateria)
+        {
+            var quantidade = await _conteudoService.RetornaQuantidadeConteudosPorMateria(idMateria);
+            return Ok(quantidade);
         }
     }
 }

@@ -11,8 +11,8 @@ namespace backend_dotnet.Services
     public class ConteudoService : IConteudoService
     {
         ProfelunoContext _context;
-        public ConteudoService(ProfelunoContext profelunoContext) 
-        { 
+        public ConteudoService(ProfelunoContext profelunoContext)
+        {
             _context = profelunoContext;
         }
 
@@ -42,7 +42,7 @@ namespace backend_dotnet.Services
         public async Task<ConteudoResponse> RetornaConteudoPorIdProfessor(int idUsuario)
         {
             var response = _context.Conteudos.Include(x => x.Materia).FirstOrDefaultAsync(x => x.IdUsuario == idUsuario);
-            
+
             if(response.Result != null)
             {
                 ConteudoResponse newConteudo = new ConteudoResponse()
@@ -90,6 +90,28 @@ namespace backend_dotnet.Services
             return newConteudo;
         }
 
+        public async Task<ConteudoResponse> RetornaConteudoPorIdMateria(int idMateria)
+        {
+            var response = _context.Conteudos.Include(x => x.Materia).FirstOrDefaultAsync(x => x.IdMateria == idMateria);
+            ConteudoResponse newConteudo = new ConteudoResponse()
+            {
+                IdConteudo = response.Result.IdConteudo,
+                Titulo = response.Result.Titulo,
+                Descricao = response.Result.Descricao,
+                IdUsuario = response.Result.IdUsuario,
+                IdMateria = response.Result.IdMateria,
+                Tipo = response.Result.Tipo,
+                Situacao = response.Result.Situacao,
+                NomeArquivo = response.Result.NomeArquivo,
+                ExtensaoArquivo = response.Result.ExtensaoArquivo,
+                Url = response.Result.Url,
+                CreatedAt = response.Result.CreatedAt,
+                UpdatedAt = response.Result.UpdatedAt,
+                Materia = response.Result.Materia
+            };
+            return newConteudo;
+        }
+
         public async Task<ArquivoResponse> RetornaDadosArquivo(int idConteudo)
         {
             var response = _context.Conteudos.FirstOrDefaultAsync(x => x.IdConteudo == idConteudo);
@@ -103,14 +125,14 @@ namespace backend_dotnet.Services
             return arquivoResponse;
         }
 
-        public async Task<bool> CadastrarConteudo (UploadConteudoRequest conteudo)
+        public async Task<bool> CadastrarConteudo(UploadConteudoRequest conteudo)
         {
             // Validar se a matéria existe
             var materiaExiste = await _context.Materias.AnyAsync(m => m.IdMateria == conteudo.IdMateria);
-            if (!materiaExiste)
+            if(!materiaExiste)
                 throw new Exception("Matéria não encontrada.");
 
-                using var ms = new MemoryStream();
+            using var ms = new MemoryStream();
             if(conteudo.Arquivo != null)
                 await conteudo.Arquivo.CopyToAsync(ms);
 
@@ -144,13 +166,13 @@ namespace backend_dotnet.Services
         public async Task<bool> UpdateConteudo(AtualizarConteudoRequest conteudo)
         {
             var entidade = await _context.Conteudos.FindAsync(conteudo.IdConteudo);
-            if (entidade == null) return false;
+            if(entidade == null) return false;
 
             // Validar matéria
             var materiaExiste = await _context.Materias.AnyAsync(m => m.IdMateria == conteudo.IdMateria);
-            if (!materiaExiste) throw new Exception("Matéria não encontrada.");
+            if(!materiaExiste) throw new Exception("Matéria não encontrada.");
 
-            if (conteudo.Arquivo != null)
+            if(conteudo.Arquivo != null)
             {
                 using var ms = new MemoryStream();
                 await conteudo.Arquivo.CopyToAsync(ms);
@@ -174,11 +196,16 @@ namespace backend_dotnet.Services
         public async Task<bool> DeleteConteudo(int idConteudo)
         {
             var entidade = await _context.Conteudos.FindAsync(idConteudo);
-            if (entidade == null) return false;
+            if(entidade == null) return false;
 
             _context.Conteudos.Remove(entidade);
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<int> RetornaQuantidadeConteudosPorMateria(int idMateria)
+        {
+            return await _context.Conteudos.CountAsync(c => c.IdMateria == idMateria);
         }
     }
 }

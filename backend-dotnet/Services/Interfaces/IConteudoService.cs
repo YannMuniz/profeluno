@@ -10,9 +10,11 @@ namespace backend_dotnet.Services.Interfaces
         public Task<IEnumerable<Conteudo>> RetornaTodosConteudosAsync();
         public Task<ConteudoResponse> RetornaConteudoPorIdProfessor(int idUsuario);
         public Task<ConteudoResponse> RetornaConteudoPorIdConteudo(int idConteudo);
+        public Task<ConteudoResponse> RetornaConteudoPorIdMateria(int idMateria);
         public Task<ArquivoResponse> RetornaDadosArquivo(int idConteudo);
         public Task<Conteudo> DownloadArquivoConteudo(int idConteudo);
         public Task<bool> UpdateConteudo(AtualizarConteudoRequest conteudo);
         public Task<bool> DeleteConteudo(int idConteudo);
+        public Task<int> RetornaQuantidadeConteudosPorMateria(int idMateria);
     }
 }

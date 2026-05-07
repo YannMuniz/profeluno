@@ -114,5 +114,10 @@ namespace backend_dotnet.Services
                 Status = salaAula.Status
             };
         }
+
+        public async Task<int> RetornaQuantidadeSalaAulaIdProfessor(int idProfessor)
+        {
+            return await _context.SalaAulas.Where(x => x.IdProfessor == idProfessor).CountAsync();
+        }
     }
 }

@@ -24,7 +24,7 @@ namespace backend_dotnet.Controllers
             return Ok(conteudos);
         }
 
-        [HttpGet("RetornaAreaPorId")]
+        [HttpGet("RetornaAreaPorId/{idArea}")]
         public async Task<IActionResult> RetornaAreaPorId(int idArea)
         {
             var conteudo = await _service.RetornaAreaId(idArea);

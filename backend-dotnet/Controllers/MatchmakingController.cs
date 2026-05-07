@@ -17,11 +17,11 @@ namespace backend_dotnet.Controllers
         }
 
         [HttpGet("MatchmakingDeSala")]
-        public async Task<IActionResult> AcharMelhorProfessor(int idMateria, int idProfessor)
+        public async Task<IActionResult> AcharMelhorProfessor(int idMateria, int idArea)
         {
             try
             {
-                var resultado = await _matchmakingService.AcharMelhorProfessor(idMateria, idProfessor);
+                var resultado = await _matchmakingService.AcharMelhorProfessor(idMateria, idArea);
                 if(resultado == null) return NotFound("Não foi encotrado uma sala que se boa para você");
 
                 return Ok(resultado);

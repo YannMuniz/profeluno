@@ -38,6 +38,7 @@ namespace backend_dotnet.Services
 
             return new QuantidadeAlunosSalaResponse
             {
+                IdSalaAula = dadosSala.IdSalaAula,
                 QtdAlunosSala = totalAlunos,
                 DataHoraInicio = dadosSala.DataHoraInicio,
                 DataHoraFim = dadosSala.DataHoraFim,

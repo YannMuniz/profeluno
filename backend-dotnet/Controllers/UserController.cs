@@ -116,5 +116,12 @@ namespace backend_dotnet.Controllers
             if(resultado) return Ok("Usuário deletado com sucesso!");
             return BadRequest("Erro ao deletar usuário.");
         }
+
+        [HttpGet("RetornaQuantidadeUsuarios")]
+        public async Task<IActionResult> RetornaQuantidadeUsuarios()
+        {
+            var quantidade = await _userService.RetornaQuantidadeUsuarios();
+            return Ok(quantidade);
+        }
     }
 }

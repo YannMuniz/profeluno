@@ -14,5 +14,6 @@ namespace backend_dotnet.Services.Interfaces
         public Task<IEnumerable<SimuladoUsuarioResponse>> RetornaSimuladosPorUsuarioAsync(int idUsuario);
         public Task<bool> DeletarSimulado(int idSimulado);
         public Task<bool> AtualizaSimuladoAsync(AtualizarSimuladoRequest request);
+        public Task<int> RetornaQuantidadeSimuladosIdUsuario(int idUsuario);
     }
 }

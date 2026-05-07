@@ -69,5 +69,12 @@ namespace backend_dotnet.Controllers
             if(response == null) return BadRequest();
             return Ok(response);
         }
+
+        [HttpGet("RetornaQuantidadeSalaAulaIdProfessor/{idProfessor}")]
+        public async Task<IActionResult> RetornaQuantidadeSalaAulaIdProfessor(int idProfessor)
+        {
+            var response = await _salaAulaService.RetornaQuantidadeSalaAulaIdProfessor(idProfessor);
+            return Ok(response);
+        }
     }
 }

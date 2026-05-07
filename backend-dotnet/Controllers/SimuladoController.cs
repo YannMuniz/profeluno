@@ -78,5 +78,12 @@ namespace backend_dotnet.Controllers
             if(result) return Ok("Simulado atualizado com sucesso!");
             return BadRequest("Erro ao atualizar o simulado. Verifique os dados informados.");
         }
+
+        [HttpGet("RetornaQuantidadeSimuladosPorUsuario/{idUsuario}")]
+        public async Task<IActionResult> RetornaQuantidadeSimuladosPorUsuarioAsync(int idUsuario)
+        {
+            var result = await _simuladoService.RetornaQuantidadeSimuladosIdUsuario(idUsuario);
+            return Ok(result);
+        }
     }
 }

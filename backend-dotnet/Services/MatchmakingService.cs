@@ -14,14 +14,14 @@ namespace backend_dotnet.Services
             _context = context;
         }
 
-        public async Task<List<SalaAula>> AcharMelhorProfessor(int idMateria, int idProfessor)
+        public async Task<List<SalaAula>> AcharMelhorProfessor(int idMateria, int idArea)
         {
             var professoresCandidatos = await _context.Users
                 .Include(d => d.ProfessorPerfil)
                     .ThenInclude(d => d.Area)
                         .ThenInclude(d => d.ProfessorMateria)
                             .ThenInclude(d => d.Materias)
-                .Where(u => u.ProfessorPerfil.Area.ProfessorMateria.Any(am => am.IdProfessor == idProfessor || am.IdMateria == idMateria))
+                .Where(u => u.ProfessorPerfil.Area.ProfessorMateria.Any(am => am.IdMateria == idMateria) || u.ProfessorPerfil.IdArea == idArea)
                 .ToListAsync();
 
             if(!professoresCandidatos.Any()) return new List<SalaAula>();

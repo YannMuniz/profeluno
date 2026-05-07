@@ -13,5 +13,6 @@ namespace backend_dotnet.Services.Interfaces
         public Task<bool> AtualizaSalaAula(AtualizarSalaAulaRequest request);
         public Task<bool> DeletarSalaAula(int idSalaAula);
         public Task<TrocaStatusSalaAulaResponse> TrocarStatusSalaAula(TrocaStatusSalaAulaRequest request);
+        public Task<int> RetornaQuantidadeSalaAulaIdProfessor(int idProfessor);
     }
 }
