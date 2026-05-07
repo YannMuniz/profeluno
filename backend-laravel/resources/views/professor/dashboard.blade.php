@@ -13,7 +13,7 @@
             </div>
         </div>
         <div class="stat-value">
-            <h3>{{ $classrooms->sum(fn($c) => $c->qtd_alunos) }}</h3>
+            <h3>{{ $totalAlunos }}</h3>
             <p class="stat-label">Total de Alunos</p>
         </div>
     </div>
@@ -49,7 +49,7 @@
             </div>
         </div>
         <div class="stat-value">
-            <h3>{{ $classrooms->where('status', 'completed')->count() }}</h3>
+            <h3>{{ $completedClasses }}</h3>
             <p class="stat-label">Aulas Concluídas</p>
         </div>
     </div>
@@ -62,7 +62,7 @@
             </div>
         </div>
         <div class="stat-value">
-            <h3>{{-- $totalConteudos --}}</h3>
+            <h3>{{ $totalConteudos }}</h3>
             <p class="stat-label">Conteúdos Criados</p>
         </div>
     </div>
@@ -74,7 +74,7 @@
             </div>
         </div>
         <div class="stat-value">
-            <h3>{{-- $totalSimulados --}}</h3>
+            <h3>{{ $totalSimulados }}</h3>
             <p class="stat-label">Simulados Criados</p>
         </div>
     </div>
