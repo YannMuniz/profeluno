@@ -279,10 +279,11 @@ class SalaAulaAlunoController extends Controller
             return redirect()->route('aluno.salas.video', $id)
                 ->with('success', 'Você já está nessa aula.');
         }
-
+        $dataHoraAtual = date('Y-m-d H:i:s');
         $resultado = $this->apiPost('AlunoSala/CadastraAlunoSala', [
             'idAluno'    => $idAluno,
             'idSalaAula' => $id,
+            'joinedAt' => $dataHoraAtual,
         ]);
 
         if (is_null($resultado)) {
