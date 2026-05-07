@@ -672,7 +672,7 @@
     const SALA_NOME       = @json($sala->nomeSala ?? '');
     const SALA_URL        = @json($sala->url ?? '');
     const HORA_INICIO_ISO = @json(optional($sala->data_hora_inicio)->toIso8601String() ?? now()->toIso8601String());
-    const USER_NAME       = @json(Auth::user()->name ?? 'Professor');
+    const USER_NAME       = @json(session('user_nome'));
     const IS_PROFESSOR    = true;
 </script>
 
@@ -788,11 +788,13 @@
                 parentNode: document.getElementById('jitsi-container'),
                 userInfo:   { displayName: USER_NAME },        // nome limpo, sem sufixo
                 configOverwrite: {
-                    prejoinPageEnabled:     false,             // entra direto, sem tela de confirmação
+                    prejoinPageEnabled:     true,             // entra direto, sem tela de confirmação
                     startWithAudioMuted:    false,
-                    startWithVideoMuted:    false,
+                    startWithVideoMuted:    true,
                     toolbarButtons:         [],                // esconde toolbar nativa
                     disableDeepLinking:     true,
+                    enableWelcomePage:      false,
+                    enableClosePage:        true,
                 },
                 interfaceConfigOverwrite: {
                     TOOLBAR_BUTTONS:           [],
