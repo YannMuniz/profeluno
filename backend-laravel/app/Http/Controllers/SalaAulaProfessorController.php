@@ -198,9 +198,12 @@ class SalaAulaProfessorController extends Controller
         $salasConcluidas = $items->where('status', 'completed')->values();
         $salaAtiva       = $salasAtivas->first();
 
+        $title    = '<i class="fas fa-chalkboard-teacher"></i> Sala de aula';
+        $subtitle = 'Gerencie suas salas de aula, inicie aulas ao vivo e acompanhe o desempenho dos alunos';
+
         return view('professor.salas.index', compact(
             'salas', 'salasAtivas', 'salasAgendadas',
-            'salasConcluidas', 'salaAtiva', 'materias',
+            'salasConcluidas', 'salaAtiva', 'materias', 'title', 'subtitle'
         ));
     }
 
@@ -221,8 +224,9 @@ class SalaAulaProfessorController extends Controller
         if (!$materias) {
             session()->flash('warning', 'Não foi possível carregar as matérias.');
         }
-
-        return view('professor.salas.create', compact('materias', 'conteudos', 'simulados'));
+        $title    = '<i class="fas fa-chalkboard-teacher"></i> Sala de aula';
+        $subtitle = 'Crie uma nova sala de aula, defina a matéria, adicione conteúdo ou simulado e prepare-se para ensinar!';
+        return view('professor.salas.create', compact('materias', 'conteudos', 'simulados', 'title', 'subtitle'));
     }
 
     // STORE
@@ -332,8 +336,10 @@ class SalaAulaProfessorController extends Controller
             $materia       = collect($materias)->firstWhere('idMateria', $sala->idMateria);
             $sala->materia = $materia['nomeMateria'] ?? '—';
         }
+        $title    = '<i class="fas fa-chalkboard-teacher"></i> Sala de aula';
+        $subtitle = 'Gerencie suas salas de aula, inicie aulas ao vivo e acompanhe o desempenho dos alunos';
 
-        return view('professor.salas.show', compact('sala'));
+        return view('professor.salas.show', compact('sala', 'title', 'subtitle'));
     }
 
     // EDIT
@@ -583,7 +589,6 @@ class SalaAulaProfessorController extends Controller
                 Log::warning("[SalaAulaProfessorController] Conteúdo {$data['idConteudo']} não encontrado para sala {$id}");
             }
         }
- 
         // Verifica se o professor já liberou os alunos
         $liberada = Cache::get("sala_{$id}_liberada", false);
  

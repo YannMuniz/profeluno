@@ -177,8 +177,9 @@ class SalaAulaAlunoController extends Controller
         } else {
             session()->flash('error', 'Não foi possível carregar as salas. Tente novamente.');
         }
-
-        return view('aluno.salas.index', compact('salas', 'materias'));
+        $title    = '<i class="fas fa-chalkboard-teacher"></i> Sala de aula';
+        $subtitle = 'Encontre salas de aula ao vivo ou agendadas, filtre por matéria e participe das aulas que mais te interessam';
+        return view('aluno.salas.index', compact('salas', 'materias', 'filters', 'title', 'subtitle'));
     }
 
     // ─── SHOW - DETALHES DE UMA SALA ────────────────────────────────────────
@@ -216,8 +217,9 @@ class SalaAulaAlunoController extends Controller
             }
         }
         $sala->qtd_alunos_atual = $qtdAlunos;
-
-        return view('aluno.salas.show', compact('sala', 'professor'));
+        $title    = '<i class="fas fa-chalkboard-teacher"></i> Sala de aula';
+        $subtitle = 'Veja os detalhes da sala, informações sobre o professor e a matéria, e participe das aulas que mais te interessam';
+        return view('aluno.salas.show', compact('sala', 'professor', 'title', 'subtitle'));
     }
 
     // ─── AGUARDANDO - SALA DE ESPERA ────────────────────────────────────────
@@ -401,124 +403,5 @@ class SalaAulaAlunoController extends Controller
         }
 
         return back()->with('success', 'Avaliação enviada com sucesso!');
-    }
-
-    // ─── HISTÓRICO ──────────────────────────────────────────────────────────
-
-    public function historico(Request $request)
-    {
-        $idAluno = Auth::id();
-        $page    = (int) $request->get('page', 1);
-        $perPage = 10;
-
-        $data     = $this->apiGet("AlunoSala/RetornarAlunoSalaPorIdAluno/{$idAluno}");
-        $materias = $this->apiGet('Materia/ListarMaterias') ?? [];
-
-        if (is_null($data)) {
-            session()->flash('error', 'Não foi possível carregar o histórico. Tente novamente.');
-
-            $aulas = new LengthAwarePaginator(
-                collect(), 0, $perPage, $page,
-                ['path' => $request->url()]
-            );
-
-            return view('aluno.historico.index', compact('aulas'));
-        }
-
-        $materiasMap = collect($materias)->keyBy('idMateria');
-
-        $items = collect($data)->map(function ($item) use ($materiasMap) {
-            $sala = $this->normalizeSala($item);
-            if (isset($sala->idMateria) && $materiasMap->has($sala->idMateria)) {
-                $sala->materia = $materiasMap->get($sala->idMateria)['nomeMateria'] ?? '—';
-            }
-            return $sala;
-        });
-
-        $aulas = new LengthAwarePaginator(
-            $items->forPage($page, $perPage)->values(),
-            $items->count(),
-            $perPage,
-            $page,
-            ['path' => $request->url()]
-        );
-
-        return view('aluno.historico.index', compact('aulas'));
-    }
-
-    // ─── HISTÓRICO SHOW ─────────────────────────────────────────────────────
-
-    public function historicoShow(int $id)
-    {
-        $data = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$id}");
-
-        if (is_null($data)) {
-            return redirect()->route('aluno.historico')
-                ->with('error', 'Registro não encontrado.');
-        }
-
-        $sala = $this->normalizeSala($data);
-
-        if (!empty($data['idMateria'])) {
-            $materias      = $this->apiGet('Materia/ListarMaterias') ?? [];
-            $materia       = collect($materias)->firstWhere('idMateria', $data['idMateria']);
-            $sala->materia = $materia['nomeMateria'] ?? '—';
-        }
-
-        return view('aluno.historico.show', compact('sala'));
-    }
-
-    // ─── SIMULADOS ──────────────────────────────────────────────────────────
-
-    public function simulados(Request $request)
-    {
-        $idAluno = Auth::id();
-        $page    = (int) $request->get('page', 1);
-        $perPage = 10;
-
-        $data      = $this->apiGet("Simulado/RetornaSimuladosPorUsuario/{$idAluno}");
-        $simulados = [];
-
-        if (!is_null($data)) {
-            $simulados = is_array($data) && isset($data[0])
-                ? $data
-                : (isset($data['idSimulado']) ? [$data] : []);
-        } else {
-            session()->flash('error', 'Não foi possível carregar os simulados. Tente novamente.');
-        }
-
-        $items = collect($simulados);
-
-        $simulados = new LengthAwarePaginator(
-            $items->forPage($page, $perPage)->values(),
-            $items->count(),
-            $perPage,
-            $page,
-            ['path' => $request->url()]
-        );
-
-        return view('aluno.simulados.index', compact('simulados'));
-    }
-
-    // ─── SIMULADO SHOW ──────────────────────────────────────────────────────
-
-    public function simuladoShow(int $id)
-    {
-        $data = $this->apiGet("Simulado/RetornaSimuladoPorId/{$id}");
-
-        if (is_null($data)) {
-            return redirect()->route('aluno.simulados')
-                ->with('error', 'Simulado não encontrado.');
-        }
-
-        $simulado = (object) $data;
-
-        if (!empty($data['idMateria'])) {
-            $materias          = $this->apiGet('Materia/ListarMaterias') ?? [];
-            $materia           = collect($materias)->firstWhere('idMateria', $data['idMateria']);
-            $simulado->materia = $materia['nomeMateria'] ?? '—';
-        }
-
-        return view('aluno.simulados.show', compact('simulado'));
     }
 }

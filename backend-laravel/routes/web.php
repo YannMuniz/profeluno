@@ -14,6 +14,8 @@ use App\Http\Controllers\EscolaridadeController;
 use App\Http\Controllers\CargoController;
 use App\Http\Controllers\MateriaController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\HistoricoAlunoController;
+use App\Http\Controllers\SimuladoAlunoController;
 
 // ─── Raiz ────────────────────────────────────────────────────────────────────
 Route::get('/', function () {
@@ -60,12 +62,12 @@ Route::middleware(['auth', 'role:aluno'])->prefix('aluno')->name('aluno.')->grou
     Route::get('salas/{id}/check-liberada', [SalaAulaAlunoController::class, 'checkLiberada'])->name('salas.checkLiberada');
 
     // Histórico de Aulas
-    Route::get('historico', [SalaAulaAlunoController::class, 'historico'])->name('historico');
-    Route::get('historico/{id}', [SalaAulaAlunoController::class, 'historicoShow'])->name('historico.show');
+    Route::get('historico', [HistoricoAlunoController::class, 'index'])->name('historico');
+    Route::get('historico/{id}', [HistoricoAlunoController::class, 'show'])->name('historico.show');
 
     // Simulados
-    Route::get('simulados', [SalaAulaAlunoController::class, 'simulados'])->name('simulados');
-    Route::get('simulados/{id}', [SalaAulaAlunoController::class, 'simuladoShow'])->name('simulados.show');
+    Route::get('simulados', [SimuladoAlunoController::class, 'index'])->name('simulados');
+    Route::get('simulados/{id}', [SimuladoAlunoController::class, 'show'])->name('simulados.show');
 });
 
 // ─── Professor ────────────────────────────────────────────────────────────────
