@@ -259,8 +259,53 @@ class SalaAulaAlunoController extends Controller
 
     public function checkLiberada(int $id): \Illuminate\Http\JsonResponse
     {
+        $data = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$id}");
+    
+        if (is_null($data) || ($data['status'] ?? '') !== 'active') {
+            return response()->json(['liberada' => false, 'encerrada' => true]);
+        }
+    
         $liberada = Cache::get("sala_{$id}_liberada", false);
-        return response()->json(['liberada' => (bool) $liberada]);
+        return response()->json(['liberada' => (bool) $liberada, 'encerrada' => false]);
+    }
+
+    public function entrar(int $id): \Illuminate\Http\JsonResponse
+    {
+        $data = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$id}");
+    
+        if (is_null($data)) {
+            return response()->json(['success' => false, 'message' => 'Sala não encontrada.'], 404);
+        }
+    
+        $liberada = Cache::get("sala_{$id}_liberada", false);
+        if (!$liberada) {
+            return response()->json(['success' => false, 'message' => 'Sala ainda não liberada.'], 403);
+        }
+    
+        // Verifica se já está cadastrado para evitar duplicata
+        $registros = $this->apiGet("AlunoSala/RetornarAlunoSalaPorIdAluno/" . Auth::id());
+        if ($registros) {
+            $lista   = is_array($registros) && isset($registros[0]) ? $registros : [$registros];
+            $existente = collect($lista)->first(fn($r) => ($r['idSalaAula'] ?? null) == $id);
+            if ($existente) {
+                return response()->json(['success' => true, 'already' => true]);
+            }
+        }
+    
+        $resultado = $this->apiPost('AlunoSala/CadastraAlunoSala', [
+            'idAluno'     => Auth::id(),
+            'idSalaAula'  => $id,
+            'dataEntrada' => now()->toIso8601String(),
+        ]);
+    
+        if (is_null($resultado)) {
+            Log::warning("[SalaAulaAlunoController] Falha ao cadastrar AlunoSala para aluno " . Auth::id() . " sala {$id}");
+        }
+    
+        return response()->json([
+            'success' => true, // permite entrar mesmo se a API falhou (não bloqueia)
+            'message' => 'Entrada registrada.',
+        ]);
     }
 
     // ─── JOIN - CRIAR REGISTRO E ENTRAR NA SALA ─────────────────────────────
@@ -299,79 +344,59 @@ class SalaAulaAlunoController extends Controller
 
     // ─── VIDEO AULA - ASSISTIR AULA AO VIVO ─────────────────────────────────
 
-    public function video(int $id)
+    public function videoAula(int $id)
     {
         $data = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$id}");
-
+    
         if (is_null($data)) {
             return redirect()->route('aluno.salas.index')
                 ->with('error', 'Sala não encontrada.');
         }
-
+    
         $sala = $this->normalizeSala($data);
-
+    
         if ($sala->status !== 'active') {
             return redirect()->route('aluno.salas.index')
-                ->with('error', 'Esta sala não está ao vivo no momento.');
+                ->with('error', 'Esta sala não está ao vivo.');
         }
-
-        $nomeProfessor = null;
-        if (!empty($data['idProfessor'])) {
-            $professor     = $this->apiGet("Usuario/RetornaUsuarioPorId/{$data['idProfessor']}");
-            $nomeProfessor = $professor['nome'] ?? $professor['name'] ?? 'Professor';
-        }
-
-        if (!empty($data['idMateria'])) {
+    
+        // Nome da matéria
+        if (isset($sala->idMateria)) {
             $materias      = $this->apiGet('Materia/ListarMaterias') ?? [];
-            $materia       = collect($materias)->firstWhere('idMateria', $data['idMateria']);
+            $materia       = collect($materias)->firstWhere('idMateria', $sala->idMateria);
             $sala->materia = $materia['nomeMateria'] ?? '—';
         }
-
-        // Busca conteúdo vinculado à sala
+    
+        // Conteúdo vinculado
         $conteudo = null;
         if (!empty($data['idConteudo'])) {
             $conteudo = $this->apiGet("Conteudo/RetornaConteudoPorId/{$data['idConteudo']}");
-            if (is_null($conteudo)) {
-                Log::warning("[SalaAulaAlunoController] Conteúdo {$data['idConteudo']} não encontrado para sala {$id}");
-            }
         }
-
-        // Quantidade de alunos na sala
-        $qtdAlunos = 0;
-        $qtdData   = $this->apiGet("AlunoSala/RetornaQtdAlunosSala/{$id}");
-        if (!is_null($qtdData)) {
-            if (is_array($qtdData)) {
-                $qtdAlunos = (int) ($qtdData['quantidade'] ?? $qtdData['count'] ?? 0);
-            } else {
-                $qtdAlunos = (int) $qtdData;
-            }
-        }
-
-        return view('aluno.salas.video-aula', compact('sala', 'nomeProfessor', 'conteudo', 'qtdAlunos'));
+    
+        // Liberação e nome do professor
+        $liberada      = Cache::get("sala_{$id}_liberada", false);
+        $nomeProfessor = $data['nomeProfessor'] ?? 'Professor';
+    
+        return view('aluno.salas.video-aula', compact('sala', 'conteudo', 'liberada', 'nomeProfessor'));
     }
+
 
     // ─── LEAVE - SAIR DA SALA ───────────────────────────────────────────────
 
     public function leave(int $id)
     {
-        $idAluno = Auth::id();
-
-        $enrollments = $this->apiGet("AlunoSala/RetornarAlunoSalaPorIdAluno/{$idAluno}");
-        $alunoSala   = collect($enrollments)->firstWhere('idSalaAula', $id);
-
-        if (empty($alunoSala['idAlunoSala'])) {
-            return redirect()->route('aluno.dashboard')
-                ->with('error', 'Não foi possível sair da sala. Matrícula não encontrada.');
+        $registros = $this->apiGet("AlunoSala/RetornarAlunoSalaPorIdAluno/" . Auth::id());
+    
+        if ($registros) {
+            $lista   = is_array($registros) && isset($registros[0]) ? $registros : [$registros];
+            $registro = collect($lista)->first(fn($r) => ($r['idSalaAula'] ?? null) == $id);
+    
+            if ($registro && isset($registro['idAlunoSala'])) {
+                $this->apiDelete("AlunoSala/DeletarAlunoSala/{$registro['idAlunoSala']}");
+            }
         }
-
-        $ok = $this->apiDelete("AlunoSala/DeletarAlunoSala/{$alunoSala['idAlunoSala']}");
-
-        if (!$ok) {
-            return redirect()->route('aluno.dashboard')
-                ->with('error', 'Não foi possível sair da sala. Tente novamente.');
-        }
-
-        return redirect()->route('aluno.dashboard')
+    
+        return redirect()->route('aluno.salas.index')
             ->with('success', 'Você saiu da aula.');
     }
 
@@ -404,4 +429,32 @@ class SalaAulaAlunoController extends Controller
 
         return back()->with('success', 'Avaliação enviada com sucesso!');
     }
+    
+    public function membros(int $id): \Illuminate\Http\JsonResponse
+    {
+        $alunosSala = $this->apiGet("AlunoSala/RetornaAlunoSalaPorIdSalaAula/{$id}") ?? [];
+    
+        if (!is_array($alunosSala) || (count($alunosSala) && !isset($alunosSala[0]))) {
+            $alunosSala = isset($alunosSala['idAlunoSala']) ? [$alunosSala] : [];
+        }
+    
+        // Busca info do professor via sala
+        $sala      = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$id}");
+        $professor = $sala ? [
+            'id'   => $sala['idProfessor'] ?? null,
+            'nome' => $sala['nomeProfessor'] ?? 'Professor',
+            'role' => 'professor',
+        ] : null;
+    
+        return response()->json([
+            'professor' => $professor,
+            'alunos'    => collect($alunosSala)->map(fn($a) => [
+                'id'   => $a['idAluno']   ?? null,
+                'nome' => $a['nomeAluno'] ?? 'Aluno',
+                'role' => 'aluno',
+            ])->values(),
+            'total' => count($alunosSala),
+        ]);
+    }
+
 }

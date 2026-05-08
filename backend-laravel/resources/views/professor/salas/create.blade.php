@@ -5,9 +5,7 @@
 
 @section('styles')
 <link rel="stylesheet" href="{{ asset('css/sala-professor.css') }}">
-<link rel="stylesheet" href="{{ asset('css/steps-conteudo-simulado.css') }}">
 <style>
-    /* Tabs do conteúdo — classes próprias para não conflitar com steps-conteudo-simulado.js */
     .conteudo-tab-btn {
         flex: 1;
         padding: 12px 16px;
@@ -27,6 +25,46 @@
     .conteudo-tab-btn.active      { color: var(--primary-color, #7367f0); border-bottom-color: var(--primary-color, #7367f0); }
     .conteudo-tab-panel           { display: none; }
     .conteudo-tab-panel.active    { display: block; }
+
+    /* Simulado tabs — idênticos ao padrão de conteúdo */
+    .simulado-tab-btn {
+        flex: 1;
+        padding: 12px 16px;
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid transparent;
+        color: var(--text-secondary, #6e6b7b);
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: color .2s, border-color .2s;
+    }
+    .simulado-tab-btn:hover  { color: var(--primary-color, #7367f0); }
+    .simulado-tab-btn.active { color: var(--primary-color, #7367f0); border-bottom-color: var(--primary-color, #7367f0); }
+    .simulado-tab-panel      { display: none; }
+    .simulado-tab-panel.active { display: block; }
+
+    .btn-refresh-lista {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        background: rgba(115,103,240,.08);
+        border: 1px solid var(--primary-color, #7367f0);
+        border-radius: 6px;
+        color: var(--primary-color, #7367f0);
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: .2s;
+        margin-top: 10px;
+    }
+    .btn-refresh-lista:hover { background: var(--primary-color, #7367f0); color: #fff; }
+    .btn-refresh-lista i.spin { animation: girando .8s linear infinite; }
+    @keyframes girando { to { transform: rotate(360deg); } }
 </style>
 @endsection
 
@@ -59,7 +97,12 @@
         {{ $errors->first('api') }}
     </div>
 @endif
-
+@if($errors->has('simulado'))
+    <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle"></i>
+        {{ $errors->first('simulado') }}
+    </div>
+@endif
 @if(session('warning'))
     <div class="alert alert-warning">
         <i class="fas fa-exclamation-triangle"></i>
@@ -84,7 +127,6 @@
                     </div>
                     <div class="form-card-body">
 
-                        {{-- Título --}}
                         <div class="form-group">
                             <label for="titulo" class="form-label">
                                 Título da Sala <span class="required">*</span>
@@ -107,7 +149,6 @@
                             @enderror
                         </div>
 
-                        {{-- Descrição --}}
                         <div class="form-group">
                             <label for="descricao" class="form-label">Descrição</label>
                             <textarea
@@ -122,7 +163,6 @@
                             @enderror
                         </div>
 
-                        {{-- Matéria + Max Alunos --}}
                         <div class="form-row-two">
                             <div class="form-group">
                                 <label for="materia_id" class="form-label">
@@ -172,12 +212,9 @@
                             </div>
                         </div>
 
-                        {{-- Data/hora início + fim --}}
                         <div class="form-row-two">
                             <div class="form-group" id="grupo-data-inicio">
-                                <label for="data_hora_inicio" class="form-label">
-                                    Data e Hora de Início
-                                </label>
+                                <label for="data_hora_inicio" class="form-label">Data e Hora de Início</label>
                                 <input
                                     type="datetime-local"
                                     id="data_hora_inicio"
@@ -191,9 +228,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label for="data_hora_fim" class="form-label">
-                                    Data e Hora de Fim
-                                </label>
+                                <label for="data_hora_fim" class="form-label">Data e Hora de Fim</label>
                                 <input
                                     type="datetime-local"
                                     id="data_hora_fim"
@@ -207,7 +242,6 @@
                             </div>
                         </div>
 
-                        {{-- Status --}}
                         <div class="form-row-two">
                             <div class="form-group">
                                 <label for="status" class="form-label">Status Inicial</label>
@@ -233,7 +267,6 @@
                 </div>
             </div>
 
-            {{-- Prévia --}}
             <div class="form-col-side">
                 <div class="preview-card">
                     <div class="preview-card-header">
@@ -272,7 +305,6 @@
                     <ul class="tips-list">
                         <li>Use um título claro e descritivo para facilitar a busca pelos alunos.</li>
                         <li>Defina data e hora de início para que os alunos se programem.</li>
-                        <li>Deixe o link externo vazio para usar a sala Jitsi automática.</li>
                         <li>Você vinculará o conteúdo e simulado nos próximos passos.</li>
                     </ul>
                 </div>
@@ -305,7 +337,6 @@
             </div>
             <div class="form-card-body">
 
-                {{-- Tabs — classes próprias (.conteudo-tab-btn / .conteudo-tab-panel) --}}
                 <div class="simulado-tabs">
                     <button type="button" class="conteudo-tab-btn active" data-conteudo-tab="existente">
                         <i class="fas fa-link"></i>
@@ -317,95 +348,78 @@
                     </button>
                 </div>
 
-                {{-- TAB: Vincular existente --}}
                 <div class="conteudo-tab-panel active" id="conteudoTab-existente">
-                    @if(count($conteudos))
-                        <p class="section-hint">
-                            <i class="fas fa-info-circle"></i>
-                            Selecione um conteúdo já cadastrado. Para cadastrar um novo, acesse
-                            <a href="{{ route('professor.conteudo.create') }}" target="_blank"><strong>Conteúdos</strong></a>.
-                        </p>
-                        <div class="conteudo-grid" id="conteudoGrid">
-                            @foreach($conteudos as $conteudo)
-                            <label
-                                class="conteudo-card"
-                                for="conteudo_{{ $conteudo['idConteudo'] }}"
-                                data-url="{{ $conteudo['url'] ?? '' }}"
-                                data-tipo="{{ $conteudo['tipo'] ?? 'other' }}"
-                            >
-                                <input
-                                    type="radio"
-                                    id="conteudo_{{ $conteudo['idConteudo'] }}"
-                                    name="conteudo_id"
-                                    value="{{ $conteudo['idConteudo'] }}"
-                                    {{ old('conteudo_id') == $conteudo['idConteudo'] ? 'checked' : '' }}
-                                    class="conteudo-radio"
+                    <div id="conteudoGridWrapper">
+                        @if(count($conteudos))
+                            <p class="section-hint">
+                                <i class="fas fa-info-circle"></i>
+                                Selecione um conteúdo já cadastrado. Para cadastrar um novo, acesse
+                                <a href="{{ route('professor.conteudo.create') }}" target="_blank"><strong>Conteúdos</strong></a>.
+                            </p>
+                            <div class="conteudo-grid" id="conteudoGrid">
+                                @foreach($conteudos as $conteudo)
+                                <label
+                                    class="conteudo-card"
+                                    for="conteudo_opt_{{ $conteudo['idConteudo'] }}"
+                                    data-url="{{ $conteudo['url'] ?? '' }}"
+                                    data-tipo="{{ $conteudo['tipo'] ?? 'other' }}"
                                 >
-                                <div class="conteudo-card-inner">
-                                    <div class="conteudo-tipo-badge {{ $conteudo['tipo'] ?? 'other' }}">
-                                        @switch($conteudo['tipo'] ?? '')
-                                            @case('pdf')  <i class="fas fa-file-pdf"></i> PDF @break
-                                            @case('pptx') <i class="fas fa-file-powerpoint"></i> PPTX @break
-                                            @case('docx') <i class="fas fa-file-word"></i> DOCX @break
-                                            @case('mp4')  <i class="fas fa-file-video"></i> MP4 @break
-                                            @case('link') <i class="fas fa-link"></i> Link @break
-                                            @default       <i class="fas fa-file"></i> Arquivo
-                                        @endswitch
+                                    <input
+                                        type="radio"
+                                        id="conteudo_opt_{{ $conteudo['idConteudo'] }}"
+                                        name="_conteudo_radio"
+                                        value="{{ $conteudo['idConteudo'] }}"
+                                        {{ old('conteudo_id') == $conteudo['idConteudo'] ? 'checked' : '' }}
+                                        class="conteudo-radio"
+                                    >
+                                    <div class="conteudo-card-inner">
+                                        <div class="conteudo-tipo-badge {{ $conteudo['tipo'] ?? 'other' }}">
+                                            @switch($conteudo['tipo'] ?? '')
+                                                @case('pdf')  <i class="fas fa-file-pdf"></i> PDF @break
+                                                @case('pptx') <i class="fas fa-file-powerpoint"></i> PPTX @break
+                                                @case('docx') <i class="fas fa-file-word"></i> DOCX @break
+                                                @case('mp4')  <i class="fas fa-file-video"></i> MP4 @break
+                                                @case('link') <i class="fas fa-link"></i> Link @break
+                                                @default       <i class="fas fa-file"></i> Arquivo
+                                            @endswitch
+                                        </div>
+                                        <div class="conteudo-info">
+                                            <strong>{{ $conteudo['titulo'] }}</strong>
+                                            @if(!empty($conteudo['descricao']))
+                                                <span>{{ Str::limit($conteudo['descricao'], 60) }}</span>
+                                            @endif
+                                        </div>
+                                        <div class="conteudo-check">
+                                            <i class="fas fa-check-circle"></i>
+                                        </div>
                                     </div>
-                                    <div class="conteudo-info">
-                                        <strong>{{ $conteudo['titulo'] }}</strong>
-                                        @if(!empty($conteudo['descricao']))
-                                            <span>{{ Str::limit($conteudo['descricao'], 60) }}</span>
-                                        @endif
-                                    </div>
-                                    <div class="conteudo-check">
-                                        <i class="fas fa-check-circle"></i>
-                                    </div>
-                                </div>
-                            </label>
-                            @endforeach
-                        </div>
-
-                        {{-- Preview do conteúdo selecionado --}}
-                        <div class="conteudo-preview-wrapper" id="conteudoPreviewWrapper">
-                            <div class="conteudo-preview-header">
-                                <span>
-                                    <i class="fas fa-eye"></i>
-                                    <span id="conteudoPreviewTitle">Prévia</span>
-                                </span>
-                                <a href="#" target="_blank" id="btnAbrirNovaAba" class="btn-abrir-nova-aba">
-                                    <i class="fas fa-external-link-alt"></i> Abrir em nova aba
+                                </label>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="empty-state-inline">
+                                <i class="fas fa-folder-open"></i>
+                                <p>Você ainda não tem conteúdos cadastrados.</p>
+                                <a href="{{ route('professor.conteudo.create') }}" class="btn-form-next" target="_blank">
+                                    <i class="fas fa-plus"></i> Cadastrar Conteúdo
                                 </a>
                             </div>
-                            <iframe
-                                id="conteudoIframe"
-                                class="conteudo-iframe"
-                                src=""
-                                allowfullscreen
-                                style="display:none;"
-                            ></iframe>
-                            <div id="conteudoFallback" class="conteudo-preview-fallback" style="display:none;"></div>
-                        </div>
-                    @else
-                        <div class="empty-state-inline">
-                            <i class="fas fa-folder-open"></i>
-                            <p>Você ainda não tem conteúdos cadastrados.</p>
-                            <a href="{{ route('professor.conteudo.create') }}" class="btn-form-next" target="_blank">
-                                <i class="fas fa-plus"></i> Cadastrar Conteúdo
-                            </a>
-                        </div>
-                    @endif
-                    {{-- Hidden que carrega o valor selecionado --}}
-                    <input type="hidden" id="conteudo_id_hidden" name="conteudo_id" value="{{ old('conteudo_id', '') }}">
+                        @endif
+                    </div>
+                    <button type="button" class="btn-refresh-lista" id="btnRefreshConteudo">
+                        <i class="fas fa-sync-alt" id="iconRefreshConteudo"></i> Atualizar lista
+                    </button>
                 </div>
 
-                {{-- TAB: Sem conteúdo --}}
                 <div class="conteudo-tab-panel" id="conteudoTab-nenhum">
                     <div class="empty-state-inline muted">
                         <i class="fas fa-ban"></i>
                         <p>Esta sala será criada sem conteúdo vinculado.<br>Você poderá adicionar um depois.</p>
                     </div>
                 </div>
+
+                {{-- ÚNICO campo hidden de conteudo_id enviado ao server --}}
+                <input type="hidden" id="conteudo_id_final" name="conteudo_id" value="{{ old('conteudo_id', '') }}">
 
             </div>
         </div>
@@ -435,96 +449,90 @@
             </div>
             <div class="form-card-body">
 
+                {{-- TABS do simulado — agora com classe própria .simulado-tab-btn --}}
                 <div class="simulado-tabs">
-                    <button type="button" class="simulado-tab active" data-simulado-tab="existente">
+                    <button type="button" class="simulado-tab-btn active" data-sim-tab="existente">
                         <i class="fas fa-link"></i>
-                        Vincular Simulado Existente
+                        Vincular Existente
                     </button>
-                    <button type="button" class="simulado-tab" data-simulado-tab="novo">
+                    <button type="button" class="simulado-tab-btn" data-sim-tab="novo">
                         <i class="fas fa-plus"></i>
-                        Criar Novo Simulado
+                        Criar Novo
                     </button>
-                    <button type="button" class="simulado-tab" data-simulado-tab="nenhum">
+                    <button type="button" class="simulado-tab-btn" data-sim-tab="nenhum">
                         <i class="fas fa-ban"></i>
                         Sem Simulado
                     </button>
                 </div>
 
                 {{-- TAB: Vincular existente --}}
-                <div class="simulado-tab-content active" id="simuladoTab-existente">
-                    @if(count($simulados))
-                        <div class="conteudo-grid">
-                            @foreach($simulados as $simulado)
-                            <label class="conteudo-card" for="simulado_{{ $simulado['idSimulado'] }}">
-                                <input
-                                    type="radio"
-                                    id="simulado_{{ $simulado['idSimulado'] }}"
-                                    name="simulado_id"
-                                    value="{{ $simulado['idSimulado'] }}"
-                                    {{ old('simulado_id') == $simulado['idSimulado'] ? 'checked' : '' }}
-                                    class="simulado-radio"
-                                >
-                                <div class="conteudo-card-inner">
-                                    <div class="conteudo-tipo-badge simulado">
-                                        <i class="fas fa-clipboard-list"></i>
+                <div class="simulado-tab-panel active" id="simTab-existente">
+                    <div id="simuladoGridWrapper">
+                        @if(count($simulados))
+                            <div class="conteudo-grid">
+                                @foreach($simulados as $simulado)
+                                <label class="conteudo-card" for="simulado_opt_{{ $simulado['idSimulado'] }}">
+                                    <input
+                                        type="radio"
+                                        id="simulado_opt_{{ $simulado['idSimulado'] }}"
+                                        name="_simulado_radio"
+                                        value="{{ $simulado['idSimulado'] }}"
+                                        {{ old('simulado_id') == $simulado['idSimulado'] ? 'checked' : '' }}
+                                        class="simulado-radio"
+                                    >
+                                    <div class="conteudo-card-inner">
+                                        <div class="conteudo-tipo-badge simulado">
+                                            <i class="fas fa-clipboard-list"></i>
+                                        </div>
+                                        <div class="conteudo-info">
+                                            <strong>{{ $simulado['titulo'] }}</strong>
+                                            @if(!empty($simulado['descricao']))
+                                                <span>{{ Str::limit($simulado['descricao'], 60) }}</span>
+                                            @endif
+                                            @if(!empty($simulado['questoes_count']))
+                                                <span class="badge-questoes">{{ $simulado['questoes_count'] }} questões</span>
+                                            @endif
+                                        </div>
+                                        <div class="conteudo-check">
+                                            <i class="fas fa-check-circle"></i>
+                                        </div>
                                     </div>
-                                    <div class="conteudo-info">
-                                        <strong>{{ $simulado['titulo'] }}</strong>
-                                        @if(!empty($simulado['descricao']))
-                                            <span>{{ Str::limit($simulado['descricao'], 60) }}</span>
-                                        @endif
-                                        @if(!empty($simulado['questoes_count']))
-                                            <span class="badge-questoes">
-                                                {{ $simulado['questoes_count'] }} questões
-                                            </span>
-                                        @endif
-                                    </div>
-                                    <div class="conteudo-check">
-                                        <i class="fas fa-check-circle"></i>
-                                    </div>
-                                </div>
-                            </label>
-                            @endforeach
-                        </div>
-
-                        <div class="simulado-questoes-preview" id="simuladoQuestoesPreview">
-                            <div class="simulado-preview-header">
-                                <span>
-                                    <i class="fas fa-list-ol"></i>
-                                    Questões do simulado
-                                </span>
-                                <span class="simulado-preview-count" id="simuladoQuestoesCount">0 questões</span>
+                                </label>
+                                @endforeach
                             </div>
-                            <div class="simulado-questoes-list" id="simuladoQuestoesList"></div>
-                        </div>
-                    @else
-                        <div class="empty-state-inline">
-                            <i class="fas fa-clipboard-list"></i>
-                            <p>Nenhum simulado cadastrado ainda.</p>
-                        </div>
-                    @endif
+                        @else
+                            <div class="empty-state-inline" id="simuladoEmptyState">
+                                <i class="fas fa-clipboard-list"></i>
+                                <p>Nenhum simulado cadastrado ainda.</p>
+                            </div>
+                        @endif
+                    </div>
+                    <button type="button" class="btn-refresh-lista" id="btnRefreshSimulado">
+                        <i class="fas fa-sync-alt" id="iconRefreshSimulado"></i> Atualizar lista
+                    </button>
                 </div>
 
-                {{-- TAB: Criar novo — redireciona para a página de criação --}}
-                <div class="simulado-tab-content" id="simuladoTab-novo">
+                {{-- TAB: Criar novo --}}
+                <div class="simulado-tab-panel" id="simTab-novo">
                     <div class="empty-state-inline">
                         <i class="fas fa-clipboard-list"></i>
-                        <p>Crie um simulado na área de Simulados e depois vincule-o aqui.</p>
+                        <p>Crie um simulado e depois volte para vinculá-lo aqui.</p>
                         <a href="{{ route('professor.simulados.create') }}" target="_blank" class="btn-form-next">
                             <i class="fas fa-external-link-alt"></i>
-                            Ir para Criar Simulado
+                            Criar Simulado em Nova Aba
                         </a>
                     </div>
-                    <input type="hidden" name="simulado_id" value="">
+                    <button type="button" class="btn-refresh-lista" id="btnRefreshSimuladoNovo">
+                        <i class="fas fa-sync-alt" id="iconRefreshSimuladoNovo"></i> Atualizar lista e vincular
+                    </button>
                 </div>
 
                 {{-- TAB: Sem simulado --}}
-                <div class="simulado-tab-content" id="simuladoTab-nenhum">
+                <div class="simulado-tab-panel" id="simTab-nenhum">
                     <div class="empty-state-inline muted">
                         <i class="fas fa-ban"></i>
                         <p>Esta sala será criada sem simulado vinculado.<br>Você poderá adicionar um depois.</p>
                     </div>
-                    <input type="hidden" name="simulado_id" value="">
                 </div>
 
             </div>
@@ -575,39 +583,15 @@
         </div>
     </div>
 
+    {{-- ÚNICO campo hidden para simulado_id (sem duplicatas) --}}
+    <input type="hidden" id="simulado_id_final" name="simulado_id" value="{{ old('simulado_id', '') }}">
+
 </form>
 
 @endsection
 
 @section('scripts')
 <script src="{{ asset('js/sala-professor.js') }}"></script>
-
-<script>
-window.simuladosData = {
-    @foreach($simulados as $simulado)
-    "{{ $simulado['idSimulado'] }}": {
-        titulo: @json($simulado['titulo']),
-        questoes: [
-            @if(!empty($simulado['questoes']))
-                @foreach($simulado['questoes'] as $q)
-                {
-                    enunciado:       @json($q['enunciado']       ?? ''),
-                    questao_a:       @json($q['questao_a']       ?? ''),
-                    questao_b:       @json($q['questao_b']       ?? ''),
-                    questao_c:       @json($q['questao_c']       ?? ''),
-                    questao_d:       @json($q['questao_d']       ?? ''),
-                    questao_e:       @json($q['questao_e']       ?? ''),
-                    questao_correta: @json($q['questao_correta'] ?? ''),
-                },
-                @endforeach
-            @endif
-        ]
-    },
-    @endforeach
-};
-</script>
-
-<script src="{{ asset('js/steps-conteudo-simulado.js') }}"></script>
 
 <script>
 /* ══════════════════════════════════════════
@@ -619,15 +603,21 @@ const materiaNames = {
     @endforeach
 };
 
+const ROUTE_REFRESH_CONTEUDOS = @json(route('professor.salas.refreshConteudos'));
+const ROUTE_REFRESH_SIMULADOS = @json(route('professor.salas.refreshSimulados'));
+const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+
 /* ══════════════════════════════════════════
    REFERÊNCIAS
 ══════════════════════════════════════════ */
 const inicioInput  = document.getElementById('data_hora_inicio');
 const statusSelect = document.getElementById('status');
 const grupoInicio  = document.getElementById('grupo-data-inicio');
+const conteudoIdFinal = document.getElementById('conteudo_id_final');
+const simuladoIdFinal = document.getElementById('simulado_id_final');
 
 /* ══════════════════════════════════════════
-   DATA MÍNIMA — impede datas passadas
+   DATA MÍNIMA
 ══════════════════════════════════════════ */
 function nowIso() {
     const d = new Date();
@@ -653,10 +643,6 @@ if (inicioInput) {
     });
 }
 
-/* ══════════════════════════════════════════
-   TOGGLE: esconde só o campo de início
-   quando status = active; fim fica visível
-══════════════════════════════════════════ */
 function toggleDateFields() {
     if (!statusSelect || !grupoInicio) return;
     const isActive = statusSelect.value === 'active';
@@ -671,11 +657,11 @@ toggleDateFields();
    PRÉVIA DO CARD
 ══════════════════════════════════════════ */
 function updatePreview() {
-    const titulo = document.getElementById('titulo')?.value           || '';
-    const matId  = document.getElementById('materia_id')?.value       || '';
-    const alunos = document.getElementById('max_alunos')?.value       || '30';
-    const inicio = inicioInput?.value                                  || '';
-    const status = statusSelect?.value                                 || 'pending';
+    const titulo = document.getElementById('titulo')?.value || '';
+    const matId  = document.getElementById('materia_id')?.value || '';
+    const alunos = document.getElementById('max_alunos')?.value || '30';
+    const inicio = inicioInput?.value || '';
+    const status = statusSelect?.value || 'pending';
 
     document.getElementById('previewTitulo').textContent  = titulo || 'Título da Sala';
     document.getElementById('previewMateria').textContent = materiaNames[matId] || 'Matéria';
@@ -734,31 +720,151 @@ document.getElementById('backToStep2')?.addEventListener('click', () => goToStep
 
 /* ══════════════════════════════════════════
    TABS DO CONTEÚDO
-   Usa .conteudo-tab-btn / .conteudo-tab-panel
-   — sem conflito com steps-conteudo-simulado.js
 ══════════════════════════════════════════ */
-const conteudoIdHidden = document.getElementById('conteudo_id_hidden');
-
 document.querySelectorAll('.conteudo-tab-btn').forEach(function (tab) {
     tab.addEventListener('click', function () {
         document.querySelectorAll('.conteudo-tab-btn').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.conteudo-tab-panel').forEach(p => p.classList.remove('active'));
-
         this.classList.add('active');
         document.getElementById('conteudoTab-' + this.dataset.conteudoTab)?.classList.add('active');
-
         if (this.dataset.conteudoTab === 'nenhum') {
             document.querySelectorAll('.conteudo-radio').forEach(r => { r.checked = false; });
-            if (conteudoIdHidden) conteudoIdHidden.value = '';
+            if (conteudoIdFinal) conteudoIdFinal.value = '';
         }
     });
 });
 
 document.querySelectorAll('.conteudo-radio').forEach(function (radio) {
     radio.addEventListener('change', function () {
-        if (conteudoIdHidden) conteudoIdHidden.value = this.value;
+        if (conteudoIdFinal) conteudoIdFinal.value = this.value;
     });
 });
+
+/* ══════════════════════════════════════════
+   TABS DO SIMULADO
+══════════════════════════════════════════ */
+document.querySelectorAll('.simulado-tab-btn').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+        document.querySelectorAll('.simulado-tab-btn').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.simulado-tab-panel').forEach(p => p.classList.remove('active'));
+        this.classList.add('active');
+        const panel = document.getElementById('simTab-' + this.dataset.simTab);
+        if (panel) panel.classList.add('active');
+        // Limpa seleção quando sai da aba "existente"
+        if (this.dataset.simTab !== 'existente') {
+            document.querySelectorAll('.simulado-radio').forEach(r => { r.checked = false; });
+            if (simuladoIdFinal) simuladoIdFinal.value = '';
+        }
+    });
+});
+
+document.querySelectorAll('.simulado-radio').forEach(function (radio) {
+    radio.addEventListener('change', function () {
+        if (simuladoIdFinal) simuladoIdFinal.value = this.value;
+    });
+});
+
+/* ══════════════════════════════════════════
+   REFRESH CONTEÚDO
+══════════════════════════════════════════ */
+async function refreshConteudos() {
+    const icon = document.getElementById('iconRefreshConteudo');
+    if (icon) icon.classList.add('spin');
+    try {
+        const r = await fetch(ROUTE_REFRESH_CONTEUDOS, {
+            headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN }
+        });
+        if (!r.ok) return;
+        const list = await r.json();
+        const wrapper = document.getElementById('conteudoGridWrapper');
+        if (!wrapper) return;
+        if (!list.length) {
+            wrapper.innerHTML = `<div class="empty-state-inline"><i class="fas fa-folder-open"></i><p>Nenhum conteúdo cadastrado.</p></div>`;
+            return;
+        }
+        const grid = list.map(c => {
+            const tipo = c.tipo ?? 'other';
+            const icones = { pdf:'fa-file-pdf', pptx:'fa-file-powerpoint', docx:'fa-file-word', mp4:'fa-file-video', link:'fa-link' };
+            const ic = icones[tipo] ?? 'fa-file';
+            return `
+            <label class="conteudo-card" for="conteudo_opt_${c.idConteudo}">
+                <input type="radio" id="conteudo_opt_${c.idConteudo}" name="_conteudo_radio"
+                    value="${c.idConteudo}" class="conteudo-radio">
+                <div class="conteudo-card-inner">
+                    <div class="conteudo-tipo-badge ${tipo}"><i class="fas ${ic}"></i></div>
+                    <div class="conteudo-info">
+                        <strong>${c.titulo ?? ''}</strong>
+                        ${c.descricao ? `<span>${c.descricao.substring(0,60)}</span>` : ''}
+                    </div>
+                    <div class="conteudo-check"><i class="fas fa-check-circle"></i></div>
+                </div>
+            </label>`;
+        }).join('');
+        wrapper.innerHTML = `<p class="section-hint"><i class="fas fa-info-circle"></i> Selecione um conteúdo já cadastrado.</p><div class="conteudo-grid">${grid}</div>`;
+        // Re-bind radio listeners
+        wrapper.querySelectorAll('.conteudo-radio').forEach(r => {
+            r.addEventListener('change', function () {
+                if (conteudoIdFinal) conteudoIdFinal.value = this.value;
+            });
+        });
+    } catch(e) { console.error('Erro ao atualizar conteúdos:', e); }
+    finally { if (icon) icon.classList.remove('spin'); }
+}
+
+document.getElementById('btnRefreshConteudo')?.addEventListener('click', refreshConteudos);
+
+/* ══════════════════════════════════════════
+   REFRESH SIMULADO
+══════════════════════════════════════════ */
+async function refreshSimulados(switchToExistente = false) {
+    const icon1 = document.getElementById('iconRefreshSimulado');
+    const icon2 = document.getElementById('iconRefreshSimuladoNovo');
+    [icon1, icon2].forEach(i => i?.classList.add('spin'));
+    try {
+        const r = await fetch(ROUTE_REFRESH_SIMULADOS, {
+            headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN }
+        });
+        if (!r.ok) return;
+        const list = await r.json();
+        const wrapper = document.getElementById('simuladoGridWrapper');
+        if (!wrapper) return;
+        if (!list.length) {
+            wrapper.innerHTML = `<div class="empty-state-inline"><i class="fas fa-clipboard-list"></i><p>Nenhum simulado cadastrado ainda.</p></div>`;
+        } else {
+            const cards = list.map(s => `
+            <label class="conteudo-card" for="simulado_opt_${s.idSimulado}">
+                <input type="radio" id="simulado_opt_${s.idSimulado}" name="_simulado_radio"
+                    value="${s.idSimulado}" class="simulado-radio">
+                <div class="conteudo-card-inner">
+                    <div class="conteudo-tipo-badge simulado"><i class="fas fa-clipboard-list"></i></div>
+                    <div class="conteudo-info">
+                        <strong>${s.titulo ?? ''}</strong>
+                        ${s.descricao ? `<span>${s.descricao.substring(0,60)}</span>` : ''}
+                        ${s.questoes_count ? `<span class="badge-questoes">${s.questoes_count} questões</span>` : ''}
+                    </div>
+                    <div class="conteudo-check"><i class="fas fa-check-circle"></i></div>
+                </div>
+            </label>`).join('');
+            wrapper.innerHTML = `<div class="conteudo-grid">${cards}</div>`;
+            wrapper.querySelectorAll('.simulado-radio').forEach(r => {
+                r.addEventListener('change', function () {
+                    if (simuladoIdFinal) simuladoIdFinal.value = this.value;
+                });
+            });
+        }
+        // Se veio do tab "novo", muda para "existente" automaticamente
+        if (switchToExistente) {
+            document.querySelectorAll('.simulado-tab-btn').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.simulado-tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelector('[data-sim-tab="existente"]')?.classList.add('active');
+            document.getElementById('simTab-existente')?.classList.add('active');
+        }
+    } catch(e) { console.error('Erro ao atualizar simulados:', e); }
+    finally { [icon1, icon2].forEach(i => i?.classList.remove('spin')); }
+}
+
+document.getElementById('btnRefreshSimulado')?.addEventListener('click', () => refreshSimulados(false));
+document.getElementById('btnRefreshSimuladoNovo')?.addEventListener('click', () => refreshSimulados(true));
 
 /* ══════════════════════════════════════════
    RESUMO FINAL
@@ -768,24 +874,20 @@ function updateResumo() {
     const inicio = inicioInput?.value || '';
     const status = statusSelect?.value || 'pending';
 
-    // Conteúdo
     const activeConteudoTab = document.querySelector('.conteudo-tab-btn.active')?.dataset.conteudoTab;
-    const conteudoRadio     = document.querySelector('.conteudo-radio:checked');
     let conteudoLabel = 'Sem conteúdo';
-    if (activeConteudoTab === 'existente' && conteudoRadio) {
-        conteudoLabel = conteudoRadio.closest('.conteudo-card')
-            ?.querySelector('strong')?.textContent?.trim() || 'Sem conteúdo';
+    if (activeConteudoTab === 'existente' && conteudoIdFinal?.value) {
+        const checked = document.querySelector('.conteudo-radio:checked');
+        conteudoLabel = checked?.closest('.conteudo-card')?.querySelector('strong')?.textContent?.trim() || 'Conteúdo selecionado';
     }
 
-    // Simulado
-    const activeSimTab  = document.querySelector('#step-3 .simulado-tab.active')?.dataset.simuladoTab;
-    const simuladoRadio = document.querySelector('.simulado-radio:checked');
+    const activeSimTab = document.querySelector('.simulado-tab-btn.active')?.dataset.simTab;
     let simuladoLabel = 'Sem simulado';
-    if (activeSimTab === 'existente' && simuladoRadio) {
-        simuladoLabel = simuladoRadio.closest('.conteudo-card')
-            ?.querySelector('strong')?.textContent?.trim() || 'Sem simulado';
+    if (activeSimTab === 'existente' && simuladoIdFinal?.value) {
+        const checked = document.querySelector('.simulado-radio:checked');
+        simuladoLabel = checked?.closest('.conteudo-card')?.querySelector('strong')?.textContent?.trim() || 'Simulado selecionado';
     } else if (activeSimTab === 'novo') {
-        simuladoLabel = 'Novo simulado (página externa)';
+        simuladoLabel = 'Criar novo (aba externa)';
     }
 
     document.getElementById('resumoTitulo').textContent   = document.getElementById('titulo')?.value || '—';
@@ -793,7 +895,7 @@ function updateResumo() {
     document.getElementById('resumoAlunos').textContent   = document.getElementById('max_alunos')?.value || '—';
     document.getElementById('resumoInicio').textContent   = status === 'active'
         ? 'Agora (ao vivo)'
-        : (inicio ? new Date(inicio).toLocaleString('pt-BR') : 'Sem data');
+        : (inicio ? new Date(inicio).toLocaleString('pt-BR') : 'Sem data definida');
     document.getElementById('resumoConteudo').textContent = conteudoLabel;
     document.getElementById('resumoSimulado').textContent = simuladoLabel;
 }

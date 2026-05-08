@@ -54,12 +54,15 @@ Route::middleware(['auth', 'role:aluno'])->prefix('aluno')->name('aluno.')->grou
 
     // Salas de Aula
     Route::resource('salas', SalaAulaAlunoController::class, ['only' => ['index', 'show']]);
-    Route::post('salas/{id}/join', [SalaAulaAlunoController::class, 'join'])->name('salas.join');
-    Route::get('salas/{id}/aguardando', [SalaAulaAlunoController::class, 'aguardando'])->name('salas.aguardando');
-    Route::get('salas/{id}/video', [SalaAulaAlunoController::class, 'video'])->name('salas.video');
-    Route::post('salas/{id}/leave', [SalaAulaAlunoController::class, 'leave'])->name('salas.leave');
-    Route::post('salas/{id}/rating', [SalaAulaAlunoController::class, 'rating'])->name('salas.rating');
+    Route::post('salas/{id}/join',          [SalaAulaAlunoController::class, 'join'])->name('salas.join');
+    Route::get('salas/{id}/aguardando',     [SalaAulaAlunoController::class, 'aguardando'])->name('salas.aguardando');
+    Route::get('salas/{id}/video',          [SalaAulaAlunoController::class, 'video'])->name('salas.video');
+    // Route::post('salas/{id}/leave',         [SalaAulaAlunoController::class, 'leave'])->name('salas.leave');
+    Route::post('salas/{id}/rating',        [SalaAulaAlunoController::class, 'rating'])->name('salas.rating');
     Route::get('salas/{id}/check-liberada', [SalaAulaAlunoController::class, 'checkLiberada'])->name('salas.checkLiberada');
+    Route::post('salas/{id}/entrar',        [SalaAulaAlunoController::class, 'entrar'])->name('salas.entrar');
+    Route::delete('salas/{id}/leave',       [SalaAulaAlunoController::class, 'leave'])->name('salas.leave');
+    Route::get('salas/{id}/membros',        [SalaAulaAlunoController::class, 'membros'])->name('salas.membros');
 
     // Histórico de Aulas
     Route::get('historico', [HistoricoAlunoController::class, 'index'])->name('historico');
@@ -101,10 +104,13 @@ Route::middleware(['auth', 'role:professor'])->prefix('professor')->name('profes
  
     // Salas de Aula
     Route::resource('salas', SalaAulaProfessorController::class);
+    Route::get('salas/refresh-conteudos',       [SalaAulaProfessorController::class, 'refreshConteudos'])->name('salas.refreshConteudos');
+    Route::get('salas/refresh-simulados',       [SalaAulaProfessorController::class, 'refreshSimulados'])->name('salas.refreshSimulados');
     Route::patch('salas/{sala}/iniciar',        [SalaAulaProfessorController::class, 'iniciar'])->name('salas.iniciar');
     Route::patch('salas/{sala}/encerrar',       [SalaAulaProfessorController::class, 'encerrar'])->name('salas.encerrar');
     Route::get('salas/{sala}/video-aula',       [SalaAulaProfessorController::class, 'videoAula'])->name('salas.video-aula');
-    Route::post('salas/{sala}/liberar',         [SalaAulaProfessorController::class, 'liberarAlunos'])->name('salas.liberar');
+    Route::post('salas/{id}/liberar',           [SalaAulaProfessorController::class, 'liberarAlunos'])->name('salas.liberar');
+    Route::get('salas/{id}/membros',            [SalaAulaProfessorController::class, 'membros'])->name('salas.membros');
     Route::get('salas/{sala}/contagem-alunos',  [SalaAulaProfessorController::class, 'contagemAlunos'])->name('salas.contagemAlunos');
 
     // Conteúdo

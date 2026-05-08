@@ -235,57 +235,36 @@ class SalaAulaProfessorController extends Controller
         $validated = $request->validate([
             'titulo'           => 'required|string|max:255',
             'descricao'        => 'nullable|string',
-            'materia_id'       => 'required|integer',
+            'materia_id'       => 'required|numeric',
             'max_alunos'       => 'required|integer|min:1|max:500',
             'status'           => 'required|in:active,pending',
-            // inicio: obrigatório só se agendada (pending)
             'data_hora_inicio' => 'nullable|date',
             'data_hora_fim'    => 'nullable|date',
-            'conteudo_id'      => 'nullable|integer',
-            'simulado_id'      => 'nullable|integer',
-
-            'questoes'                   => 'nullable|array|min:1',
-            'questoes.*.enunciado'       => 'required_with:questoes|string',
-            'questoes.*.questao_a'       => 'required_with:questoes|string',
-            'questoes.*.questao_b'       => 'required_with:questoes|string',
-            'questoes.*.questao_c'       => 'required_with:questoes|string',
-            'questoes.*.questao_d'       => 'required_with:questoes|string',
-            'questoes.*.questao_e'       => 'nullable|string',
-            'questoes.*.questao_correta' => 'required_with:questoes|integer|between:1,5',
+            // Removido nullable|integer — strings vazias causavam falha
+            'conteudo_id'      => 'nullable',
+            'simulado_id'      => 'nullable',
         ], [
             'titulo.required'     => 'O título é obrigatório.',
             'materia_id.required' => 'Selecione uma matéria.',
             'max_alunos.required' => 'Informe a quantidade máxima de alunos.',
             'status.in'           => 'Status inválido.',
         ]);
-
+    
+        // Normaliza valores vazios para null
+        $conteudoId = !empty($validated['conteudo_id']) ? (int) $validated['conteudo_id'] : null;
+        $simuladoId = !empty($validated['simulado_id']) ? (int) $validated['simulado_id'] : null;
+    
         // Se for ao vivo (active), dataHoraInicio = agora
         if ($validated['status'] === 'active') {
             $dataHoraInicio = now()->toIso8601String();
         } else {
-            $dataHoraInicio = $validated['data_hora_inicio'] ?? null;
+            $dataHoraInicio = !empty($validated['data_hora_inicio'])
+                ? $validated['data_hora_inicio']
+                : null;
         }
-
-        $dataHoraFim = $validated['data_hora_fim'] ?? null;
-
-        $simuladoId = $validated['simulado_id'] ?? null;
-
-        if (!empty($validated['questoes']) && empty($simuladoId)) {
-            $simuladoCriado = $this->apiPost('Simulado/CadastrarSimulado', [
-                'titulo'    => $validated['titulo'] . ' — Simulado',
-                'idMateria' => $validated['materia_id'],
-                'situacao'  => true,
-                'questoes'  => array_values($validated['questoes']),
-            ]);
-
-            if (is_null($simuladoCriado)) {
-                return back()->withInput()
-                    ->withErrors(['simulado' => 'Falha ao criar o simulado. Tente novamente.']);
-            }
-
-            $simuladoId = $simuladoCriado['idSimulado'] ?? null;
-        }
-
+    
+        $dataHoraFim = !empty($validated['data_hora_fim']) ? $validated['data_hora_fim'] : null;
+    
         $sala = $this->apiPost('SalaAula/CadastrarSalaAula', [
             'titulo'         => $validated['titulo'],
             'descricao'      => $validated['descricao'] ?? null,
@@ -295,16 +274,15 @@ class SalaAulaProfessorController extends Controller
             'dataHoraFim'    => $dataHoraFim,
             'idMateria'      => (int) $validated['materia_id'],
             'status'         => $validated['status'],
-            'idConteudo'     => $validated['conteudo_id'] ? (int) $validated['conteudo_id'] : null,
-            'idSimulado'     => $simuladoId               ? (int) $simuladoId               : null,
+            'idConteudo'     => $conteudoId,
+            'idSimulado'     => $simuladoId,
         ]);
-
+    
         if (is_null($sala)) {
             return back()->withInput()
                 ->withErrors(['api' => 'Falha ao criar a sala. Tente novamente.']);
         }
-
-        // Se foi criada como ao vivo, redireciona direto para a sala
+    
         if ($validated['status'] === 'active') {
             $salaId = $sala['idSalaAula'] ?? null;
             if ($salaId) {
@@ -313,7 +291,7 @@ class SalaAulaProfessorController extends Controller
                     ->with('success', 'Sala criada e iniciada!');
             }
         }
-
+    
         return redirect()
             ->route('professor.salas.index')
             ->with('success', 'Sala criada com sucesso!');
@@ -599,19 +577,27 @@ class SalaAulaProfessorController extends Controller
     public function liberarAlunos(int $id)
     {
         $data = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$id}");
- 
+    
         if (is_null($data)) {
-            return redirect()->route('professor.salas.index')
-                ->with('error', 'Sala não encontrada.');
+            if (request()->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Sala não encontrada.'], 404);
+            }
+            return redirect()->route('professor.salas.index')->with('error', 'Sala não encontrada.');
         }
- 
+    
         if (($data['idProfessor'] ?? null) != Auth::id()) {
-            return redirect()->route('professor.salas.index')
-                ->with('error', 'Acesso não autorizado.');
+            if (request()->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Acesso não autorizado.'], 403);
+            }
+            return redirect()->route('professor.salas.index')->with('error', 'Acesso não autorizado.');
         }
- 
+    
         Cache::put("sala_{$id}_liberada", true, now()->addHours(6));
- 
+    
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true, 'message' => 'Alunos liberados!']);
+        }
+    
         return redirect()->route('professor.salas.video-aula', $id)
             ->with('success', 'Alunos liberados para entrar na sala!');
     }
@@ -631,5 +617,52 @@ class SalaAulaProfessorController extends Controller
             : (int) $data;
  
         return response()->json(['count' => $count]);
+    }
+
+    // MEMBROS — retorna professor + alunos na sala (AJAX)
+    public function membros(int $id): \Illuminate\Http\JsonResponse
+    {
+        $alunosSala = $this->apiGet("AlunoSala/RetornaAlunoSalaPorIdSalaAula/{$id}") ?? [];
+    
+        // Normaliza para array de arrays
+        if (!is_array($alunosSala) || (count($alunosSala) && !isset($alunosSala[0]))) {
+            $alunosSala = isset($alunosSala['idAlunoSala']) ? [$alunosSala] : [];
+        }
+    
+        return response()->json([
+            'professor' => [
+                'id'   => Auth::id(),
+                'nome' => session('user_nome') ?? (Auth::user()->name ?? 'Professor'),
+                'role' => 'professor',
+            ],
+            'alunos' => collect($alunosSala)->map(fn($a) => [
+                'id'   => $a['idAluno']   ?? null,
+                'nome' => $a['nomeAluno'] ?? 'Aluno',
+                'role' => 'aluno',
+            ])->values(),
+            'total' => count($alunosSala),
+        ]);
+    }
+
+    // REFRESH CONTEÚDOS — retorna JSON para refresh AJAX no create
+    public function refreshConteudos(): \Illuminate\Http\JsonResponse
+    {
+        $conteudos = $this->apiGet('Conteudo/RetornaConteudoPorIdProfessor/' . Auth::id()) ?? [];
+        $conteudos = is_array($conteudos) && isset($conteudos[0])
+            ? $conteudos
+            : (isset($conteudos['idConteudo']) ? [$conteudos] : []);
+    
+        return response()->json($conteudos);
+    }
+    
+    // REFRESH SIMULADOS — retorna JSON para refresh AJAX no create
+    public function refreshSimulados(): \Illuminate\Http\JsonResponse
+    {
+        $simulados = $this->apiGet("Simulado/RetornaSimuladosPorUsuario/" . Auth::id()) ?? [];
+        $simulados = is_array($simulados) && isset($simulados[0])
+            ? $simulados
+            : (isset($simulados['idSimulado']) ? [$simulados] : []);
+    
+        return response()->json($simulados);
     }
 }
