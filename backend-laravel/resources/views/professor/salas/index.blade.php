@@ -71,7 +71,7 @@
             <div class="live-stats">
                 <div class="live-stat">
                     <strong>
-                        {{ count((array)($salaAtiva->alunoSalas ?? [])) }}
+                        <span id="live-alunos-count">—</span>
                         <span class="stat-sep">/</span>
                         {{ $salaAtiva->maxAlunos }}
                     </strong>
@@ -362,27 +362,52 @@
     const el   = document.getElementById('live-timer');
     if (!meta || !el) return;
 
+    const salaId     = meta.dataset.salaId;
     const horaInicio = meta.dataset.horaInicio;
-    if (!horaInicio) return;
 
-    const start = new Date(horaInicio);
-    if (isNaN(start.getTime())) return;
+    // ── TIMER ──
+    if (horaInicio) {
+        const start = new Date(horaInicio);
 
-    function pad(n) { return String(n).padStart(2, '0'); }
+        if (!isNaN(start.getTime())) {
+            function pad(n) { return String(n).padStart(2, '0'); }
 
-    function tick() {
-        const diff = Math.max(0, Math.floor((Date.now() - start.getTime()) / 1000));
-        const h    = Math.floor(diff / 3600);
-        const m    = Math.floor((diff % 3600) / 60);
-        const s    = diff % 60;
+            function tick() {
+                const diff = Math.max(0, Math.floor((Date.now() - start.getTime()) / 1000));
+                const h = Math.floor(diff / 3600);
+                const m = Math.floor((diff % 3600) / 60);
+                const s = diff % 60;
+                el.textContent = h > 0
+                    ? `${pad(h)}:${pad(m)}:${pad(s)}`
+                    : `${pad(m)}:${pad(s)}`;
+            }
 
-        el.textContent = h > 0
-            ? `${pad(h)}:${pad(m)}:${pad(s)}`
-            : `${pad(m)}:${pad(s)}`;
+            tick();
+            setInterval(tick, 1000);
+        } else {
+            console.warn('[ProfeLuno] data_hora_inicio inválida:', horaInicio);
+            el.textContent = '--:--';
+        }
     }
 
-    tick();
-    setInterval(tick, 1000);
+    // ── CONTAGEM DE ALUNOS VIA AJAX ──
+    const countEl = document.getElementById('live-alunos-count');
+    if (countEl && salaId) {
+        const url = @json(route('professor.salas.contagemAlunos', $salaAtiva->id));
+
+        async function fetchCount() {
+            try {
+                const r    = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                const data = await r.json();
+                countEl.textContent = data.count ?? 0;
+            } catch (e) {
+                // silencia erros de rede
+            }
+        }
+
+        fetchCount();
+        setInterval(fetchCount, 10000); // atualiza a cada 10s
+    }
 })();
 
 /* ═══════════════════════════════════════

@@ -449,14 +449,10 @@
 
         addLog('Sala liberada pelo professor!', 'ok');
 
-        if (!sessionStorage.getItem(STORAGE_KEY)) {
-            sessionStorage.setItem(STORAGE_KEY, '1');
-            setTimeout(() => {
-                document.getElementById('formEntrar').submit();
-            }, 3000);
-        } else {
-            addLog('Aguardando confirmação manual para entrar.', 'wait');
-        }
+        // Sempre fazer auto-submit quando liberada (removida lógica problemática de sessionStorage)
+        setTimeout(() => {
+            document.getElementById('formEntrar').submit();
+        }, 3000);
     }
 
     async function checkLiberada() {

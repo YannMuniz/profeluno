@@ -100,7 +100,8 @@ document.addEventListener('DOMContentLoaded', () => {
        5. LIVE TIMER (sala-buscar — aula ativa)
        ======================================================== */
     const timerEl = document.getElementById('live-timer');
-    if (timerEl) {
+    const liveMeta = document.getElementById('live-sala-meta');
+    if (timerEl && !liveMeta) {
         let seconds = 0;
         setInterval(() => {
             seconds++;

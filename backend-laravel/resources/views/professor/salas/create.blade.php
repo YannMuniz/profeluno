@@ -5,6 +5,7 @@
 
 @section('styles')
 <link rel="stylesheet" href="{{ asset('css/sala-professor.css') }}">
+<link rel="stylesheet" href="{{ asset('css/steps-conteudo-simulado.css') }}">
 <style>
     .conteudo-tab-btn {
         flex: 1;

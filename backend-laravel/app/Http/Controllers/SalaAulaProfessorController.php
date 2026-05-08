@@ -577,27 +577,41 @@ class SalaAulaProfessorController extends Controller
     public function liberarAlunos(int $id)
     {
         $data = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$id}");
-    
+
         if (is_null($data)) {
+            Log::error("[SalaAulaProfessorController] Tentativa de liberar sala inexistente: {$id}");
             if (request()->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Sala não encontrada.'], 404);
             }
             return redirect()->route('professor.salas.index')->with('error', 'Sala não encontrada.');
         }
-    
+
         if (($data['idProfessor'] ?? null) != Auth::id()) {
+            Log::warning("[SalaAulaProfessorController] Tentativa não autorizada de liberar sala {$id} por usuário " . Auth::id());
             if (request()->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Acesso não autorizado.'], 403);
             }
             return redirect()->route('professor.salas.index')->with('error', 'Acesso não autorizado.');
         }
-    
+
+        // Verificar se já está liberada
+        $jaLiberada = Cache::get("sala_{$id}_liberada", false);
+        if ($jaLiberada) {
+            Log::info("[SalaAulaProfessorController] Sala {$id} já estava liberada");
+        } else {
+            Log::info("[SalaAulaProfessorController] Liberando sala {$id} para alunos");
+        }
+
         Cache::put("sala_{$id}_liberada", true, now()->addHours(6));
-    
+
+        // Verificar se foi setado corretamente
+        $verificar = Cache::get("sala_{$id}_liberada", false);
+        Log::info("[SalaAulaProfessorController] Cache verificado após set: " . ($verificar ? 'true' : 'false'));
+
         if (request()->expectsJson()) {
             return response()->json(['success' => true, 'message' => 'Alunos liberados!']);
         }
-    
+
         return redirect()->route('professor.salas.video-aula', $id)
             ->with('success', 'Alunos liberados para entrar na sala!');
     }
