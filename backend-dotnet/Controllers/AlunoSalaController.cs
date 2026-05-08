@@ -24,7 +24,7 @@ namespace backend_dotnet.Controllers
             return Ok(response);
         }
 
-        [HttpGet("RetornaAlunoSalaPorId/{IdAlunoSala}")]
+        [HttpGet("RetornaAlunoSalaPorId/{idAlunoSala}")]
         public async Task<IActionResult> RetornaAlunoSalaPorId(int idAlunoSala)
         {
             var response = await _alunoSalaService.RetornaAlunoSalaPorId(idAlunoSala);
