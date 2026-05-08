@@ -256,23 +256,30 @@ class SalaAulaAlunoController extends Controller
     }
 
     // ─── CHECK LIBERADA - AJAX (polling da sala de espera) ──────────────────
-
     public function checkLiberada(int $id): \Illuminate\Http\JsonResponse
     {
         $data = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$id}");
 
-        if (is_null($data) || ($data['status'] ?? '') !== 'active') {
-            Log::info("[SalaAulaAlunoController] Check sala {$id} - Sala não existe ou não está ativa");
+        if (is_null($data)) {
             return response()->json(['liberada' => false, 'encerrada' => true]);
         }
 
-        $liberada = Cache::get("sala_{$id}_liberada", false);
-        Log::info("[SalaAulaAlunoController] Check sala {$id} - Cache liberada: " . ($liberada ? 'true' : 'false'));
+        $status = $data['status'] ?? '';
+
+        // Sala encerrada ou não existe mais
+        if ($status === 'completed') {
+            return response()->json(['liberada' => false, 'encerrada' => true]);
+        }
+
+        // Sala ativa = professor já liberou (status é a fonte de verdade)
+        // Cache é checado como fallback extra (liberar sem mudar status)
+        $liberadaPorCache = Cache::get("sala_{$id}_liberada", false);
+        $liberada = ($status === 'active') && $liberadaPorCache;
 
         return response()->json([
-            'liberada' => (bool) $liberada,
+            'liberada'  => $liberada,
             'encerrada' => false,
-            'timestamp' => now()->toISOString()
+            'status'    => $status,
         ]);
     }
 
@@ -316,52 +323,58 @@ class SalaAulaAlunoController extends Controller
     }
 
     // ─── JOIN - CRIAR REGISTRO E ENTRAR NA SALA ─────────────────────────────
-
     public function join(Request $request, int $id)
     {
-        Log::info("[SalaAulaAlunoController] Join iniciado - Sala: {$id}, User ID: " . (Auth::id() ?? 'null') . ", Session ID: " . session()->getId());
+        $data = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$id}");
 
-        // Verifica se a sala está liberada pelo professor
+        if (is_null($data)) {
+            return redirect()->route('aluno.salas.index')
+                ->with('error', 'Sala não encontrada.');
+        }
+
+        $sala   = $this->normalizeSala($data);
+        $status = $data['status'] ?? '';
+
+        // Sala não está ativa de jeito nenhum
+        if ($status !== 'active') {
+            return redirect()->route('aluno.salas.index')
+                ->with('error', 'Esta sala não está ao vivo no momento.');
+        }
+
         $liberada = Cache::get("sala_{$id}_liberada", false);
-        Log::info("[SalaAulaAlunoController] Join sala {$id} - Cache liberada: " . ($liberada ? 'true' : 'false'));
-
         if (!$liberada) {
-            Log::warning("[SalaAulaAlunoController] Tentativa de join em sala não liberada: {$id}");
-            return redirect()->route('aluno.salas.aguardando', $id)
-                ->with('error', 'O professor ainda não liberou a entrada.');
+            return redirect()->route('aluno.salas.aguardando', $id);
         }
 
         $idAluno = Auth::id();
         if (!$idAluno) {
-            Log::error("[SalaAulaAlunoController] Join sala {$id} - Usuário não autenticado");
             return redirect()->route('login')->with('error', 'Você precisa estar logado.');
         }
 
-        Log::info("[SalaAulaAlunoController] Join sala {$id} - Verificando inscrições do aluno {$idAluno}");
+        // Verifica se já está inscrito
         $enrollments = $this->apiGet("AlunoSala/RetornarAlunoSalaPorIdAluno/{$idAluno}");
-        $existing = collect($enrollments)->firstWhere('idSalaAula', $id);
-
-        if (!empty($existing['idAlunoSala'])) {
-            Log::info("[SalaAulaAlunoController] Aluno {$idAluno} já está na sala {$id}");
-            return redirect()->route('aluno.salas.video', $id)
-                ->with('success', 'Você já está nessa aula.');
+        if ($enrollments) {
+            $lista     = isset($enrollments[0]) ? $enrollments : [$enrollments];
+            $existente = collect($lista)->first(fn($r) => ($r['idSalaAula'] ?? null) == $id);
+            if (!empty($existente['idAlunoSala'])) {
+                return redirect()->route('aluno.salas.video', $id)
+                    ->with('success', 'Você já está nessa aula.');
+            }
         }
 
-        $dataHoraAtual = date('Y-m-d H:i:s');
-        Log::info("[SalaAulaAlunoController] Join sala {$id} - Cadastrando aluno {$idAluno} na API");
+        // Cadastra na API
         $resultado = $this->apiPost('AlunoSala/CadastraAlunoSala', [
             'idAluno'    => $idAluno,
             'idSalaAula' => $id,
-            'joinedAt' => $dataHoraAtual,
+            'joinedAt'   => now()->toIso8601String(),
         ]);
 
         if (is_null($resultado)) {
-            Log::error("[SalaAulaAlunoController] Falha ao cadastrar AlunoSala para aluno {$idAluno} sala {$id}");
+            Log::error("[SalaAulaAlunoController] Falha ao cadastrar AlunoSala aluno {$idAluno} sala {$id}");
             return redirect()->route('aluno.salas.aguardando', $id)
                 ->with('error', 'Não foi possível entrar na sala. Tente novamente.');
         }
 
-        Log::info("[SalaAulaAlunoController] Aluno {$idAluno} entrou na sala {$id} com sucesso");
         return redirect()->route('aluno.salas.video', $id)
             ->with('success', 'Você entrou na aula!');
     }

@@ -442,17 +442,15 @@
 
     function onLiberado() {
         clearInterval(intervalId);
-
         document.getElementById('waitingVisual').style.display = 'none';
         document.getElementById('liberadoBox').classList.add('show');
         document.getElementById('btnEntrarWrap').style.display = 'block';
+        addLog('Sala liberada! Entrando automaticamente...', 'ok');
 
-        addLog('Sala liberada pelo professor!', 'ok');
-
-        // Sempre fazer auto-submit quando liberada (removida lógica problemática de sessionStorage)
+        // Entra em 2s em vez de 15s
         setTimeout(() => {
             document.getElementById('formEntrar').submit();
-        }, 3000);
+        }, 2000);
     }
 
     async function checkLiberada() {
@@ -466,10 +464,17 @@
 
             const data = await response.json();
 
+            // Sala encerrada — para de verificar
+            if (data.encerrada) {
+                clearInterval(intervalId);
+                addLog('Esta sala foi encerrada.', 'error');
+                setTimeout(() => { window.location.href = @json(route('aluno.salas.index')); }, 3000);
+                return;
+            }
+
             if (data.liberada) {
                 onLiberado();
             } else if (attempts % 6 === 0) {
-                // Log a cada 30s (6 tentativas × 5s)
                 addLog(`Ainda aguardando... (${Math.floor(attempts * 5 / 60)}min ${(attempts * 5) % 60}s)`, 'wait');
             }
         } catch (err) {

@@ -48,16 +48,22 @@ Route::middleware('auth')->group(function () {
     Route::put('/perfil', [ProfileController::class, 'update'])->name('perfil.update');
 });
 
-// ─── Aluno ────────────────────────────────────────────────────────────────────
+// ─── Aluno ─────────────────────────────────────────────────────────────────
 Route::middleware(['auth', 'role:aluno'])->prefix('aluno')->name('aluno.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'DashboardAluno'])->name('dashboard');
 
     // Salas de Aula
     Route::resource('salas', SalaAulaAlunoController::class, ['only' => ['index', 'show']]);
-    Route::post('salas/{id}/join',          [SalaAulaAlunoController::class, 'join'])->name('salas.join');
+
+    // JOIN — aceita GET (vindo do show/link direto) e POST (vindo do form da espera)
+    Route::match(['GET', 'POST'], 'salas/{id}/join', [SalaAulaAlunoController::class, 'join'])
+        ->name('salas.join');
+
     Route::get('salas/{id}/aguardando',     [SalaAulaAlunoController::class, 'aguardando'])->name('salas.aguardando');
-    Route::get('salas/{id}/video',          [SalaAulaAlunoController::class, 'video'])->name('salas.video');
-    // Route::post('salas/{id}/leave',         [SalaAulaAlunoController::class, 'leave'])->name('salas.leave');
+
+    // ↓ CORRIGIDO: videoAula (não 'video')
+    Route::get('salas/{id}/video',          [SalaAulaAlunoController::class, 'videoAula'])->name('salas.video');
+
     Route::post('salas/{id}/rating',        [SalaAulaAlunoController::class, 'rating'])->name('salas.rating');
     Route::get('salas/{id}/check-liberada', [SalaAulaAlunoController::class, 'checkLiberada'])->name('salas.checkLiberada');
     Route::post('salas/{id}/entrar',        [SalaAulaAlunoController::class, 'entrar'])->name('salas.entrar');
@@ -65,13 +71,23 @@ Route::middleware(['auth', 'role:aluno'])->prefix('aluno')->name('aluno.')->grou
     Route::get('salas/{id}/membros',        [SalaAulaAlunoController::class, 'membros'])->name('salas.membros');
 
     // Histórico de Aulas
-    Route::get('historico', [HistoricoAlunoController::class, 'index'])->name('historico');
+    Route::get('historico',      [HistoricoAlunoController::class, 'index'])->name('historico');
     Route::get('historico/{id}', [HistoricoAlunoController::class, 'show'])->name('historico.show');
 
     // Simulados
-    Route::get('simulados', [SimuladoAlunoController::class, 'index'])->name('simulados');
+    Route::get('simulados',      [SimuladoAlunoController::class, 'index'])->name('simulados');
     Route::get('simulados/{id}', [SimuladoAlunoController::class, 'show'])->name('simulados.show');
 });
+
+// web.php — remova depois de testar
+Route::get('/debug-cache/{id}', function ($id) {
+    $val = Cache::get("sala_{$id}_liberada", 'NÃO ENCONTRADO');
+    return response()->json([
+        'cache_driver' => config('cache.default'),
+        'sala_id'      => $id,
+        'liberada'     => $val,
+    ]);
+})->middleware('auth');
 
 // ─── Professor ────────────────────────────────────────────────────────────────
 // Rotas geradas automaticamente pelo resource:

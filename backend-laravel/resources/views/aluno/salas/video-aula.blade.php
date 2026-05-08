@@ -701,6 +701,9 @@ function appendMessage(name, initials, text, isMe) {
 function sendMsg() {
     const text = chatInput.value.trim();
     if (!text) return;
+    if (window.jitsiApi) {
+        window.jitsiApi.executeCommand('sendChatMessage', text);
+    }
     const initials = USER_NAME.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
     appendMessage('Você', initials, text, true);
     chatInput.value = '';
@@ -731,6 +734,12 @@ if (SALA_URL && SALA_NOME) {
         });
 
         window.jitsiApi = api;
+
+        api.on('incomingMessage', (event) => {
+            const { nick, message } = event;
+            const initials = nick.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
+            appendMessage(nick, initials, message, false);
+        });
 
         /* Sync estado real do Jitsi → botões */
         api.on('audioMuteStatusChanged', ({ muted }) => {

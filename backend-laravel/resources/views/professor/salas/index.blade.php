@@ -392,6 +392,7 @@
 
     // ── CONTAGEM DE ALUNOS VIA AJAX ──
     const countEl = document.getElementById('live-alunos-count');
+    @if($salaAtiva)
     if (countEl && salaId) {
         const url = @json(route('professor.salas.contagemAlunos', $salaAtiva->id));
 
@@ -408,6 +409,7 @@
         fetchCount();
         setInterval(fetchCount, 10000); // atualiza a cada 10s
     }
+    @endif
 })();
 
 /* ═══════════════════════════════════════
