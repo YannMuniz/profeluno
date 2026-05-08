@@ -33,6 +33,15 @@ namespace backend_dotnet.Controllers
             return Ok(response);
         }
 
+        [HttpGet("RetornaAlunoSalaPorIdSalaAula/{idSalaAula}")]
+        public async Task<IActionResult> RetornaAlunoSalaPorIdSalAula(int idSalaAula)
+        {
+            var response = await _alunoSalaService.RetornaAlunoSalaPorIdSalaAula(idSalaAula);
+            if(response == null) return NotFound();
+
+            return Ok(response);
+        }
+
         [HttpGet("RetornarAlunoSalaPorIdAluno/{idAluno}")]
         public async Task<IActionResult> RetornarAlunoSalaPorIdAluno(int idAluno)
         {

@@ -29,6 +29,11 @@ namespace backend_dotnet.Services
             return await _context.AlunoSalas.Where(x => x.IdAluno == idAluno).ToListAsync();
         }
 
+        public async Task<List<AlunoSala>> RetornaAlunoSalaPorIdSalaAula(int idSalaAula)
+        {
+            return _context.AlunoSalas.Where(x => x.IdSalaAula == idSalaAula).ToList();
+        }
+
         public async Task<QuantidadeAlunosSalaResponse> RetornaQtdAlunosSala(int idSalaAula)
         {
             var totalAlunos = await _context.AlunoSalas
