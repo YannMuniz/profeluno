@@ -670,6 +670,7 @@ function initJitsi() {
                 toolbarButtons:[],
                 disableDeepLinking:true,
                 enableWelcomePage:false,
+                notifications: [],
             },
             interfaceConfigOverwrite:{TOOLBAR_BUTTONS:[],SHOW_JITSI_WATERMARK:false},
         });

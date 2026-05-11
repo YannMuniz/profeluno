@@ -238,17 +238,38 @@ class SalaAulaProfessorController extends Controller
             'materia_id'       => 'required|numeric',
             'max_alunos'       => 'required|integer|min:1|max:500',
             'status'           => 'required|in:active,pending',
-            'data_hora_inicio' => 'nullable|date',
-            'data_hora_fim'    => 'nullable|date',
-            // Removido nullable|integer — strings vazias causavam falha
+            'data_hora_inicio' => 'required_if:status,pending|nullable|date_format:Y-m-d\TH:i',
+            'data_hora_fim'    => 'nullable|date_format:Y-m-d\TH:i',
             'conteudo_id'      => 'nullable',
             'simulado_id'      => 'nullable',
         ], [
             'titulo.required'     => 'O título é obrigatório.',
             'materia_id.required' => 'Selecione uma matéria.',
             'max_alunos.required' => 'Informe a quantidade máxima de alunos.',
+            'data_hora_inicio.required_if' => 'A data e hora de início são obrigatórias para salas agendadas.',
+            'data_hora_inicio.date_format' => 'O formato da data deve ser válido.',
+            'data_hora_fim.date_format' => 'O formato da data deve ser válido.',
             'status.in'           => 'Status inválido.',
         ]);
+
+        // Validação customizada para data_hora_inicio no futuro
+        if ($validated['status'] === 'pending' && !empty($validated['data_hora_inicio'])) {
+            $dataInicio = Carbon::createFromFormat('Y-m-d\TH:i', $validated['data_hora_inicio']);
+            if ($dataInicio <= now()) {
+                return back()->withInput()
+                    ->withErrors(['data_hora_inicio' => 'A data de início deve ser no futuro.']);
+            }
+        }
+
+        // Validação: data_hora_fim deve ser após data_hora_inicio
+        if (!empty($validated['data_hora_inicio']) && !empty($validated['data_hora_fim'])) {
+            $dataInicio = Carbon::createFromFormat('Y-m-d\TH:i', $validated['data_hora_inicio']);
+            $dataFim = Carbon::createFromFormat('Y-m-d\TH:i', $validated['data_hora_fim']);
+            if ($dataFim <= $dataInicio) {
+                return back()->withInput()
+                    ->withErrors(['data_hora_fim' => 'A data de fim deve ser após a data de início.']);
+            }
+        }
     
         // Normaliza valores vazios para null
         $conteudoId = !empty($validated['conteudo_id']) ? (int) $validated['conteudo_id'] : null;
@@ -258,12 +279,19 @@ class SalaAulaProfessorController extends Controller
         if ($validated['status'] === 'active') {
             $dataHoraInicio = now()->toIso8601String();
         } else {
-            $dataHoraInicio = !empty($validated['data_hora_inicio'])
-                ? $validated['data_hora_inicio']
-                : null;
+            $dataHoraInicio = null;
+            if (!empty($validated['data_hora_inicio'])) {
+                // Converte de datetime-local (YYYY-MM-DDTHH:mm) para ISO8601
+                $dataInicio = Carbon::createFromFormat('Y-m-d\TH:i', $validated['data_hora_inicio']);
+                $dataHoraInicio = $dataInicio->toIso8601String();
+            }
         }
     
-        $dataHoraFim = !empty($validated['data_hora_fim']) ? $validated['data_hora_fim'] : null;
+        $dataHoraFim = null;
+        if (!empty($validated['data_hora_fim'])) {
+            $dataFim = Carbon::createFromFormat('Y-m-d\TH:i', $validated['data_hora_fim']);
+            $dataHoraFim = $dataFim->toIso8601String();
+        }
     
         $sala = $this->apiPost('SalaAula/CadastrarSalaAula', [
             'titulo'         => $validated['titulo'],
@@ -354,14 +382,16 @@ class SalaAulaProfessorController extends Controller
             'materia_id'       => 'required|integer',
             'max_alunos'       => 'required|integer|min:1|max:500',
             'status'           => 'required|in:active,completed,pending',
-            'data_hora_inicio' => 'nullable|date',
-            'data_hora_fim'    => 'nullable|date',
+            'data_hora_inicio' => 'nullable|date_format:Y-m-d\TH:i',
+            'data_hora_fim'    => 'nullable|date_format:Y-m-d\TH:i',
             'conteudo_id'      => 'nullable|integer',
             'simulado_id'      => 'nullable|integer',
         ], [
             'titulo.required'     => 'O título é obrigatório.',
             'materia_id.required' => 'Selecione uma matéria.',
             'max_alunos.required' => 'Informe a quantidade máxima de alunos.',
+            'data_hora_inicio.date_format' => 'O formato da data deve ser válido.',
+            'data_hora_fim.date_format' => 'O formato da data deve ser válido.',
             'status.in'           => 'Status inválido.',
         ]);
 
@@ -376,9 +406,22 @@ class SalaAulaProfessorController extends Controller
         if ($validated['status'] === 'active') {
             $dataHoraInicio = now()->toIso8601String();
         } else {
-            $dataHoraInicio = $validated['data_hora_inicio']
-                ?? $dadosAtuais['dataHoraInicio']
-                ?? null;
+            $dataHoraInicio = null;
+            if (!empty($validated['data_hora_inicio'])) {
+                // Converte de datetime-local (YYYY-MM-DDTHH:mm) para ISO8601
+                $dataInicio = Carbon::createFromFormat('Y-m-d\TH:i', $validated['data_hora_inicio']);
+                $dataHoraInicio = $dataInicio->toIso8601String();
+            } else {
+                $dataHoraInicio = $dadosAtuais['dataHoraInicio'] ?? null;
+            }
+        }
+
+        $dataHoraFim = null;
+        if (!empty($validated['data_hora_fim'])) {
+            $dataFim = Carbon::createFromFormat('Y-m-d\TH:i', $validated['data_hora_fim']);
+            $dataHoraFim = $dataFim->toIso8601String();
+        } else {
+            $dataHoraFim = $dadosAtuais['dataHoraFim'] ?? null;
         }
 
         $resultado = $this->apiPut('SalaAula/AtualizarSalaAula', [
@@ -388,7 +431,7 @@ class SalaAulaProfessorController extends Controller
             'idProfessor'    => Auth::id(),
             'maxAlunos'      => (int) $validated['max_alunos'],
             'dataHoraInicio' => $dataHoraInicio,
-            'dataHoraFim'    => $validated['data_hora_fim'] ?? $dadosAtuais['dataHoraFim'] ?? null,
+            'dataHoraFim'    => $dataHoraFim,
             'idMateria'      => (int) $validated['materia_id'],
             'status'         => $validated['status'],
             'idConteudo'     => $validated['conteudo_id'] ? (int) $validated['conteudo_id'] : null,

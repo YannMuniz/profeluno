@@ -111,7 +111,7 @@
     </div>
 @endif
 
-<form action="{{ route('professor.salas.store') }}" method="POST" id="formCriarSala">
+<form action="{{ route('professor.salas.store') }}" method="POST" id="formCriarSala" novalidate>
     @csrf
 
     {{-- ══════════════════════════════════════
@@ -222,6 +222,7 @@
                                     name="data_hora_inicio"
                                     class="form-control @error('data_hora_inicio') is-invalid @enderror"
                                     value="{{ old('data_hora_inicio') }}"
+                                    {{ old('status', 'pending') === 'active' ? 'disabled' : '' }}
                                 >
                                 @error('data_hora_inicio')
                                     <span class="error-message">{{ $message }}</span>
@@ -364,6 +365,7 @@
                                     for="conteudo_opt_{{ $conteudo['idConteudo'] }}"
                                     data-url="{{ $conteudo['url'] ?? '' }}"
                                     data-tipo="{{ $conteudo['tipo'] ?? 'other' }}"
+                                    data-id-materia="{{ $conteudo['idMateria'] ?? '' }}"
                                 >
                                     <input
                                         type="radio"
@@ -472,7 +474,7 @@
                         @if(count($simulados))
                             <div class="conteudo-grid">
                                 @foreach($simulados as $simulado)
-                                <label class="conteudo-card" for="simulado_opt_{{ $simulado['idSimulado'] }}">
+                                <label class="conteudo-card" for="simulado_opt_{{ $simulado['idSimulado'] }}" data-id-materia="{{ $simulado['idMateria'] ?? '' }}">
                                     <input
                                         type="radio"
                                         id="simulado_opt_{{ $simulado['idSimulado'] }}"
@@ -592,8 +594,6 @@
 @endsection
 
 @section('scripts')
-<script src="{{ asset('js/sala-professor.js') }}"></script>
-
 <script>
 /* ══════════════════════════════════════════
    MAPA DE MATÉRIAS
@@ -611,9 +611,10 @@ const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]')?.content ??
 /* ══════════════════════════════════════════
    REFERÊNCIAS
 ══════════════════════════════════════════ */
-const inicioInput  = document.getElementById('data_hora_inicio');
-const statusSelect = document.getElementById('status');
-const grupoInicio  = document.getElementById('grupo-data-inicio');
+const formCriarSala  = document.getElementById('formCriarSala');
+const inicioInput     = document.getElementById('data_hora_inicio');
+const statusSelect    = document.getElementById('status');
+const grupoInicio     = document.getElementById('grupo-data-inicio');
 const conteudoIdFinal = document.getElementById('conteudo_id_final');
 const simuladoIdFinal = document.getElementById('simulado_id_final');
 
@@ -628,7 +629,11 @@ function nowIso() {
 
 if (inicioInput) {
     inicioInput.min = nowIso();
-    setInterval(() => { inicioInput.min = nowIso(); }, 60000);
+    setInterval(() => {
+        if (inicioInput && !inicioInput.disabled) {
+            inicioInput.min = nowIso();
+        }
+    }, 60000);
 
     inicioInput.addEventListener('change', function () {
         if (!this.value) return;
@@ -644,11 +649,27 @@ if (inicioInput) {
     });
 }
 
+let _toggling = false;
 function toggleDateFields() {
-    if (!statusSelect || !grupoInicio) return;
-    const isActive = statusSelect.value === 'active';
-    grupoInicio.style.display = isActive ? 'none' : '';
-    if (isActive && inicioInput) inicioInput.value = '';
+    if (_toggling) return;
+    _toggling = true;
+    try {
+        if (!statusSelect || !grupoInicio || !inicioInput) return;
+        const isActive = statusSelect.value === 'active';
+        grupoInicio.style.display = isActive ? 'none' : '';
+        inicioInput.disabled = isActive;
+        inicioInput.required = !isActive;
+        inicioInput.setAttribute('aria-hidden', isActive ? 'true' : 'false');
+        inicioInput.tabIndex = isActive ? -1 : 0;
+        if (isActive) {
+            inicioInput.value = '';
+            inicioInput.removeAttribute('min');
+        } else {
+            inicioInput.min = nowIso();
+        }
+    } finally {
+        _toggling = false;
+    }
 }
 
 statusSelect?.addEventListener('change', () => { toggleDateFields(); updatePreview(); });
@@ -684,9 +705,27 @@ function updatePreview() {
     document.getElementById(id)?.addEventListener('change', updatePreview);
 });
 
-document.getElementById('titulo')?.addEventListener('input', function () {
-    document.getElementById('tituloCount').textContent = this.value.length;
+document.getElementById('materia_id')?.addEventListener('change', function () {
+    const selectedMateria = this.value;
+    filterConteudosByMateria(selectedMateria);
+    filterSimuladosByMateria(selectedMateria);
 });
+
+function filterConteudosByMateria(materiaId) {
+    const cards = document.querySelectorAll('#conteudoGrid .conteudo-card');
+    cards.forEach(card => {
+        const cardMateria = card.dataset.idMateria;
+        card.style.display = (!materiaId || cardMateria === materiaId) ? '' : 'none';
+    });
+}
+
+function filterSimuladosByMateria(materiaId) {
+    const cards = document.querySelectorAll('#simuladoGridWrapper .conteudo-card');
+    cards.forEach(card => {
+        const cardMateria = card.dataset.idMateria;
+        card.style.display = (!materiaId || cardMateria === materiaId) ? '' : 'none';
+    });
+}
 
 /* ══════════════════════════════════════════
    NAVEGAÇÃO ENTRE STEPS
@@ -702,22 +741,64 @@ function goToStep(n) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-document.getElementById('nextToStep2')?.addEventListener('click', () => {
+function validateStep1() {
     const titulo    = document.getElementById('titulo');
     const materiaId = document.getElementById('materia_id');
     const maxAlunos = document.getElementById('max_alunos');
-    if (!titulo?.value.trim() || !materiaId?.value || !maxAlunos?.value) {
+    const inicio    = document.getElementById('data_hora_inicio');
+    const status    = document.getElementById('status');
+
+    if (!titulo?.value.trim()) {
+        goToStep(1);
         titulo?.reportValidity();
-        materiaId?.reportValidity();
-        maxAlunos?.reportValidity();
-        return;
+        return false;
     }
-    goToStep(2);
+
+    if (!materiaId?.value) {
+        goToStep(1);
+        materiaId?.reportValidity();
+        return false;
+    }
+
+    if (!maxAlunos?.value) {
+        goToStep(1);
+        maxAlunos?.reportValidity();
+        return false;
+    }
+
+    if (status?.value === 'pending') {
+        if (!inicio?.value) {
+            goToStep(1);
+            inicio?.reportValidity();
+            return false;
+        }
+
+        const selected = new Date(inicio.value);
+        if (selected <= new Date()) {
+            goToStep(1);
+            inicio?.setCustomValidity('A data de início deve ser no futuro.');
+            inicio?.reportValidity();
+            inicio?.setCustomValidity('');
+            return false;
+        }
+    }
+
+    return true;
+}
+
+document.getElementById('nextToStep2')?.addEventListener('click', () => {
+    if (validateStep1()) goToStep(2);
 });
 
 document.getElementById('backToStep1')?.addEventListener('click', () => goToStep(1));
 document.getElementById('nextToStep3')?.addEventListener('click', () => { updateResumo(); goToStep(3); });
 document.getElementById('backToStep2')?.addEventListener('click', () => goToStep(2));
+
+formCriarSala?.addEventListener('submit', function (e) {
+    if (!validateStep1()) {
+        e.preventDefault();
+    }
+});
 
 /* ══════════════════════════════════════════
    TABS DO CONTEÚDO

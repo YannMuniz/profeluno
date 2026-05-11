@@ -148,13 +148,16 @@ class SalaAulaAlunoController extends Controller
                 return $sala;
             });
 
+            // Não exibe salas concluídas para o aluno
+            $salas = $salas->whereIn('status', ['active', 'pending']);
+
             if ($filters['idMateria']) {
                 $salas = $salas->where('idMateria', $filters['idMateria']);
             }
 
             if ($filters['q']) {
                 $salas = $salas->filter(function ($sala) use ($filters) {
-                    $texto = mb_strtolower(($sala->titulo ?? '') . ' ' . ($sala->materia ?? ''));
+                    $texto = mb_strtolower($sala->titulo ?? '');
                     return str_contains($texto, mb_strtolower($filters['q']));
                 });
             }
@@ -165,12 +168,18 @@ class SalaAulaAlunoController extends Controller
                 $salas = $salas->where('status', 'pending');
             }
 
-            if ($filters['ordenar'] === 'ao-vivo') {
-                $salas = $salas->sortByDesc(fn($s) => $s->status === 'active');
-            } elseif ($filters['ordenar'] === 'alunos') {
-                $salas = $salas->sortByDesc('qtd_alunos');
+            if ($filters['ordenar'] === 'alunos') {
+                $salas = $salas->sortBy(function ($s) {
+                    return sprintf('%s%04d', $s->status === 'active' ? '0' : '1', 9999 - ($s->qtd_alunos ?? 0));
+                });
             } else {
-                $salas = $salas->sortByDesc('data_hora_inicio');
+                $salas = $salas->sortBy(function ($s) {
+                    return sprintf(
+                        '%s%020d',
+                        $s->status === 'active' ? '0' : '1',
+                        9999999999 - ($s->data_hora_inicio?->timestamp ?? 0)
+                    );
+                });
             }
 
             $salas = $salas->values()->all();
@@ -178,7 +187,7 @@ class SalaAulaAlunoController extends Controller
             session()->flash('error', 'Não foi possível carregar as salas. Tente novamente.');
         }
         $title    = '<i class="fas fa-chalkboard-teacher"></i> Sala de aula';
-        $subtitle = 'Encontre salas de aula ao vivo ou agendadas, filtre por matéria e participe das aulas que mais te interessam';
+        $subtitle = 'Encontre salas de aula ao vivo ou agn endadas, filtre por matéria e participe das aulas que mais te interessam';
         return view('aluno.salas.index', compact('salas', 'materias', 'filters', 'title', 'subtitle'));
     }
 
@@ -235,9 +244,9 @@ class SalaAulaAlunoController extends Controller
 
         $sala = $this->normalizeSala($data);
 
-        if ($sala->status !== 'active') {
+        if (!in_array($sala->status, ['active', 'pending'])) {
             return redirect()->route('aluno.salas.index')
-                ->with('error', 'Esta sala não está ao vivo no momento.');
+                ->with('error', 'Esta sala não está disponível.');
         }
 
         $nomeProfessor = null;
@@ -335,10 +344,10 @@ class SalaAulaAlunoController extends Controller
         $sala   = $this->normalizeSala($data);
         $status = $data['status'] ?? '';
 
-        // Sala não está ativa de jeito nenhum
-        if ($status !== 'active') {
+        // Sala não está ativa ou agendada
+        if (!in_array($status, ['active', 'pending'])) {
             return redirect()->route('aluno.salas.index')
-                ->with('error', 'Esta sala não está ao vivo no momento.');
+                ->with('error', 'Esta sala não está disponível.');
         }
 
         $liberada = Cache::get("sala_{$id}_liberada", false);

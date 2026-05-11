@@ -241,8 +241,28 @@
         .status-log .log-wait  { color: var(--warning); }
         .status-log .log-error { color: var(--danger); }
 
-        /* ── ACTIONS ── */
-        .btn-voltar {
+        /* ── COUNTDOWN ── */
+        .countdown-box {
+            margin-bottom: 24px;
+            padding: 16px;
+            background: var(--sidebar-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .countdown-title {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .countdown-timer {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            font-family: 'Courier New', monospace;
+        }
             display: inline-flex;
             align-items: center;
             gap: 8px;
@@ -354,8 +374,13 @@
     {{-- Sala info --}}
     <div class="sala-info">
         <div class="sala-badge">
-            <i class="fas fa-circle" style="color:var(--danger);font-size:8px"></i>
-            Ao Vivo
+            @if($sala->status === 'active')
+                <i class="fas fa-circle" style="color:var(--danger);font-size:8px"></i>
+                Ao Vivo
+            @else
+                <i class="fas fa-calendar" style="color:var(--warning);font-size:8px"></i>
+                Agendada
+            @endif
         </div>
         <div class="sala-titulo">{{ $sala->titulo }}</div>
         <div class="sala-meta">
@@ -389,13 +414,30 @@
     <div class="waiting-visual" id="waitingVisual">
         <div class="waiting-ring"></div>
         <div class="waiting-title">
-            Aguardando<span class="waiting-dots"><span></span><span></span><span></span></span>
+            @if($sala->status === 'active')
+                Aguardando<span class="waiting-dots"><span></span><span></span><span></span></span>
+            @else
+                Aula Agendada<span class="waiting-dots"><span></span><span></span><span></span></span>
+            @endif
         </div>
         <div class="waiting-subtitle">
-            O professor liberará sua entrada em breve.<br>
-            Por favor, mantenha esta página aberta.
+            @if($sala->status === 'active')
+                O professor liberará sua entrada em breve.<br>
+                Por favor, mantenha esta página aberta.
+            @else
+                A aula está agendada para {{ $sala->data_hora_inicio ? $sala->data_hora_inicio->format('d/m/Y H:i') : 'data indefinida' }}.<br>
+                Você será notificado quando iniciar.
+            @endif
         </div>
     </div>
+
+    {{-- Countdown for scheduled --}}
+    @if($sala->status === 'pending' && $sala->data_hora_inicio)
+    <div class="countdown-box" id="countdownBox">
+        <div class="countdown-title">Tempo restante</div>
+        <div class="countdown-timer" id="countdownTimer">--:--:--</div>
+    </div>
+    @endif
 
     {{-- Status log --}}
     <div class="status-log" id="statusLog">
@@ -425,8 +467,11 @@
 <script>
     const CHECK_URL  = @json(route('aluno.salas.checkLiberada', $sala->id));
     const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').content;
+    const SALA_STATUS = @json($sala->status);
+    const SALA_INICIO = @json($sala->data_hora_inicio ? $sala->data_hora_inicio->toISOString() : null);
     let   attempts   = 0;
     let   intervalId = null;
+    let   countdownInterval = null;
 
     function addLog(message, type = 'wait') {
         const log  = document.getElementById('statusLog');
@@ -442,15 +487,45 @@
 
     function onLiberado() {
         clearInterval(intervalId);
+        clearInterval(countdownInterval);
         document.getElementById('waitingVisual').style.display = 'none';
+        document.getElementById('countdownBox')?.style.display = 'none';
         document.getElementById('liberadoBox').classList.add('show');
         document.getElementById('btnEntrarWrap').style.display = 'block';
         addLog('Sala liberada! Entrando automaticamente...', 'ok');
 
-        // Entra em 2s em vez de 15s
         setTimeout(() => {
             document.getElementById('formEntrar').submit();
         }, 2000);
+    }
+
+    function startCountdown(targetTime) {
+        const timerEl = document.getElementById('countdownTimer');
+        if (!timerEl) return;
+
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const distance = targetTime - now;
+
+            if (distance <= 0) {
+                clearInterval(countdownInterval);
+                timerEl.textContent = '00:00:00';
+                addLog('A aula está começando! Aguardando liberação...', 'ok');
+                // Agora aguardar liberação
+                checkLiberada();
+                intervalId = setInterval(checkLiberada, 5000);
+                return;
+            }
+
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            timerEl.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        updateCountdown();
+        countdownInterval = setInterval(updateCountdown, 1000);
     }
 
     async function checkLiberada() {
@@ -467,6 +542,7 @@
             // Sala encerrada — para de verificar
             if (data.encerrada) {
                 clearInterval(intervalId);
+                clearInterval(countdownInterval);
                 addLog('Esta sala foi encerrada.', 'error');
                 setTimeout(() => { window.location.href = @json(route('aluno.salas.index')); }, 3000);
                 return;
@@ -484,11 +560,24 @@
         }
     }
 
-    // Verifica imediatamente (pode já estar liberada)
-    checkLiberada();
-
-    // Poll a cada 5 segundos
-    intervalId = setInterval(checkLiberada, 5000);
+    // Inicialização
+    if (SALA_STATUS === 'pending' && SALA_INICIO) {
+        const inicioTime = new Date(SALA_INICIO).getTime();
+        if (inicioTime > Date.now()) {
+            addLog('Aguardando o horário da aula agendada.', 'wait');
+            startCountdown(inicioTime);
+        } else {
+            // Já passou, aguardar liberação
+            addLog('A aula já deveria ter iniciado. Aguardando liberação...', 'wait');
+            checkLiberada();
+            intervalId = setInterval(checkLiberada, 5000);
+        }
+    } else if (SALA_STATUS === 'active') {
+        // Sala ativa, aguardar liberação
+        addLog('Sala ao vivo. Aguardando liberação do professor...', 'wait');
+        checkLiberada();
+        intervalId = setInterval(checkLiberada, 5000);
+    }
 
     document.getElementById('btnEntrarManual')?.addEventListener('click', function () {
         sessionStorage.setItem(STORAGE_KEY, '1');
@@ -498,6 +587,7 @@
     // Aviso se sair da página
     window.addEventListener('beforeunload', () => {
         clearInterval(intervalId);
+        clearInterval(countdownInterval);
     });
 </script>
 </body>

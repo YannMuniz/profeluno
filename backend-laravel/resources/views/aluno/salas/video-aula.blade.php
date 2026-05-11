@@ -726,6 +726,7 @@ if (SALA_URL && SALA_NOME) {
                 startWithVideoMuted: true,
                 toolbarButtons: [],
                 disableDeepLinking: true,
+                notifications: [],
             },
             interfaceConfigOverwrite: {
                 TOOLBAR_BUTTONS: [],

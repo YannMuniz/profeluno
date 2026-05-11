@@ -531,7 +531,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'other':    { url: true,  upload: true  },  // Ambos
     };
 
-    matType.addEventListener('change', handleTipoChange);
+    matType?.addEventListener('change', handleTipoChange);
 
     function handleTipoChange() {
         const config = tipoConfig[matType.value] ?? { url: false, upload: false };
@@ -563,7 +563,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Dispara ao carregar para respeitar o old() do Laravel
-    handleTipoChange();
+    if (matType) handleTipoChange();
 
     // ─── AUTO-DETECT: salas pending que já passaram do horário ───────────────────
     function verificarSalasProntas() {
@@ -616,7 +616,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     document.getElementById('cancelIniciar')?.addEventListener('click', () => {
-        document.getElementById('iniciarModal').classList.remove('active');
+        document.getElementById('iniciarModal')?.classList.remove('active');
     });
 
     bindIniciarBtns();

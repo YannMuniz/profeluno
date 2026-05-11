@@ -20,9 +20,11 @@
 <div class="search-section">
     <h2 class="search-title">Encontre sua Sala de Aula</h2>
     <form class="search-form" method="GET" action="{{ route('aluno.salas.index') }}">
+        <input type="hidden" name="filtro" value="{{ request('filtro') }}">
+        <input type="hidden" name="ordenar" value="{{ request('ordenar', 'recentes') }}">
         <div class="search-input-group">
             <input type="text" name="q"
-                   placeholder="Buscar por título ou professor..."
+                   placeholder="Buscar por título da sala..."
                    value="{{ request('q') }}">
             <i class="fas fa-search"></i>
         </div>

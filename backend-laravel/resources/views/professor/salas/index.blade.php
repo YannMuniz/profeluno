@@ -178,12 +178,6 @@
                 <i class="fas fa-search"></i>
                 <input type="text" id="searchSalas" placeholder="Buscar sala, matéria...">
             </div>
-            <select class="filter-select" id="filterStatus">
-                <option value="">Todos os status</option>
-                <option value="active">Ativas</option>
-                <option value="pending">Agendadas</option>
-                <option value="completed">Concluídas</option>
-            </select>
             <select class="filter-select" id="filterMateria">
                 <option value="">Todas as matérias</option>
                 @foreach($salas->pluck('materia')->unique()->filter() as $mat)
@@ -494,13 +488,12 @@ iniciarModal.addEventListener('click', function (e) {
    SEARCH + FILTROS
 ═══════════════════════════════════════ */
 const searchInput   = document.getElementById('searchSalas');
-const filterStatus  = document.getElementById('filterStatus');
 const filterMateria = document.getElementById('filterMateria');
 const cards         = document.querySelectorAll('.class-card');
+let statusFilter    = '';
 
 function filterCards() {
     const q       = (searchInput?.value || '').toLowerCase().trim();
-    const status  = filterStatus?.value  || '';
     const materia = (filterMateria?.value || '').toLowerCase();
 
     cards.forEach(function (card) {
@@ -509,15 +502,14 @@ function filterCards() {
         const st      = card.dataset.status   || '';
 
         const matchQ  = !q       || titulo.includes(q) || mat.includes(q);
-        const matchSt = !status  || st === status;
-        const matchMt = !materia || mat === materia;
+        const matchSt = !statusFilter || st === statusFilter;
+        const matchMt = !materia   || mat === materia;
 
         card.style.display = (matchQ && matchSt && matchMt) ? '' : 'none';
     });
 }
 
 searchInput?.addEventListener('input',  filterCards);
-filterStatus?.addEventListener('change', filterCards);
 filterMateria?.addEventListener('change', filterCards);
 
 /* ═══════════════════════════════════════
@@ -547,22 +539,24 @@ document.querySelectorAll('.tab-btn').forEach(function (btn) {
             'todas'    : 'tab-todas',
             'ao-vivo'  : 'tab-ao-vivo',
             'agendadas': 'tab-agendadas',
-            'concluidas': null,
+            'concluidas': 'tab-todas',
         };
 
         // Mostrar/ocultar seções
         ['tab-todas', 'tab-ao-vivo', 'tab-agendadas'].forEach(function (id) {
             const el = document.getElementById(id);
             if (!el) return;
-            el.style.display = (tab === 'todas' || sections[tab] === id) ? '' : 'none';
+            el.style.display = sections[tab] === id ? '' : 'none';
         });
 
-        // Concluídas: filtro no grid de todas
+        // Ajusta filtro de status para a aba atual
         if (tab === 'concluidas') {
-            filterStatus.value = 'completed';
-            filterCards();
-        } else if (tab === 'todas') {
-            filterStatus.value = '';
+            statusFilter = 'completed';
+        } else {
+            statusFilter = '';
+        }
+
+        if (sections[tab] === 'tab-todas') {
             filterCards();
         }
     });
