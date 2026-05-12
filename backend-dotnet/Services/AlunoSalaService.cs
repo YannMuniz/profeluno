@@ -50,6 +50,26 @@ namespace backend_dotnet.Services
             };
         }
 
+        public async Task<IEnumerable<AlunoSala>> RetornaAulasConcluidasIdAluno(int idAluno)
+        {
+            var aulasConcluidas = await _context.AlunoSalas
+                .Include(x => x.SalaAula)
+                .Where(s => s.SalaAula.Status == "completed" && s.IdAluno == idAluno)
+                .ToListAsync();
+
+            return aulasConcluidas;
+        }
+
+        public async Task<IEnumerable<AlunoSala>> RetornaAulasAtivasConcluidasIdAluno(int idAluno)
+        {
+            var aulasAtivas = await _context.AlunoSalas
+                .Include(x => x.SalaAula)
+                .Where(s => (s.SalaAula.Status == "active" || s.SalaAula.Status == "pending") && s.IdAluno == idAluno)
+                .ToListAsync();
+
+            return aulasAtivas;
+        }
+
         public async Task<int> CadastraAlunoSala(CadastrarAlunoSalaRequest request)
         {
             AlunoSala newAlunoSala = new AlunoSala
