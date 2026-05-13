@@ -71,8 +71,10 @@ Route::middleware(['auth', 'role:aluno'])->prefix('aluno')->name('aluno.')->grou
     Route::get('salas/{id}/membros',        [SalaAulaAlunoController::class, 'membros'])->name('salas.membros');
 
     // Histórico de Aulas
-    Route::get('historico',      [HistoricoAlunoController::class, 'index'])->name('historico');
-    Route::get('historico/{id}', [HistoricoAlunoController::class, 'show'])->name('historico.show');
+    Route::get('historico',                         [HistoricoAlunoController::class, 'index'])->name('historico');
+    Route::get('historico/{id}',                    [HistoricoAlunoController::class, 'show'])->name('historico.show');
+    Route::get('historico/{salaId}/simulado',      [HistoricoAlunoController::class, 'simulado'])->name('historico.simulado');
+    Route::post('historico/{salaId}/simulado',     [HistoricoAlunoController::class, 'simuladoSubmit'])->name('historico.simulado.submit');
 
     // Simulados
     Route::get('simulados',      [SimuladoAlunoController::class, 'index'])->name('simulados');
