@@ -37,6 +37,15 @@ namespace backend_dotnet.Controllers
             return Ok(response);
         }
 
+        [HttpGet("AulasConcluidas/{idProfessor}")]
+        public async Task<IActionResult> AulasConcluidas(int idProfessor)
+        {
+            var response = _dashboardProfessor.AulasConcluidas(idProfessor);
+            if(response == null) return BadRequest();
+
+            return Ok(response);
+        }
+
         [HttpGet("ConteudosCriados/{idProfessor}")]
         public async Task<IActionResult> ConteudosCriados(int idProfessor)
         {
