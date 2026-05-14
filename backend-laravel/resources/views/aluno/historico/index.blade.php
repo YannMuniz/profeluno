@@ -22,10 +22,10 @@
     </a>
 </div>
 
-@if($historico->count() > 0)
+@if($aulas->count() > 0)
 
 <div class="classes-list">
-    @foreach($historico as $sala)
+    @foreach($aulas as $sala)
     <div class="class-item">
         <div class="class-info">
             <div class="class-icon">
@@ -40,11 +40,32 @@
                     <i class="fas fa-calendar me-1"></i>
                     {{ $sala->data_hora_inicio->format('d/m/Y \à\s H:i') }}
                     @endif
+                    @if($sala->idConteudo)
+                    &nbsp;·&nbsp;
+                    <i class="fas fa-file-alt me-1" title="Conteúdo disponível"></i>
+                    @endif
+                    @if($sala->idSimulado)
+                    &nbsp;·&nbsp;
+                    <i class="fas fa-list-ol me-1" title="Simulado disponível"></i>
+                    @endif
                 </p>
             </div>
         </div>
 
-        <div class="class-meta">
+        <div class="class-meta d-flex align-items-center gap-2">
+            {{-- Badges de recursos --}}
+            @if($sala->idConteudo)
+                <span class="badge-resource" title="Possui conteúdo">
+                    <i class="fas fa-file-alt"></i>
+                </span>
+            @endif
+            @if($sala->idSimulado)
+                <span class="badge-resource" title="Possui simulado">
+                    <i class="fas fa-list-ol"></i>
+                </span>
+            @endif
+
+            {{-- Status --}}
             @if($sala->status === 'completed')
                 <span class="class-status status-completed">
                     <i class="fas fa-check"></i> Concluída
@@ -69,7 +90,7 @@
 
 {{-- Paginação --}}
 <div class="pagination-wrapper mt-4">
-    {{ $historico->links() }}
+    {{ $aulas->links() }}
 </div>
 
 @else
@@ -77,7 +98,7 @@
 <div class="empty-state">
     <i class="fas fa-history"></i>
     <h3>Nenhuma aula no histórico</h3>
-    <p>Você ainda não participou de nenhuma aula.</p>
+    <p>Você ainda não concluiu nenhuma aula.</p>
     <a href="{{ route('aluno.salas.index') }}" class="btn-primary mt-3">
         <i class="fas fa-search"></i> Buscar Salas
     </a>
@@ -86,3 +107,20 @@
 @endif
 
 @endsection
+
+@push('styles')
+<style>
+    .badge-resource {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        background: rgba(115, 103, 240, 0.1);
+        color: var(--primary-color);
+        font-size: 12px;
+        border: 1px solid rgba(115, 103, 240, 0.2);
+    }
+</style>
+@endpush

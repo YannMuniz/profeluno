@@ -1,6 +1,6 @@
 namespace backend_dotnet.Services.Interfaces
 {
-    public interface IDashboardProfessor
+    public interface IDashboardProfessorService
     {
         public Task<int> TotalAulas(int idProfessor);
         public Task<int> AulasAtivas(int idProfessor);

@@ -1,6 +1,7 @@
 ﻿using backend_dotnet.Models;
 using backend_dotnet.Models.Requests;
 using backend_dotnet.Models.Responses;
+using backend_dotnet.Services;
 using backend_dotnet.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -57,6 +58,22 @@ namespace backend_dotnet.Controllers
             var response = await _alunoSalaService.RetornaQtdAlunosSala(idSalaAula);
             if(response == null) return NotFound();
 
+            return Ok(response);
+        }
+
+        [HttpGet("RetornaAulasConcluidasIdAluno/{idAluno}")]
+        public async Task<IActionResult> RetornaAulasConcluidasIdAluno(int idAluno)
+        {
+            var response = await _alunoSalaService.RetornaAulasConcluidasIdAluno(idAluno);
+            if(response == null) return NotFound();
+            return Ok(response);
+        }
+
+        [HttpGet("RetornaAulasAtivasConcluidasIdAluno/{idAluno}")]
+        public async Task<IActionResult> RetornaAulasAtivasConcluidasIdAluno(int idAluno)
+        {
+            var response = await _alunoSalaService.RetornaAulasAtivasConcluidasIdAluno(idAluno);
+            if(response == null) return NotFound();
             return Ok(response);
         }
 

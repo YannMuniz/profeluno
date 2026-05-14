@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Carbon\Carbon;
 
@@ -76,28 +75,6 @@ class HistoricoAlunoController extends Controller
         }
     }
 
-    private function apiDelete(string $endpoint): bool
-    {
-        try {
-            $response = Http::withHeaders($this->authHeaders())
-                ->timeout(15)
-                ->delete("{$this->baseUrl}/v1/{$endpoint}");
-
-            if ($response->successful()) {
-                return true;
-            }
-
-            Log::warning("[HistoricoAlunoController] DELETE {$endpoint} retornou {$response->status()}", [
-                'body' => $response->body(),
-            ]);
-
-            return false;
-        } catch (\Exception $e) {
-            Log::error("[HistoricoAlunoController] DELETE {$endpoint} falhou: " . $e->getMessage());
-            return false;
-        }
-    }
-
     // ─── NORMALIZE ──────────────────────────────────────────────────────────
 
     private function normalizeSala(array $item): object
@@ -114,16 +91,20 @@ class HistoricoAlunoController extends Controller
             ? Carbon::parse($sala->dataHoraFim)
             : null;
 
-        $sala->qtd_alunos = $sala->maxAlunos ?? 0;
-        $sala->materia    = $sala->materia   ?? '—';
-        $sala->status     = $sala->status    ?? 'pending';
-        $sala->descricao  = $sala->descricao ?? null;
-        $sala->titulo     = $sala->titulo    ?? 'Sem título';
+        $sala->qtd_alunos = $sala->maxAlunos  ?? 0;
+        $sala->materia    = $sala->materia     ?? '—';
+        $sala->status     = $sala->status      ?? 'pending';
+        $sala->descricao  = $sala->descricao   ?? null;
+        $sala->titulo     = $sala->titulo      ?? 'Sem título';
+        $sala->idMateria  = $sala->idMateria   ?? null;
+        $sala->idConteudo = $sala->idConteudo  ?? null;
+        $sala->idSimulado = $sala->idSimulado  ?? null;
+        $sala->idProfessor= $sala->idProfessor ?? null;
 
         return $sala;
     }
 
-    // ─── HISTÓRICO ──────────────────────────────────────────────────────────
+    // ─── INDEX ──────────────────────────────────────────────────────────────
 
     public function index(Request $request)
     {
@@ -131,7 +112,8 @@ class HistoricoAlunoController extends Controller
         $page    = (int) $request->get('page', 1);
         $perPage = 10;
 
-        $data     = $this->apiGet("AlunoSala/RetornarAlunoSalaPorIdAluno/{$idAluno}");
+        // Endpoint correto: retorna aulas concluídas com salaAula aninhada
+        $data     = $this->apiGet("AlunoSala/RetornaAulasConcluidasIdAluno/{$idAluno}");
         $materias = $this->apiGet('Materia/ListarMaterias') ?? [];
 
         if (is_null($data)) {
@@ -148,10 +130,23 @@ class HistoricoAlunoController extends Controller
         $materiasMap = collect($materias)->keyBy('idMateria');
 
         $items = collect($data)->map(function ($item) use ($materiasMap) {
-            $sala = $this->normalizeSala($item);
-            if (isset($sala->idMateria) && $materiasMap->has($sala->idMateria)) {
+            // A API retorna { idAlunoSala, salaAula: { ... } }
+            $salaData = $item['salaAula'] ?? $item;
+            $sala = $this->normalizeSala($salaData);
+
+            // Meta da relação aluno↔sala
+            $sala->joinedAt = !empty($item['joinedAt'])
+                ? Carbon::parse($item['joinedAt'])
+                : null;
+            $sala->leftAt = !empty($item['leftAt'])
+                ? Carbon::parse($item['leftAt'])
+                : null;
+
+            // Resolve nome da matéria
+            if ($sala->idMateria && $materiasMap->has($sala->idMateria)) {
                 $sala->materia = $materiasMap->get($sala->idMateria)['nomeMateria'] ?? '—';
             }
+
             return $sala;
         });
 
@@ -166,7 +161,7 @@ class HistoricoAlunoController extends Controller
         return view('aluno.historico.index', compact('aulas'));
     }
 
-    // ─── HISTÓRICO SHOW ─────────────────────────────────────────────────────
+    // ─── SHOW ───────────────────────────────────────────────────────────────
 
     public function show(int $id)
     {
@@ -179,12 +174,120 @@ class HistoricoAlunoController extends Controller
 
         $sala = $this->normalizeSala($data);
 
-        if (!empty($data['idMateria'])) {
+        // Resolve matéria
+        if ($sala->idMateria) {
             $materias      = $this->apiGet('Materia/ListarMaterias') ?? [];
-            $materia       = collect($materias)->firstWhere('idMateria', $data['idMateria']);
+            $materia       = collect($materias)->firstWhere('idMateria', $sala->idMateria);
             $sala->materia = $materia['nomeMateria'] ?? '—';
         }
 
-        return view('aluno.historico.show', compact('sala'));
+        // Resolve professor
+        $professor = null;
+        if ($sala->idProfessor) {
+            $professor = $this->apiGet("Professor/RetornaProfessorPorId/{$sala->idProfessor}");
+            if (is_null($professor)) {
+                Log::warning("[HistoricoAlunoController] Professor {$sala->idProfessor} não encontrado.");
+            }
+        }
+
+        // Resolve conteúdo
+        $conteudo = null;
+        if ($sala->idConteudo) {
+            $conteudo = $this->apiGet("Conteudo/RetornaConteudoPorId/{$sala->idConteudo}");
+            if (is_null($conteudo)) {
+                Log::warning("[HistoricoAlunoController] Conteúdo {$sala->idConteudo} não encontrado.");
+            }
+        }
+
+        // Resolve simulado (apenas metadados; respostas ficam na view do simulado)
+        $simulado = null;
+        if ($sala->idSimulado) {
+            $simulado = $this->apiGet("Simulado/RetornaSimuladoPorId/{$sala->idSimulado}");
+            if (is_null($simulado)) {
+                Log::warning("[HistoricoAlunoController] Simulado {$sala->idSimulado} não encontrado.");
+            }
+        }
+
+        return view('aluno.historico.show', compact('sala', 'professor', 'conteudo', 'simulado'));
+    }
+
+    // ─── SIMULADO ───────────────────────────────────────────────────────────
+
+    /**
+     * Exibe o simulado para o aluno responder.
+     * Pode ser acessado múltiplas vezes (retry livre).
+     */
+    public function simulado(int $salaId)
+    {
+        $salaData = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$salaId}");
+
+        if (is_null($salaData) || empty($salaData['idSimulado'])) {
+            return redirect()->route('aluno.historico.show', $salaId)
+                ->with('error', 'Esta sala não possui simulado disponível.');
+        }
+
+        $simulado = $this->apiGet("Simulado/RetornaSimuladoPorId/{$salaData['idSimulado']}");
+
+        if (is_null($simulado)) {
+            return redirect()->route('aluno.historico.show', $salaId)
+                ->with('error', 'Não foi possível carregar o simulado.');
+        }
+
+        $sala = $this->normalizeSala($salaData);
+
+        return view('aluno.simulado.show', compact('simulado', 'sala', 'salaId'));
+    }
+
+    /**
+     * Processa as respostas do aluno e retorna a correção.
+     * O aluno pode repetir o simulado quantas vezes quiser.
+     */
+    public function simuladoSubmit(Request $request, int $salaId)
+    {
+        $salaData = $this->apiGet("SalaAula/RetornaSalaAulaPorId/{$salaId}");
+
+        if (is_null($salaData) || empty($salaData['idSimulado'])) {
+            return redirect()->route('aluno.historico.show', $salaId)
+                ->with('error', 'Simulado não disponível.');
+        }
+
+        $simulado = $this->apiGet("Simulado/RetornaSimuladoPorId/{$salaData['idSimulado']}");
+
+        if (is_null($simulado)) {
+            return redirect()->route('aluno.historico.show', $salaId)
+                ->with('error', 'Não foi possível carregar o simulado.');
+        }
+
+        $sala      = $this->normalizeSala($salaData);
+        $respostas = $request->input('respostas', []); // ['0' => '2', '1' => '1', ...]
+        $questoes  = $simulado['simuladoQuestao'] ?? [];
+
+        // Correção
+        $total    = count($questoes);
+        $acertos  = 0;
+        $resultado = [];
+
+        foreach ($questoes as $i => $q) {
+            $correta    = (int) ($q['questaoCorreta'] ?? 0);
+            $respondida = isset($respostas[$i]) ? (int) $respostas[$i] : null;
+            $acertou    = ($respondida !== null && $respondida === $correta);
+
+            if ($acertou) {
+                $acertos++;
+            }
+
+            $resultado[] = [
+                'questao'    => $q,
+                'respondida' => $respondida,
+                'correta'    => $correta,
+                'acertou'    => $acertou,
+            ];
+        }
+
+        $percentual = $total > 0 ? round(($acertos / $total) * 100) : 0;
+
+        return view('aluno.simulado.show', compact(
+            'simulado', 'sala', 'salaId', 'resultado', 'acertos', 'total', 'percentual'
+        ));
     }
 }
