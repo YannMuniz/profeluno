@@ -9,9 +9,9 @@ namespace backend_dotnet.Controllers
 
     public class DashboardProfessorController : ControllerBase
     {
-        private readonly IDashboardProfessor _dashboardProfessor;
+        private readonly IDashboardProfessorService _dashboardProfessor;
 
-        public DashboardProfessorController(IDashboardProfessor dashboardProfessor)
+        public DashboardProfessorController(IDashboardProfessorService dashboardProfessor)
         {
             _dashboardProfessor = dashboardProfessor;
         }
@@ -38,6 +38,15 @@ namespace backend_dotnet.Controllers
         public async Task<IActionResult> AulasPendentes(int idProfessor)
         {
             var response = _dashboardProfessor.AulasPendentes(idProfessor);
+            if(response == null) return BadRequest();
+
+            return Ok(response);
+        }
+
+        [HttpGet("AulasConcluidas/{idProfessor}")]
+        public async Task<IActionResult> AulasConcluidas(int idProfessor)
+        {
+            var response = _dashboardProfessor.AulasConcluidas(idProfessor);
             if(response == null) return BadRequest();
 
             return Ok(response);
