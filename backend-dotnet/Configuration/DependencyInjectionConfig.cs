@@ -20,6 +20,7 @@ public static class DependencyInjectionConfig
         services.AddScoped<IMatchmakingService, MatchmakingService>();
         services.AddScoped<IProfessorMateriaService, ProfessorMateriaService>();
         services.AddScoped<IEscolaridadeService, EscolaridadeService>();
+        services.AddScoped<IDashboardProfessorService, DashboardProfessorService>();
 
         return services;
     }

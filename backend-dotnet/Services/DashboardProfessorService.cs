@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace backend_dotnet.Services
 {
-    public class DashboardProfessor : IDashboardProfessor
+    public class DashboardProfessorService : IDashboardProfessorService
     {
         private readonly ProfelunoContext _context;
 
-        public DashboardProfessor(ProfelunoContext profeluno)
+        public DashboardProfessorService(ProfelunoContext profeluno)
         {
             _context = profeluno;
         }
