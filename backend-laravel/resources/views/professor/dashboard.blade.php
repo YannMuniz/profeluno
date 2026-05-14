@@ -8,24 +8,12 @@
 <div class="stats-row">
     <div class="stat-card">
         <div class="stat-card-header">
-            <div class="stat-icon primary">
-                <i class="fas fa-users"></i>
-            </div>
-        </div>
-        <div class="stat-value">
-            <h3>{{ $totalAlunos }}</h3>
-            <p class="stat-label">Total de Alunos</p>
-        </div>
-    </div>
-
-    <div class="stat-card">
-        <div class="stat-card-header">
             <div class="stat-icon success">
                 <i class="fas fa-chalkboard"></i>
             </div>
         </div>
         <div class="stat-value">
-            <h3>{{ $totalClasses }}</h3>
+            <h3>{{ $totalAulas }}</h3>
             <p class="stat-label">Total de Aulas</p>
         </div>
     </div>
@@ -37,8 +25,20 @@
             </div>
         </div>
         <div class="stat-value">
-            <h3>{{ $activeClasses }}</h3>
+            <h3>{{ $totalAulasAtivas }}</h3>
             <p class="stat-label">Aulas Ativas</p>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-card-header">
+            <div class="stat-icon info">
+                <i class="fas fa-clock"></i>
+            </div>
+        </div>
+        <div class="stat-value">
+            <h3>{{ $AulasPendentes }}</h3>
+            <p class="stat-label">Aulas Pendentes</p>
         </div>
     </div>
 
@@ -49,7 +49,7 @@
             </div>
         </div>
         <div class="stat-value">
-            <h3>{{ $completedClasses }}</h3>
+            <h3>{{ $AulasCompletas }}</h3>
             <p class="stat-label">Aulas Concluídas</p>
         </div>
     </div>

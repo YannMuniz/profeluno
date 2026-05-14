@@ -29,7 +29,7 @@ private string $baseUrl;
         ];
     }
 
-    private function apiGet(string $endpoint): ?array
+    private function apiGet(string $endpoint): mixed
     {
         try {
             $response = Http::withHeaders($this->authHeaders())
@@ -53,29 +53,19 @@ private string $baseUrl;
 
     public function DashboardProfessor()
     {
-        $dashboard = $this->apiGet(
-            "Dashboard/Professor/" . Auth::id()
-        );
-
-        $classrooms = collect($dashboard['ultimasSalas'] ?? []);
-
         return view('professor.dashboard', [
-            'totalAlunos'      => $dashboard['totalAlunos'] ?? 0,
-            'totalClasses'     => $dashboard['totalAulas'] ?? 0,
-            'activeClasses'    => $dashboard['aulasAtivas'] ?? 0,
-            'completedClasses' => $dashboard['aulasConcluidas'] ?? 0,
-            'totalConteudos'   => $dashboard['conteudosCriados'] ?? 0,
-            'totalSimulados'   => $dashboard['simuladosCriados'] ?? 0,
-            'classrooms'       => $classrooms,
+            'totalAulas'           => $this->apiGet("DashboardProfessor/TotalAulas/" . Auth::id()) ?? 0,
+            'totalAulasAtivas'       => $this->apiGet("DashboardProfessor/AulasAtivas/" . Auth::id()) ?? 0,
+            'AulasPendentes'    => $this->apiGet("DashboardProfessor/AulasPendentes/" . Auth::id()) ?? 0,
+            'AulasCompletas'        => $this->apiGet("DashboardProfessor/AulasConcluidas/" . Auth::id()) ?? 0,
+            'totalConteudos'         => $this->apiGet("DashboardProfessor/ConteudosCriados/" . Auth::id()) ?? 0,
+            'totalSimulados'         => $this->apiGet("DashboardProfessor/SimuladosCriados/" . Auth::id()) ?? 0,
+            'classrooms'             => collect($this->apiGet("DashboardProfessor/UltimasAulas/" . Auth::id()) ?? []),
         ]);
     }
         
     public function DashboardAluno()
     {
-        $dashboard = $this->apiGet(
-            "Dashboard/Aluno/" . Auth::id()
-        );
-
         return view('aluno.dashboard', [
             'totalClasses' => $dashboard['aulasDisponiveis'] ?? 0,
             'completedClasses' => $dashboard['aulasConcluidas'] ?? 0,
