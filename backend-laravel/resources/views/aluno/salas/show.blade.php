@@ -23,22 +23,6 @@
 </div>
 @endif
 
-{{-- Cabeçalho da sala --}}
-<div class="page-header d-flex align-items-center justify-content-between mb-4">
-    <div>
-        <a href="{{ route('aluno.salas.index') }}" class="btn-back">
-            <i class="fas fa-arrow-left"></i> Voltar
-        </a>
-        <h1 class="mt-2">{{ $sala->titulo }}</h1>
-        <p class="text-muted">{{ $sala->materia }}</p>
-    </div>
-    @if($sala->status === 'active')
-    <div class="live-badge" style="font-size:14px;padding:8px 18px">
-        <i class="fas fa-circle"></i> AO VIVO
-    </div>
-    @endif
-</div>
-
 <div class="row g-4">
 
     {{-- Coluna principal --}}
@@ -91,6 +75,78 @@
                 </div>
             </div>
         </div>
+
+        {{-- Conteúdo da Aula --}}
+        <div class="card-section">
+            <h2 class="section-title">
+                <i class="fas fa-file-alt"></i> Conteúdo da Aula
+            </h2>
+            @if(!empty($conteudo))
+                @php
+                    $conteudoLink = $conteudo['url'] ?? $conteudo['link'] ?? null;
+                    $conteudoTitle = $conteudo['titulo'] ?? 'Conteúdo da Aula';
+                    $conteudoDesc  = $conteudo['descricao'] ?? 'Material de apoio da aula';
+                    $conteudoTipo  = $conteudo['tipo'] ?? null;
+                    $conteudoIcon  = [
+                        'pdf'   => 'fa-file-pdf',
+                        'slide' => 'fa-file-powerpoint',
+                        'video' => 'fa-file-video',
+                        'link'  => 'fa-link',
+                    ][$conteudoTipo] ?? 'fa-file-alt';
+                @endphp
+                <a href="{{ $conteudoLink ?? '#' }}" target="{{ $conteudoLink ? '_blank' : '_self' }}" class="conteudo-preview" style="display:flex;align-items:center;gap:16px;padding:16px;border:1px solid #ddd;border-radius:12px;text-decoration:none;color:inherit;">
+                    <div style="width:48px;height:48px;border-radius:12px;background:rgba(115,103,240,0.12);display:flex;align-items:center;justify-content:center;">
+                        <i class="fas {{ $conteudoIcon }}" style="font-size:20px;color:#7367f0"></i>
+                    </div>
+                    <div>
+                        <strong style="display:block;font-size:15px;color:#111;">{{ $conteudoTitle }}</strong>
+                        <span style="font-size:13px;color:#6c6b7d;">{{ $conteudoDesc }}</span>
+                    </div>
+                </a>
+            @else
+                <div style="padding:20px;border:1px solid #ddd;border-radius:12px;background:#f8f9ff;text-align:center;color:#6c6b7d;">
+                    <i class="fas fa-folder-open" style="font-size:24px;margin-bottom:8px;display:block;"></i>
+                    Nenhum conteúdo vinculado a esta sala.
+                </div>
+            @endif
+        </div>
+
+        {{-- Simulado --}}
+        <div class="card-section">
+            <h2 class="section-title">
+                <i class="fas fa-clipboard-list"></i> Simulado
+            </h2>
+            @if(!empty($simulado))
+                @php
+                    $questoes = $simulado['simuladoQuestao'] ?? [];
+                    $totalQuestoes = count($questoes);
+                @endphp
+                <div style="padding:20px;border:1px solid #ddd;border-radius:12px;background:#fff;">
+                    <p style="font-size:15px;font-weight:600;margin-bottom:8px;color:#111;">{{ $simulado['titulo'] ?? 'Simulado da Aula' }}</p>
+                    <p style="font-size:13px;color:#6c6b7d;margin-bottom:12px;">{{ $simulado['descricao'] ?? 'Avaliação disponibilizada pelo professor.' }}</p>
+                    <p style="font-size:13px;color:#6c6b7d;margin-bottom:16px;"><strong>{{ $totalQuestoes }}</strong> questões</p>
+                    @if(!empty($simulado['situacao']) && $totalQuestoes > 0 && $sala->status === 'completed')
+                        <a href="{{ route('aluno.historico.simulado', $sala->id) }}" class="btn-primary" style="display:inline-flex;align-items:center;gap:8px;">
+                            <i class="fas fa-play"></i> Fazer Simulado
+                        </a>
+                    @else
+                        <span style="font-size:13px;color:#6c6b7d;">
+                            @if($sala->status !== 'completed')
+                                Simulado disponível após a conclusão da aula.
+                            @else
+                                Simulado indisponível.
+                            @endif
+                        </span>
+                    @endif
+                </div>
+            @else
+                <div style="padding:20px;border:1px solid #ddd;border-radius:12px;background:#f8f9ff;text-align:center;color:#6c6b7d;">
+                    <i class="fas fa-clipboard-list" style="font-size:24px;margin-bottom:8px;display:block;"></i>
+                    Nenhum simulado vinculado a esta sala.
+                </div>
+            @endif
+        </div>
+
     </div>
 
     {{-- Coluna lateral --}}

@@ -584,12 +584,14 @@
 
 {{-- Dados para JS --}}
 <script>
-    const SALA_NOME    = @json($sala->nomeSala ?? '');
-    const SALA_URL     = @json($sala->url ?? '');
-    const SALA_ID      = {{ $sala->id ?? 'null' }};
-    const USER_NAME    = @json(session('user_nome') ?? (Auth::user()->name ?? 'Aluno'));
-    const IS_PROFESSOR = false;
-    const ROUTE_VOLTAR = @json(route('aluno.salas.index'));
+    const SALA_NOME        = @json($sala->nomeSala ?? '');
+    const SALA_URL         = @json($sala->url ?? '');
+    const SALA_ID          = {{ $sala->id ?? 'null' }};
+    const USER_NAME        = @json(session('user_nome') ?? (Auth::user()->name ?? 'Aluno'));
+    const IS_PROFESSOR     = false;
+    const ROUTE_VOLTAR     = @json(route('aluno.salas.index'));
+    const CHECK_STATUS_URL = @json(route('aluno.salas.checkLiberada', $sala->id));
+    const REDIRECT_AFTER_END = @json(route('aluno.salas.index'));
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -761,6 +763,45 @@ if (SALA_URL && SALA_NOME) {
     };
     document.head.appendChild(script);
 }
+
+function handleSalaStatus() {
+    if (!CHECK_STATUS_URL) {
+        return;
+    }
+
+    async function pollStatus() {
+        try {
+            const response = await fetch(CHECK_STATUS_URL, {
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (!response.ok) {
+                return;
+            }
+
+            const data = await response.json();
+            if (data.encerrada || data.status === 'completed') {
+                if (window.jitsiApi) {
+                    try {
+                        window.jitsiApi.executeCommand('hangup');
+                    } catch (err) {
+                        console.warn('Erro ao encerrar Jitsi:', err);
+                    }
+                }
+
+                alert('A aula foi encerrada pelo professor. Você será redirecionado.');
+                window.location.href = REDIRECT_AFTER_END;
+            }
+        } catch (err) {
+            console.warn('Falha ao verificar status da sala:', err);
+        }
+    }
+
+    pollStatus();
+    setInterval(pollStatus, 5000);
+}
+
+handleSalaStatus();
 </script>
 </body>
 </html>

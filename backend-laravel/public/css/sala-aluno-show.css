@@ -23,6 +23,35 @@
     color: var(--primary-color, #7367f0);
 }
 
+.conteudo-preview {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px;
+    border: 1px solid var(--border-color, #3b3b52);
+    border-radius: 14px;
+    background: var(--dark-bg, #1e1e2d);
+    color: var(--text-primary, #e0e0e0);
+    text-decoration: none;
+    transition: transform .2s ease, border-color .2s ease, background .2s ease;
+}
+
+.conteudo-preview:hover {
+    transform: translateY(-1px);
+    border-color: var(--primary-color, #7367f0);
+    background: rgba(115,103,240,.08);
+}
+
+.conteudo-preview strong {
+    font-size: 15px;
+    line-height: 1.3;
+}
+
+.conteudo-preview span {
+    color: var(--text-secondary, #b4b4c6);
+    font-size: 13px;
+}
+
 /* ── TEACHER MINI CARD ── */
 .teacher-mini-card {
     display: flex;

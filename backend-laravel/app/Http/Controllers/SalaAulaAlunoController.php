@@ -215,6 +215,16 @@ class SalaAulaAlunoController extends Controller
             $sala->materia = $materia['nomeMateria'] ?? '—';
         }
 
+        $conteudo = null;
+        if (!empty($data['idConteudo'])) {
+            $conteudo = $this->apiGet("Conteudo/RetornaConteudoPorId/{$data['idConteudo']}");
+        }
+
+        $simulado = null;
+        if (!empty($data['idSimulado'])) {
+            $simulado = $this->apiGet("Simulado/RetornaSimuladoPorId/{$data['idSimulado']}");
+        }
+
         // Quantidade atual de alunos na sala
         $qtdAlunos = 0;
         $qtdData   = $this->apiGet("AlunoSala/RetornaQtdAlunosSala/{$id}");
@@ -228,7 +238,7 @@ class SalaAulaAlunoController extends Controller
         $sala->qtd_alunos_atual = $qtdAlunos;
         $title    = '<i class="fas fa-chalkboard-teacher"></i> Sala de aula';
         $subtitle = 'Veja os detalhes da sala, informações sobre o professor e a matéria, e participe das aulas que mais te interessam';
-        return view('aluno.salas.show', compact('sala', 'professor', 'title', 'subtitle'));
+        return view('aluno.salas.show', compact('sala', 'professor', 'conteudo', 'simulado', 'title', 'subtitle'));
     }
 
     // ─── AGUARDANDO - SALA DE ESPERA ────────────────────────────────────────

@@ -342,6 +342,15 @@ class SalaAulaProfessorController extends Controller
             $materia       = collect($materias)->firstWhere('idMateria', $sala->idMateria);
             $sala->materia = $materia['nomeMateria'] ?? '—';
         }
+
+        if (!empty($data['idConteudo'])) {
+            $sala->conteudo = $this->apiGet("Conteudo/RetornaConteudoPorId/{$data['idConteudo']}");
+        }
+
+        if (!empty($data['idSimulado'])) {
+            $sala->simulados = $this->apiGet("Simulado/RetornaSimuladoPorId/{$data['idSimulado']}");
+        }
+
         $title    = '<i class="fas fa-chalkboard-teacher"></i> Sala de aula';
         $subtitle = 'Gerencie suas salas de aula, inicie aulas ao vivo e acompanhe o desempenho dos alunos';
 

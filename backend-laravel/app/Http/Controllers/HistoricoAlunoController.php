@@ -158,7 +158,9 @@ class HistoricoAlunoController extends Controller
             ['path' => $request->url()]
         );
 
-        return view('aluno.historico.index', compact('aulas'));
+        $title    = '<i class="fas fa-clipboard-list"></i> Histórico de Aulas';
+        $subtitle = 'Veja as aulas que você concluiu, revise o conteúdo e refaça os simulados para melhorar seu desempenho.';
+        return view('aluno.historico.index', compact('aulas', 'title', 'subtitle'));
     }
 
     // ─── SHOW ───────────────────────────────────────────────────────────────
@@ -207,8 +209,9 @@ class HistoricoAlunoController extends Controller
                 Log::warning("[HistoricoAlunoController] Simulado {$sala->idSimulado} não encontrado.");
             }
         }
-
-        return view('aluno.historico.show', compact('sala', 'professor', 'conteudo', 'simulado'));
+        $title    = '<i class="fas fa-clipboard-list"></i> Detalhes da Aula';
+        $subtitle = 'Revise o conteúdo desta aula e refaça o simulado para testar seus conhecimentos.';
+        return view('aluno.historico.show', compact('sala', 'professor', 'conteudo', 'simulado', 'title', 'subtitle'));
     }
 
     // ─── SIMULADO ───────────────────────────────────────────────────────────

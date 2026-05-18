@@ -127,13 +127,13 @@
                     <span>Minhas Aulas</span>
                 </a>
             </div>
-            <div class="menu-item">
+            <!-- <div class="menu-item">
                 <a href="{{ route('aluno.simulados') }}"
                    class="menu-link {{ request()->routeIs('aluno.simulados*') ? 'active' : '' }}">
                     <i class="fas fa-file-alt"></i>
                     <span>Simulados</span>
                 </a>
-            </div>
+            </div> -->
         @endif
 
         <hr style="border-color: var(--border-color); margin: 20px 15px;">

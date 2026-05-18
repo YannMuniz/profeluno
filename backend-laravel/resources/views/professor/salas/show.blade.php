@@ -10,26 +10,6 @@
 
 @section('content')
 
-{{-- ── PAGE HEADER ── --}}
-<div class="page-header">
-    <div class="page-header-left">
-        <a href="{{ route('professor.salas.index') }}" class="back-link">
-            <i class="fas fa-arrow-left"></i>
-            Voltar
-        </a>
-        <h1 class="page-title">Detalhes da Sala</h1>
-        <p class="page-subtitle">{{ $sala->titulo }}</p>
-    </div>
-    @if($sala->status !== 'completed')
-    <div class="page-header-right">
-        <a href="{{ route('professor.salas.edit', $sala->id) }}" class="btn-new-class">
-            <i class="fas fa-edit"></i>
-            Editar Sala
-        </a>
-    </div>
-    @endif
-</div>
-
 <div class="show-grid">
 
     {{-- ════════════════════════════════
@@ -150,20 +130,6 @@
                             @endif
                         </span>
                     </div>
-                    @if(!empty($sala->url))
-                    <div class="info-row">
-                        <span class="info-label">Link da Sala</span>
-                        <span class="info-value">
-                            <div class="url-box">
-                                <i class="fas fa-video"></i>
-                                <a href="{{ $sala->url }}" target="_blank">{{ $sala->url }}</a>
-                                <button class="btn-copy" data-copy="{{ $sala->url }}" title="Copiar link">
-                                    <i class="fas fa-copy"></i>
-                                </button>
-                            </div>
-                        </span>
-                    </div>
-                    @endif
                     @if(!empty($sala->createdAt ?? $sala->created_at))
                     <div class="info-row">
                         <span class="info-label">Criada em</span>
