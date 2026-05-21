@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use App\Models\Cargo;
 
 class AuthController extends Controller
@@ -18,100 +17,97 @@ class AuthController extends Controller
         $this->baseUrl = env('DOTNET_API_URL', 'http://profeluno_dotnet:9000');
     }
 
+    public function showLogin()
+    {
+        return view('auth.login');
+    }
+
     public function autenticar(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email'    => 'required|email',
             'password' => 'required|string',
         ]);
 
-        $url = "{$this->baseUrl}/v1/User/Login";
-
         try {
-            $response = Http::post($url, [
-                'email' => $request->input('email'),
+            $response = Http::post("{$this->baseUrl}/v1/User/Login", [
+                'email'    => $request->input('email'),
                 'password' => md5($request->input('password')),
             ]);
 
-            if ($response->successful()) {
+            if ($response->successful() && !empty($response->json('autorizacao'))) {
                 $data = $response->json();
 
-                if (!empty($data['autorizacao'])) {
-                    $user = \App\Models\User::where('email', $request->input('email'))
-                        ->with('cargo') // eager load para não fazer query extra
-                        ->firstOrFail();
+                $user = \App\Models\User::firstOrCreate(
+                    ['email' => $request->input('email')],
+                    [
+                        'nome_usuario' => explode('@', $request->input('email'))[0],
+                        'password'     => md5($request->input('password')),
+                        'cargo_id'     => $data['idCargo'] ?? null,
+                    ]
+                );
 
-                    Auth::login($user);
+                $user->update([
+                    'password' => md5($request->input('password')),
+                    'cargo_id' => $data['idCargo'] ?? $user->cargo_id,
+                ]);
 
-                    // Salva na sessão — sem aparecer na URL
-                    session([
-                        'user_id'    => $user->id,
-                        'user_nome'  => $user->nome_usuario,
-                        'user_email' => $user->email,
-                        'user_cargo' => strtolower($user->cargo?->nome_cargo ?? 'aluno'),
-                        'cargo_id'   => $user->cargo_id,
-                        'api_token'  => $data['autorizacao'],
-                    ]);
+                $user->load('cargo');
 
-                    $role = session('user_cargo');
+                Auth::login($user);
 
-                    if ($role === 'admin') {
-                        return redirect()->route('admin.dashboard');
-                    } elseif ($role === 'professor') {
-                        return redirect()->route('professor.dashboard');
-                    } else {
-                        return redirect()->route('aluno.dashboard');
-                    }
-                }
+                session([
+                    'user_id'    => $user->id,
+                    'user_nome'  => $user->nome_usuario,
+                    'user_email' => $user->email,
+                    'user_cargo' => strtolower($user->cargo?->nome_cargo ?? 'aluno'),
+                    'cargo_id'   => $user->cargo_id,
+                    'api_token'  => $data['autorizacao'],
+                ]);
+
+                return match (session('user_cargo')) {
+                    'professor' => redirect()->route('professor.dashboard'),
+                    default     => redirect()->route('aluno.dashboard'),
+                };
             }
 
-            return redirect()
-                ->route('login')
-                ->withErrors(['email' => 'Email ou senha inválidos.'])
-                ->withInput($request->only('email'));
-
         } catch (\Throwable $e) {
-            Log::error('AuthController::autenticar error', ['exception' => $e]);
-
-            return redirect()
-                ->route('login')
-                ->withErrors(['email' => 'Ocorreu um erro ao tentar fazer login.'])
-                ->withInput($request->only('email'));
+            Log::error('AuthController::autenticar', ['exception' => $e]);
         }
+
+        return redirect()
+            ->route('login')
+            ->withErrors(['email' => 'Email ou senha inválidos.'])
+            ->withInput($request->only('email'));
     }
 
     public function logout(Request $request)
     {
         Auth::logout();
-
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
         return redirect()->route('login');
     }
 
-    public function showLogin() {
-        return view('auth.login');
-    }
-
     public function showRegister()
     {
-        $cargos        = Cargo::all();
+        $cargos        = Cargo::whereNotIn('nome_cargo', ['admin', 'Admin'])->get();
         $escolaridades = collect();
         $areas         = collect();
 
         try {
-            $resEsc = Http::get("{$this->baseUrl}/v1/Escolaridade/ListarEscolaridades");
+            $resEsc = Http::get("{$this->baseUrl}/v1/Escolaridade/RetornaTodasEscolaridades");
             if ($resEsc->successful()) {
                 $escolaridades = collect($resEsc->json());
             }
 
-            $resArea = Http::get("{$this->baseUrl}/v1/Area/ListarAreas");
+            $resArea = Http::get("{$this->baseUrl}/v1/Area/RetornaTodasAreas");
             if ($resArea->successful()) {
                 $areas = collect($resArea->json());
             }
         } catch (\Throwable $e) {
-            Log::error('AuthController::showRegister erro ao buscar listas', ['exception' => $e]);
+            Log::error('AuthController::showRegister listas', ['exception' => $e]);
         }
 
         return view('auth.register', compact('cargos', 'escolaridades', 'areas'));
@@ -123,104 +119,85 @@ class AuthController extends Controller
         $cargoNome = strtolower($cargo?->nome_cargo ?? '');
 
         $rules = [
-            'name'                  => 'required|string',
+            'name'                  => 'required|string|max:255',
             'email'                 => 'required|email',
             'cargo_id'              => 'required|exists:cargos,id',
-            'password'              => 'required|string',
-            'password_confirmation' => 'required|string|same:password',
+            'password'              => 'required|string|min:6',
+            'password_confirmation' => 'required|same:password',
         ];
 
-        if (in_array($cargoNome, ['aluno', 'professor'])) {
-            $rules['escolaridade_id'] = 'required';
-            $rules['area_id']         = 'required';
+        if ($cargoNome === 'aluno') {
+            $rules['escolaridade_id'] = 'required|integer';
+            $rules['area_id']         = 'required|integer';
+        }
+
+        if ($cargoNome === 'professor') {
+            $rules['escolaridade_id'] = 'required|integer';
+            $rules['area_id']         = 'required|integer';
         }
 
         $request->validate($rules);
 
-        $url = "{$this->baseUrl}/v1/User/CadastrarUsuario";
+        // O .NET aceita tudo em /v1/User/CadastrarUsuario
+        $payload = [
+            'nome'    => $request->input('name'),
+            'email'   => $request->input('email'),
+            'senha'   => md5($request->input('password')),
+            'idCargo' => (int) $request->input('cargo_id'),
+        ];
 
+        if ($cargoNome === 'aluno') {
+            $payload['periodoAluno']        = $request->input('periodo') ?? '';
+            $payload['idEscolaridadeAluno'] = (int) $request->input('escolaridade_id');
+            $payload['idAreaAluno']         = (int) $request->input('area_id');
+        }
+
+        if ($cargoNome === 'professor') {
+            $payload['formacaoProfessor']       = $request->input('formacao') ?? '';
+            $payload['idEscolaridadeProfessor'] = (int) $request->input('escolaridade_id');
+            $payload['idAreaProfessor']         = (int) $request->input('area_id');
+        }
+
+        // Chamada ao .NET 
         try {
-            Log::debug('AuthController::registrar dotnet request', [
-                'url'     => $url,
-                'payload' => [
-                    'nome'    => $request->input('name'),
-                    'email'   => $request->input('email'),
-                    'idCargo' => $request->input('cargo_id'),
-                ],
-            ]);
+            Log::debug('AuthController::registrar payload', ['payload' => $payload]);
 
-            $response = Http::post($url, [
-                'nome'    => $request->input('name'),
-                'email'   => $request->input('email'),
-                'senha'   => md5($request->input('password')),
-                'idCargo' => $request->input('cargo_id'),
-            ]);
+            $response = Http::post("{$this->baseUrl}/v1/User/CadastrarUsuario", $payload);
 
-            Log::debug('AuthController::registrar dotnet response', [
+            Log::debug('AuthController::registrar response', [
                 'status' => $response->status(),
                 'body'   => $response->body(),
             ]);
 
             if ($response->successful()) {
-                $user = \App\Models\User::updateOrCreate(
+                \App\Models\User::updateOrCreate(
                     ['email' => $request->input('email')],
                     [
                         'nome_usuario' => $request->input('name'),
                         'password'     => md5($request->input('password')),
-                        'cargo_id'     => $request->input('cargo_id'),
+                        'cargo_id'     => (int) $request->input('cargo_id'),
                     ]
                 );
 
-                if (in_array($cargoNome, ['aluno', 'professor'])) {
-                    $modulo = $cargoNome === 'aluno' ? 'AlunoPerfil' : 'ProfessorPerfil';
-
-                    $perfilPayload = $cargoNome === 'aluno'
-                        ? [
-                            'idUser'         => $user->id,
-                            'periodo'        => $request->input('periodo'),
-                            'idEscolaridade' => $request->input('escolaridade_id'),
-                            'idArea'         => $request->input('area_id'),
-                        ]
-                        : [
-                            'idUser'         => $user->id,
-                            'formacao'       => $request->input('formacao'),
-                            'idEscolaridade' => $request->input('escolaridade_id'),
-                            'idArea'         => $request->input('area_id'),
-                        ];
-
-                    try {
-                        $resPerfil = Http::post("{$this->baseUrl}/v1/{$modulo}/SalvarPerfil", $perfilPayload);
-
-                        Log::debug("AuthController::registrar {$modulo} dotnet", [
-                            'status' => $resPerfil->status(),
-                            'body'   => $resPerfil->body(),
-                        ]);
-
-                        // Não bloqueia o registro se o perfil falhar — endpoint ainda não existe
-                        if (! $resPerfil->successful()) {
-                            Log::warning("AuthController::registrar {$modulo} falhou", [
-                                'status' => $resPerfil->status(),
-                            ]);
-                        }
-                    } catch (\Throwable $e) {
-                        Log::error("AuthController::registrar {$modulo} erro", ['exception' => $e]);
-                    }
-                }
-
-                return redirect()->route('login')->with('success', 'Registro bem-sucedido. Faça login para continuar.');
+                return redirect()
+                    ->route('login')
+                    ->with('success', 'Conta criada com sucesso! Faça login para continuar.');
             }
+
+            // Tenta extrair mensagem de erro do .NET para exibir ao usuário
+            $apiMsg = $response->json('message') ?? 'Ocorreu um erro ao registrar. Tente novamente.';
 
             return redirect()
                 ->route('register')
-                ->withErrors(['email' => 'Ocorreu um erro ao tentar registrar.'])
+                ->withErrors(['email' => $apiMsg])
                 ->withInput($request->only('name', 'email', 'cargo_id'));
 
         } catch (\Throwable $e) {
-            Log::error('AuthController::registrar error', ['exception' => $e]);
+            Log::error('AuthController::registrar exception', ['exception' => $e]);
 
             return redirect()
                 ->route('register')
-                ->withErrors(['email' => 'Ocorreu um erro ao tentar registrar.'])
+                ->withErrors(['email' => 'Erro de conexão. Tente novamente mais tarde.'])
                 ->withInput($request->only('name', 'email', 'cargo_id'));
         }
     }
