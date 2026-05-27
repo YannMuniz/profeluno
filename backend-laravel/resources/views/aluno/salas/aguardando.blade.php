@@ -484,8 +484,10 @@
     }
 
     const STORAGE_KEY = 'aguardando_join_attempted_{{ $sala->id }}';
+    const ENTRAR_URL = @json(route('aluno.salas.entrar', $sala->id));
+    const VIDEO_URL = @json(route('aluno.salas.video', $sala->id));
 
-    function onLiberado() {
+    async function onLiberado() {
         clearInterval(intervalId);
         clearInterval(countdownInterval);
         document.getElementById('waitingVisual').style.display = 'none';
@@ -494,8 +496,14 @@
         document.getElementById('btnEntrarWrap').style.display = 'block';
         addLog('Sala liberada! Entrando automaticamente...', 'ok');
 
-        setTimeout(() => {
-            document.getElementById('formEntrar').submit();
+        // Fazer AJAX POST em vez de form submit bloqueante
+        setTimeout(async () => {
+            const sucesso = await tentarEntrar();
+            if (!sucesso) {
+                // Se falhar, continuar tentando periodicamente
+                checkLiberada();
+                intervalId = setInterval(checkLiberada, 5000);
+            }
         }, 2000);
     }
 
@@ -579,9 +587,39 @@
         intervalId = setInterval(checkLiberada, 5000);
     }
 
-    document.getElementById('btnEntrarManual')?.addEventListener('click', function () {
+    // Função reutilizável para entrar na sala
+    async function tentarEntrar() {
+        try {
+            const response = await fetch(ENTRAR_URL, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': CSRF_TOKEN
+                }
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                addLog('Entrada confirmada! Redirecionando para a sala...', 'ok');
+                setTimeout(() => {
+                    window.location.href = VIDEO_URL;
+                }, 1000);
+                return true;
+            } else {
+                addLog('Erro ao processar entrada: ' + (data.message || 'Desconhecido'), 'error');
+                return false;
+            }
+        } catch (err) {
+            addLog('Erro de rede ao processar entrada: ' + err.message, 'error');
+            return false;
+        }
+    }
+
+    document.getElementById('btnEntrarManual')?.addEventListener('click', async function () {
         sessionStorage.setItem(STORAGE_KEY, '1');
-        document.getElementById('formEntrar').submit();
+        await tentarEntrar();
     });
 
     // Aviso se sair da página

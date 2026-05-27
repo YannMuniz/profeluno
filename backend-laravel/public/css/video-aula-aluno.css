@@ -146,15 +146,13 @@ body {
 /* Sobreposições de Vídeo */
 .video-overlay {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    pointer-events: none;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    padding: 20px;
+    top: 14px; left: 14px;
+    right: auto; bottom: auto; 
+    background: rgba(0,0,0,.7);
+    padding: 7px 14px;
+    border-radius: 8px;
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px;
 }
 
 .viewer-count {
