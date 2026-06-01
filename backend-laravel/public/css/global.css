@@ -16,7 +16,7 @@ a {
 }
 
 a:hover {
-    color: #9f8cfe;
+    color: var(--primary-light);
 }
 
 .profile-name {
@@ -26,7 +26,7 @@ a:hover {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--primary-color), #9f8cfe);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
     color: white;
     border: none;
     padding: 12px 25px;
@@ -39,7 +39,7 @@ a:hover {
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(115, 103, 240, 0.3);
+    box-shadow: 0 8px 20px rgba(var(--primary-color-rgb), 0.3);
 }
 
 .form-control {
@@ -54,7 +54,7 @@ a:hover {
     background-color: var(--card-bg);
     border-color: var(--primary-color);
     color: var(--text-primary);
-    box-shadow: 0 0 0 0.2rem rgba(115, 103, 240, 0.25);
+    box-shadow: 0 0 0 0.2rem rgba(var(--primary-color-rgb), 0.25);
 }
 
 .form-control::placeholder {
@@ -68,8 +68,8 @@ a:hover {
 }
 
 .alert-danger {
-    background-color: rgba(234, 84, 85, 0.1);
-    color: #ff6b6b;
+    background-color: rgba(var(--danger-color-rgb), 0.1);
+    color: var(--danger-color);
     padding: 15px;
 }
 
@@ -82,4 +82,42 @@ a:hover {
     font-size: 12px;
     margin-top: 5px;
     display: block;
+}
+
+/* Transição de tema suave */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Botão de alternância de tema */
+.theme-toggle-btn {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 8px 12px;
+    margin-right: 15px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.theme-toggle-btn:hover {
+    background-color: var(--button-hover-bg);
+    color: var(--primary-color);
+}
+
+.theme-toggle-btn:active {
+    transform: scale(0.95);
+}
+
+.theme-toggle-btn i {
+    transition: transform 0.3s ease;
+}
+
+.theme-toggle-btn:hover i {
+    transform: rotate(20deg);
 }

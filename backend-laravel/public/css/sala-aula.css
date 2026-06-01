@@ -77,7 +77,7 @@
 }
 
 .btn-leave:hover {
-    background: #d84545;
+    background: var(--danger-color);
 }
 
 /* Main Container */
@@ -108,7 +108,7 @@
 .video-placeholder {
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    background: linear-gradient(135deg, var(--dark-bg), var(--dark-bg));
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -186,7 +186,7 @@
     min-width: 140px;
     width: 140px;
     height: 100px;
-    background: #1a1a2e;
+    background: var(--dark-bg);
     border-radius: 8px;
     position: relative;
     overflow: hidden;
@@ -211,7 +211,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, var(--primary-color), #9f8cfe);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
     font-size: 24px;
     color: white;
 }
@@ -401,7 +401,7 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary-color), #9f8cfe);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -431,7 +431,7 @@
 }
 
 .message-text.teacher {
-    background: rgba(115, 103, 240, 0.1);
+    background: rgba(var(--primary-color-rgb), 0.1);
     border-left: 3px solid var(--primary-color);
 }
 
@@ -492,14 +492,14 @@
 }
 
 .participant-item:hover {
-    background: rgba(115, 103, 240, 0.1);
+    background: rgba(var(--primary-color-rgb), 0.1);
 }
 
 .participant-item-avatar {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary-color), #9f8cfe);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -591,7 +591,7 @@
 }
 
 .material-icon.pdf {
-    background: rgba(234, 84, 85, 0.15);
+    background: rgba(var(--danger-color-rgb), 0.15);
     color: var(--danger-color);
 }
 
@@ -601,7 +601,7 @@
 }
 
 .material-icon.video {
-    background: rgba(115, 103, 240, 0.15);
+    background: rgba(var(--primary-color-rgb), 0.15);
     color: var(--primary-color);
 }
 
@@ -626,7 +626,7 @@
 .btn-material {
     flex: 1;
     padding: 8px;
-    background: rgba(115, 103, 240, 0.1);
+    background: rgba(var(--primary-color-rgb), 0.1);
     border: 1px solid var(--primary-color);
     border-radius: 6px;
     color: var(--primary-color);

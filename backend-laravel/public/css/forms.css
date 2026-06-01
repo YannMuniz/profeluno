@@ -29,7 +29,7 @@
     align-items: center;
     gap: 8px;
     padding: 12px 22px;
-    background: linear-gradient(135deg, var(--primary-color), #9f8cfe);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
     color: white;
     border: none;
     border-radius: 10px;
@@ -42,7 +42,7 @@
 
 .btn-create:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(115, 103, 240, 0.35);
+    box-shadow: 0 8px 20px rgba(var(--primary-color-rgb), 0.35);
     color: white;
 }
 
@@ -51,9 +51,9 @@
     align-items: center;
     gap: 6px;
     padding: 7px 14px;
-    background: rgba(115, 103, 240, 0.12);
+    background: rgba(var(--primary-color-rgb), 0.12);
     color: var(--primary-color);
-    border: 1px solid rgba(115, 103, 240, 0.3);
+    border: 1px solid rgba(var(--primary-color-rgb), 0.3);
     border-radius: 8px;
     font-size: 12px;
     font-weight: 600;
@@ -63,7 +63,7 @@
 }
 
 .btn-edit:hover {
-    background: rgba(115, 103, 240, 0.25);
+    background: rgba(var(--primary-color-rgb), 0.25);
     color: var(--primary-color);
 }
 
@@ -72,9 +72,9 @@
     align-items: center;
     gap: 6px;
     padding: 7px 14px;
-    background: rgba(234, 84, 85, 0.1);
-    color: var(--danger-color, #ea5455);
-    border: 1px solid rgba(234, 84, 85, 0.3);
+    background: rgba(var(--danger-color-rgb), 0.1);
+    color: var(--danger-color);
+    border: 1px solid rgba(var(--danger-color-rgb), 0.3);
     border-radius: 8px;
     font-size: 12px;
     font-weight: 600;
@@ -83,7 +83,7 @@
 }
 
 .btn-delete:hover {
-    background: rgba(234, 84, 85, 0.2);
+    background: rgba(var(--danger-color-rgb), 0.2);
 }
 
 .btn-save {
@@ -91,7 +91,7 @@
     align-items: center;
     gap: 8px;
     padding: 13px 28px;
-    background: linear-gradient(135deg, var(--primary-color), #9f8cfe);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
     color: white;
     border: none;
     border-radius: 10px;
@@ -103,7 +103,7 @@
 
 .btn-save:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(115, 103, 240, 0.35);
+    box-shadow: 0 8px 20px rgba(var(--primary-color-rgb), 0.35);
 }
 
 .btn-cancel {
@@ -154,7 +154,7 @@
 .table-search input {
     width: 100%;
     padding: 10px 38px 10px 14px;
-    background: var(--bg-color, #1a1a2e);
+    background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 8px;
     color: var(--text-primary);
@@ -187,7 +187,7 @@ table.data-table {
 }
 
 table.data-table thead tr {
-    background: rgba(115, 103, 240, 0.06);
+    background: rgba(var(--primary-color-rgb), 0.06);
 }
 
 table.data-table thead th {
@@ -207,7 +207,7 @@ table.data-table tbody tr {
 }
 
 table.data-table tbody tr:hover {
-    background: rgba(115, 103, 240, 0.04);
+    background: rgba(var(--primary-color-rgb), 0.04);
 }
 
 table.data-table tbody td {
@@ -235,33 +235,33 @@ table.data-table tbody td {
 }
 
 .badge-admin {
-    background: rgba(234, 84, 85, 0.12);
-    color: #ea5455;
-    border: 1px solid rgba(234, 84, 85, 0.3);
+    background: rgba(var(--danger-color-rgb), 0.12);
+    color: var(--danger-color);
+    border: 1px solid rgba(var(--danger-color-rgb), 0.3);
 }
 
 .badge-professor {
-    background: rgba(115, 103, 240, 0.12);
+    background: rgba(var(--primary-color-rgb), 0.12);
     color: var(--primary-color);
-    border: 1px solid rgba(115, 103, 240, 0.3);
+    border: 1px solid rgba(var(--primary-color-rgb), 0.3);
 }
 
 .badge-aluno {
     background: rgba(40, 199, 111, 0.12);
-    color: var(--success-color, #28c76f);
+    color: var(--success-color);
     border: 1px solid rgba(40, 199, 111, 0.3);
 }
 
 .badge-ativo {
     background: rgba(40, 199, 111, 0.12);
-    color: var(--success-color, #28c76f);
+    color: var(--success-color);
     border: 1px solid rgba(40, 199, 111, 0.3);
 }
 
 .badge-inativo {
-    background: rgba(234, 84, 85, 0.1);
-    color: #ea5455;
-    border: 1px solid rgba(234, 84, 85, 0.25);
+    background: rgba(var(--danger-color-rgb), 0.1);
+    color: var(--danger-color);
+    border: 1px solid rgba(var(--danger-color-rgb), 0.25);
 }
 
 /* Avatar de inicial */
@@ -269,7 +269,7 @@ table.data-table tbody td {
     width: 36px;
     height: 36px;
     border-radius: 9px;
-    background: linear-gradient(135deg, var(--primary-color), #9f8cfe);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -322,7 +322,7 @@ table.data-table tbody td {
 .form-card-header {
     padding: 22px 28px;
     border-bottom: 1px solid var(--border-color);
-    background: rgba(115, 103, 240, 0.05);
+    background: rgba(var(--primary-color-rgb), 0.05);
     display: flex;
     align-items: center;
     gap: 12px;
@@ -332,7 +332,7 @@ table.data-table tbody td {
     width: 40px;
     height: 40px;
     border-radius: 10px;
-    background: linear-gradient(135deg, var(--primary-color), #9f8cfe);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -378,14 +378,14 @@ table.data-table tbody td {
 }
 
 .form-label span.required {
-    color: #ea5455;
+    color: var(--danger-color);
     margin-left: 3px;
 }
 
 .form-control {
     width: 100%;
     padding: 13px 16px;
-    background: var(--bg-color, #1a1a2e);
+    background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 10px;
     color: var(--text-primary);
@@ -397,7 +397,7 @@ table.data-table tbody td {
 .form-control:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.15);
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.15);
 }
 
 .form-control::placeholder {
@@ -406,13 +406,13 @@ table.data-table tbody td {
 }
 
 .form-control.is-invalid {
-    border-color: #ea5455;
-    box-shadow: 0 0 0 3px rgba(234, 84, 85, 0.12);
+    border-color: var(--danger-color);
+    box-shadow: 0 0 0 3px rgba(var(--danger-color-rgb), 0.12);
 }
 
 .form-control-readonly,
 .form-control[disabled] {
-    background: rgba(115, 103, 240, 0.04) !important;
+    background: rgba(var(--primary-color-rgb), 0.04) !important;
     border-color: var(--border-color) !important;
     color: var(--text-secondary) !important;
     cursor: not-allowed !important;
@@ -441,7 +441,7 @@ select.form-control {
 .form-error {
     display: block;
     font-size: 12px;
-    color: #ea5455;
+    color: var(--danger-color);
     margin-top: 6px;
     font-weight: 600;
 }
@@ -459,7 +459,7 @@ select.form-control {
     align-items: center;
     gap: 14px;
     padding: 14px 16px;
-    background: var(--bg-color, #1a1a2e);
+    background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 10px;
     cursor: pointer;
@@ -507,7 +507,7 @@ select.form-control {
 }
 
 .toggle-switch input:checked + .toggle-slider {
-    background: var(--success-color, #28c76f);
+    background: var(--success-color);
 }
 
 .toggle-switch input:checked + .toggle-slider::before {
@@ -536,7 +536,7 @@ select.form-control {
     gap: 12px;
     padding: 22px 28px;
     border-top: 1px solid var(--border-color);
-    background: rgba(115, 103, 240, 0.03);
+    background: rgba(var(--primary-color-rgb), 0.03);
 }
 
 /* ── Alertas flash ── */
@@ -558,13 +558,13 @@ select.form-control {
 .alert-success {
     background: rgba(40, 199, 111, 0.1);
     border: 1px solid rgba(40, 199, 111, 0.3);
-    color: var(--success-color, #28c76f);
+    color: var(--success-color);
 }
 
 .alert-danger {
-    background: rgba(234, 84, 85, 0.1);
-    border: 1px solid rgba(234, 84, 85, 0.3);
-    color: #ea5455;
+    background: rgba(var(--danger-color-rgb), 0.1);
+    border: 1px solid rgba(var(--danger-color-rgb), 0.3);
+    color: var(--danger-color);
 }
 
 /* ── Modal de confirmação de exclusão ── */
@@ -607,12 +607,12 @@ select.form-control {
     width: 64px;
     height: 64px;
     border-radius: 16px;
-    background: rgba(234, 84, 85, 0.12);
+    background: rgba(var(--danger-color-rgb), 0.12);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 28px;
-    color: #ea5455;
+    color: var(--danger-color);
     margin: 0 auto 20px;
 }
 

@@ -33,7 +33,7 @@
 .logo-icon {
     width: 50px;
     height: 50px;
-    background: linear-gradient(135deg, var(--primary-color), #9f8cfe);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -95,7 +95,7 @@
 .form-group input:focus,
 .form-group select:focus {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(115, 103, 240, 0.1);
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
     outline: none;
 }
 
@@ -130,7 +130,7 @@
 }
 
 .auth-footer a:hover {
-    color: #9f8cfe;
+    color: var(--primary-light);
 }
 
 @media (max-width: 480px) {

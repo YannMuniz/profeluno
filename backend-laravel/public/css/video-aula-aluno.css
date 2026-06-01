@@ -1,18 +1,4 @@
-/* Video Aula CSS */
-:root {
-    --primary-color: #7367f0;
-    --secondary-color: #82868b;
-    --success-color: #28c76f;
-    --danger-color: #ea5455;
-    --warning-color: #ff9f43;
-    --info-color: #00cfe8;
-    --dark-bg: #1e1e2d;
-    --card-bg: #2b2b40;
-    --sidebar-bg: #262637;
-    --text-primary: #e0e0e0;
-    --text-secondary: #b4b4c6;
-    --border-color: #3b3b52;
-}
+/* Video Aula - Aluno - Usa variáveis em variables.css */
 
 body {
     overflow: hidden;
@@ -95,7 +81,7 @@ body {
 }
 
 .btn-leave:hover {
-    background: #d84545;
+    background: var(--danger-color);
 }
 
 /* Contêiner Principal */
@@ -221,7 +207,7 @@ body {
     width: 60px;
     height: 60px;
     border-radius: 8px;
-    background: linear-gradient(135deg, var(--primary-color), #9f8cfe);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -285,7 +271,7 @@ body {
 }
 
 .control-btn:hover {
-    background: rgba(115, 103, 240, 0.1);
+    background: rgba(var(--primary-color-rgb), 0.1);
     color: var(--primary-color);
 }
 
@@ -333,7 +319,7 @@ body {
 }
 
 .sidebar-tab:hover {
-    background: rgba(115, 103, 240, 0.1);
+    background: rgba(var(--primary-color-rgb), 0.1);
     color: var(--primary-color);
 }
 
@@ -403,7 +389,7 @@ body {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary-color), #9f8cfe);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -473,7 +459,7 @@ body {
 }
 
 .btn-send:hover {
-    background: #9f8cfe;
+    background: var(--primary-light);
 }
 
 /* Lista de Participantes */
@@ -494,14 +480,14 @@ body {
 }
 
 .participant-item:hover {
-    background: rgba(115, 103, 240, 0.1);
+    background: rgba(var(--primary-color-rgb), 0.1);
 }
 
 .participant-item-avatar {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary-color), #9f8cfe);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -543,7 +529,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(115, 103, 240, 0.1);
+    background: rgba(var(--primary-color-rgb), 0.1);
     border-radius: 4px;
     color: var(--text-secondary);
     font-size: 12px;
@@ -575,7 +561,7 @@ body {
 }
 
 .material-item:hover {
-    background: rgba(115, 103, 240, 0.1);
+    background: rgba(var(--primary-color-rgb), 0.1);
 }
 
 .material-header {
@@ -592,14 +578,14 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(115, 103, 240, 0.1);
+    background: rgba(var(--primary-color-rgb), 0.1);
     color: var(--primary-color);
     font-size: 18px;
     flex-shrink: 0;
 }
 
 .material-icon.pdf {
-    background: rgba(234, 84, 85, 0.1);
+    background: rgba(var(--danger-color-rgb), 0.1);
     color: var(--danger-color);
 }
 
@@ -648,7 +634,7 @@ body {
 }
 
 .btn-material:hover {
-    background: #9f8cfe;
+    background: var(--primary-light);
 }
 
 /* Responsivo */

@@ -1,23 +1,12 @@
 /* Aguardando - Sala de Espera do Aluno */
-:root {
-    --primary:    #7367f0;
-    --success:    #28c76f;
-    --danger:     #ea5455;
-    --warning:    #ff9f43;
-    --dark-bg:    #1e1e2d;
-    --card-bg:    #2b2b40;
-    --sidebar-bg: #262637;
-    --text:       #e0e0e0;
-    --text-muted: #b4b4c6;
-    --border:     #3b3b52;
-}
+/* Usa variáveis definidas em variables.css */
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
     font-family: 'Montserrat', sans-serif;
     background: var(--dark-bg);
-    color: var(--text);
+    color: var(--text-primary);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -29,7 +18,7 @@ body {
 /* ── WAITING CARD ── */
 .waiting-card {
     background: var(--card-bg);
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-color);
     border-radius: 20px;
     padding: 48px 40px;
     max-width: 480px;
@@ -44,7 +33,7 @@ body {
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 4px;
-    background: linear-gradient(90deg, var(--primary), #9f8cfe, var(--success));
+    background: linear-gradient(90deg, var(--primary-color), var(--primary-light), var(--success-color));
     animation: shimmer 2s ease-in-out infinite;
     background-size: 200% auto;
 }
@@ -64,12 +53,12 @@ body {
     align-items: center;
     gap: 6px;
     padding: 5px 14px;
-    background: rgba(115,103,240,.15);
-    border: 1px solid rgba(115,103,240,.3);
+    background: rgba(var(--primary-color-rgb),.15);
+    border: 1px solid rgba(var(--primary-color-rgb),.3);
     border-radius: 20px;
     font-size: 11px;
     font-weight: 700;
-    color: var(--primary);
+    color: var(--primary-color);
     margin-bottom: 16px;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -79,7 +68,7 @@ body {
     font-size: 22px;
     font-weight: 700;
     margin-bottom: 8px;
-    color: var(--text);
+    color: var(--text-primary);
 }
 
 .sala-meta {
@@ -88,7 +77,7 @@ body {
     justify-content: center;
     gap: 16px;
     font-size: 13px;
-    color: var(--text-muted);
+    color: var(--text-secondary);
     flex-wrap: wrap;
 }
 
@@ -98,7 +87,7 @@ body {
     gap: 5px;
 }
 
-.sala-meta i { color: var(--primary); }
+.sala-meta i { color: var(--primary-color); }
 
 /* ── PROFESSOR AVATAR ── */
 .prof-block {
@@ -112,11 +101,11 @@ body {
 .prof-avatar {
     width: 64px; height: 64px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary), #9f8cfe);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
     display: flex; align-items: center; justify-content: center;
     font-size: 26px;
     color: #fff;
-    border: 3px solid rgba(115,103,240,.3);
+    border: 3px solid rgba(var(--primary-color-rgb),.3);
     position: relative;
 }
 
@@ -136,7 +125,7 @@ body {
 
 .prof-label {
     font-size: 12px;
-    color: var(--text-muted);
+    color: var(--text-secondary);
 }
 
 /* ── WAITING ANIMATION ── */
@@ -147,9 +136,9 @@ body {
 .waiting-ring {
     width: 80px; height: 80px;
     border-radius: 50%;
-    border: 3px solid var(--border);
-    border-top-color: var(--primary);
-    border-right-color: #9f8cfe;
+    border: 3px solid var(--border-color);
+    border-top-color: var(--primary-color);
+    border-right-color: var(--primary-light);
     animation: spin 1.2s linear infinite;
     margin: 0 auto 20px;
     position: relative;
@@ -161,7 +150,7 @@ body {
     inset: 6px;
     border-radius: 50%;
     border: 2px solid transparent;
-    border-top-color: rgba(115,103,240,.3);
+    border-top-color: rgba(var(--primary-color-rgb),.3);
     animation: spin 2s linear infinite reverse;
 }
 
@@ -175,7 +164,7 @@ body {
 
 .waiting-subtitle {
     font-size: 13px;
-    color: var(--text-muted);
+    color: var(--text-secondary);
     line-height: 1.6;
 }
 
@@ -188,7 +177,7 @@ body {
 
 .waiting-dots span {
     width: 5px; height: 5px;
-    background: var(--primary);
+    background: var(--primary-color);
     border-radius: 50%;
     display: inline-block;
     animation: bounce 1.2s ease-in-out infinite;
@@ -207,8 +196,8 @@ body {
     max-height: 160px;
     overflow-y: auto;
     padding: 12px;
-    background: rgba(115,103,240,.08);
-    border: 1px solid rgba(115,103,240,.2);
+    background: rgba(var(--primary-color-rgb),.08);
+    border: 1px solid rgba(var(--primary-color-rgb),.2);
     border-radius: 8px;
     margin-bottom: 24px;
     font-size: 12px;
@@ -221,9 +210,9 @@ body {
 
 .status-log p:last-child { margin-bottom: 0; }
 
-.status-log .log-ok    { color: var(--success); }
-.status-log .log-wait  { color: var(--warning); }
-.status-log .log-error { color: var(--danger); }
+.status-log .log-ok    { color: var(--success-color); }
+.status-log .log-wait  { color: var(--warning-color); }
+.status-log .log-error { color: var(--danger-color); }
 
 /* ── ACTIONS ── */
 .btn-voltar {
@@ -231,8 +220,8 @@ body {
     align-items: center;
     gap: 8px;
     background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
     padding: 12px 20px;
     border-radius: 8px;
     cursor: pointer;
@@ -242,9 +231,9 @@ body {
 }
 
 .btn-voltar:hover {
-    background: rgba(115,103,240,.1);
-    border-color: var(--primary);
-    color: var(--primary);
+    background: rgba(var(--primary-color-rgb),.1);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
 }
 
 /* ── LIBERADO STATE ── */
@@ -254,8 +243,8 @@ body {
     align-items: center;
     gap: 12px;
     padding: 20px;
-    background: rgba(40,199,111,.1);
-    border: 1px solid rgba(40,199,111,.3);
+    background: rgba(16,185,129,.1);
+    border: 1px solid rgba(16,185,129,.3);
     border-radius: 12px;
     margin-bottom: 24px;
 }
@@ -265,12 +254,12 @@ body {
 .liberado-icon {
     width: 60px; height: 60px;
     border-radius: 50%;
-    background: rgba(40,199,111,.2);
+    background: rgba(16,185,129,.2);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 28px;
-    color: var(--success);
+    color: var(--success-color);
     animation: pop .5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
@@ -282,16 +271,16 @@ body {
 .liberado-title {
     font-size: 18px;
     font-weight: 700;
-    color: var(--text);
+    color: var(--text-primary);
 }
 
 .liberado-sub {
     font-size: 13px;
-    color: var(--text-muted);
+    color: var(--text-secondary);
 }
 
 .btn-entrar {
-    background: var(--success);
+    background: var(--success-color);
     color: #fff;
     border: none;
     padding: 14px 28px;
