@@ -1,6 +1,6 @@
 {{-- resources/views/layouts/app.blade.php --}}
 <!DOCTYPE html>
-<html lang="pt-BR" class="loading" data-textdirection="ltr">
+<html lang="pt-BR" class="loading" data-textdirection="ltr" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -43,6 +43,9 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Theme Toggle Script (deve ser carregado antes de outros scripts) -->
+    <script src="{{ asset('js/theme-toggle.js') }}"></script>
     
     <!-- Custom JS -->
     <script src="{{ asset('js/app.js') }}"></script>

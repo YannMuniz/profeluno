@@ -1,6 +1,6 @@
 {{-- resources/views/professor/salas/video-aula.blade.php --}}
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +10,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/variables.css') }}">
+    <script src="{{ asset('js/theme-toggle.js') }}"></script>
 
     <style>
         :root {
@@ -285,6 +287,9 @@
     </div>
 
     <div class="top-actions">
+        <button id="themeToggleBtn" class="theme-toggle-btn" style="background:transparent; color:var(--text-muted); border:1.5px solid var(--border); padding:8px 12px; border-radius:8px; font-size:14px; cursor:pointer; transition:.3s; display:flex; align-items:center;">
+            <i class="fas fa-sun"></i>
+        </button>
         <button class="btn-liberar {{ $liberada ? 'liberado' : '' }}" id="btnLiberar">
             <i class="fas fa-{{ $liberada ? 'check-circle' : 'door-open' }}" id="iconLiberar"></i>
             <span id="textoLiberar">{{ $liberada ? 'Alunos liberados' : 'Liberar Alunos' }}</span>
