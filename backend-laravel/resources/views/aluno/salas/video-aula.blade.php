@@ -376,6 +376,26 @@
         .modal-btn.cancel:hover  { background: var(--border); }
         .modal-btn.danger:hover  { background: #d84545; }
 
+        .theme-toggle-btn {
+            background: var(--theme-btn-bg);
+            color: var(--theme-btn-color);
+            border: 1.5px solid var(--theme-btn-border);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background .3s, color .3s, border-color .3s;
+            display: flex;
+            align-items: center;
+            line-height: 1;
+        }
+        .theme-toggle-btn:hover {
+            background: var(--theme-btn-bg-hover);
+        }
+        .ctrl-btn i {
+            color: var(--text-primary);
+        }
+
         /* ── RESPONSIVE ── */
         @media (max-width: 1024px) {
             .main-container { grid-template-columns: 1fr; }
@@ -428,12 +448,6 @@
             <div class="video-overlay">
                 <i class="fas fa-user-tie"></i>
                 <span>Prof. {{ $nomeProfessor ?? 'Professor' }}</span>
-            </div>
-
-            <div class="viewer-count">
-                <i class="fas fa-eye"></i>
-                <span id="viewer-count">{{ $qtdAlunos ?? 0 }}</span>
-                assistindo
             </div>
         </div>
 

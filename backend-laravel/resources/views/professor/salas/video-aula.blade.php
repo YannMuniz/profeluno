@@ -258,6 +258,39 @@
         .modal-btn.danger:hover { background:#d84545; }
         .modal-btn.success:hover{ background:#24b263; }
 
+        .theme-toggle-btn {
+            background: var(--theme-btn-bg);
+            color: var(--theme-btn-color);
+            border: 1.5px solid var(--theme-btn-border);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background .3s, color .3s, border-color .3s;
+            display: flex;
+            align-items: center;
+            line-height: 1;
+        }
+        .theme-toggle-btn:hover {
+            background: var(--theme-btn-bg-hover);
+        }
+        .ctrl-btn i {
+            color: var(--text-primary);
+        }
+        .class-title h2 {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text-primary); /* título usa cor principal do texto */
+        }
+
+        .class-title p {
+            font-size: 12px;
+            margin: 0;
+            color: var(--text-secondary); /* info usa cor secundária do texto */
+        }
+
+
         @media (max-width:1024px) { .main-container { grid-template-columns:1fr; } .sidebar { display:none; } }
         @media (max-width:768px)  { .top-stats .stat span { display:none; } .btn-liberar span { display:none; } }
     </style>
@@ -287,7 +320,7 @@
     </div>
 
     <div class="top-actions">
-        <button id="themeToggleBtn" class="theme-toggle-btn" style="background:transparent; color:var(--text-muted); border:1.5px solid var(--border); padding:8px 12px; border-radius:8px; font-size:14px; cursor:pointer; transition:.3s; display:flex; align-items:center;">
+        <button id="themeToggleBtn" class="theme-toggle-btn">
             <i class="fas fa-sun"></i>
         </button>
         <button class="btn-liberar {{ $liberada ? 'liberado' : '' }}" id="btnLiberar">

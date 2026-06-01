@@ -5,7 +5,8 @@ html[data-theme="dark"] {
     --primary-color-rgb: 115, 103, 240;
     --secondary-color: #82868b;
     --success-color: #28c76f;
-    --danger-color: var(--danger-color);
+    --danger-color: #ea5455;          /* ← era var(--danger-color), auto-referência! */
+    --danger-color-rgb: 234, 84, 85;
     --warning-color: #ff9f43;
     --info-color: #00cfe8;
     --dark-bg: #1e1e2d;
@@ -17,7 +18,12 @@ html[data-theme="dark"] {
     --header-bg: #2b2b40;
     --button-hover-bg: #3b3b52;
     --primary-light: #9f8cfe;
-    --danger-color-rgb: 234, 84, 85;
+
+    /* Botão de tema */
+    --theme-btn-color: #b4b4c6;
+    --theme-btn-border: #3b3b52;
+    --theme-btn-bg: transparent;
+    --theme-btn-bg-hover: #3b3b52;
 }
 
 /* TEMA CLARO */
@@ -27,6 +33,7 @@ html[data-theme="light"] {
     --secondary-color: #6b7280;
     --success-color: #10b981;
     --danger-color: #ef4444;
+    --danger-color-rgb: 239, 68, 68;
     --warning-color: #f59e0b;
     --info-color: #06b6d4;
     --dark-bg: #f9fafb;
@@ -36,7 +43,12 @@ html[data-theme="light"] {
     --text-secondary: #6b7280;
     --border-color: #e5e7eb;
     --header-bg: #ffffff;
-    --button-hover-bg: #f3f4f6;
+    --button-hover-bg: #e5e7eb;
     --primary-light: #a5b4fc;
-    --danger-color-rgb: 239, 68, 68;
+
+    /* Botão de tema */
+    --theme-btn-color: #374151;
+    --theme-btn-border: #d1d5db;
+    --theme-btn-bg: transparent;
+    --theme-btn-bg-hover: #e5e7eb;
 }
